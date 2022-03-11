@@ -1,0 +1,28 @@
+# Git attributes for end-of-line normalization
+
+# Details per file setting:
+#   text    Normalized from CRLF to LF
+#   binary  Remain untouched
+
+# All files auto-detected as text
+*               text=auto eol=lf
+
+# Source code
+*.ts            text eol=lf
+*.js            text eol=lf
+*.json          text eol=lf
+
+# Configs
+.env            text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.lock          text eol=lf
+.gitattributes  text eol=lf
+
+# RC and ignore
+*.*rc           text eol=lf
+*.*ignore       text eol=lf
+
+# Documentation, license
+*.md            text eol=lf
+LICENSE
