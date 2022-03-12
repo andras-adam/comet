@@ -2,11 +2,11 @@ import http from 'http';
 import getRawBody from 'raw-body';
 import { match } from 'path-to-regexp';
 import { ICometRequest, IParams } from './CometRequest';
-import { ICometResponse } from './CometResponse';
+import { ICometResponse, IResponder, Responder } from './CometResponse';
 
 export type NextFunction = () => unknown;
 
-export type Handler = (request: ICometRequest/* , response: ICometResponse, next: NextFunction */) => unknown;
+export type Handler = (request: ICometRequest, response: IResponder, next: NextFunction) => unknown;
 
 export class Comet {
 
@@ -41,24 +41,34 @@ export class Comet {
 
   // Handle incoming requests and return responses
   private async handle(request: ICometRequest): Promise<ICometResponse> {
+    const responder = new Responder();
+    let handlerCount = 0;
     for (const route in this.routes) {
       const matches = match<IParams>(route)(request.path);
       if (!matches) continue;
       if (!this.routes[route][request.method] && !this.routes[route]['ALL']) {
         const allow = Object.keys(this.routes[route]).join(',');
-        return { statusCode: 405, body: { success: false }, headers: { allow } };
+        return responder.notAcceptable({ success: false }, { allow });
       } else {
         request.params = Object.assign({}, matches.params);
         for (const method in this.routes[route]) {
           if (method !== request.method && method !== 'ALL') continue;
           for (const handler of this.routes[route][method]) {
-            handler(request);
-            return { statusCode: 200, body: { success: true } };
+            const response = await new Promise<ICometResponse | undefined>(resolve => {
+              responder.resolver = resolve;
+              handler(request, responder, () => resolve(undefined));
+            });
+            handlerCount++;
+            if (response) return response;
           }
         }
       }
     }
-    return { statusCode: 404, body: { success: false, message: 'Route not found.' } };
+    if (handlerCount) {
+      return responder.internalServerError({ success: false, message: 'No response was returned from any handlers.' });
+    } else {
+      return responder.notFound({ success: false, message: 'Route not found.' });
+    }
   }
 
   // HTTP request/response parser

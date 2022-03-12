@@ -1,3 +1,3 @@
-export { comet, Handler, NextFunction } from './Comet';
+export { comet, NextFunction } from './Comet';
 export { ICometRequest as Request } from './CometRequest';
-export { ICometResponse as Response } from './CometResponse';
+export { IResponder as Response } from './CometResponse';
