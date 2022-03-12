@@ -1,7 +1,7 @@
-export type IBody = Record<string, unknown>;
-export type IParams = Record<string, unknown>;
-export type IQuery = Record<string, unknown>;
-export type IHeaders = Record<string, unknown>;
+export type IBody = Record<string, any>;
+export type IParams = Record<string, string>;
+export type IQuery = Record<string, string>;
+export type IHeaders = Record<string, string | string[] | undefined>;
 
 export interface ICometRequest {
   path: string;

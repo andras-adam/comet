@@ -1,6 +1,6 @@
 export type IBody = Record<string, unknown>;
 
 export interface ICometResponse {
-  status: number;
+  statusCode: number;
   body?: IBody;
 }
