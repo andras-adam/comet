@@ -1,18 +1,64 @@
 import http from 'http';
 import getRawBody from 'raw-body';
-import { ICometRequest } from './CometRequest';
+import { match } from 'path-to-regexp';
+import { ICometRequest, IParams } from './CometRequest';
 import { ICometResponse } from './CometResponse';
 
 export type NextFunction = () => unknown;
 
-export type Handler = (request: ICometRequest, response: ICometResponse, next: NextFunction) => unknown;
+export type Handler = (request: ICometRequest/* , response: ICometResponse, next: NextFunction */) => unknown;
 
 export class Comet {
 
+  private routes: Record<string, Record<string, Handler[]>> = {};
+
+  public all(path: string, ...handlers: Handler[]) {
+    this.registerRoute('ALL', path, handlers);
+  }
+
+  public get(path: string, ...handlers: Handler[]) {
+    this.registerRoute('GET', path, handlers);
+  }
+
+  public post(path: string, ...handlers: Handler[]) {
+    this.registerRoute('POST', path, handlers);
+  }
+
+  public delete(path: string, ...handlers: Handler[]) {
+    this.registerRoute('DELETE', path, handlers);
+  }
+
+  public use(path: string, ...handlers: Handler[]) {
+    this.registerRoute('ALL', path + '(.*)', handlers);
+  }
+
+  // Register a new route
+  private registerRoute(method: string, path: string, handlers: Handler[]) {
+    if (!this.routes[path]) this.routes[path] = {};
+    if (!this.routes[path][method]) this.routes[path][method] = [];
+    this.routes[path][method].push(...handlers);
+  }
+
   // Handle incoming requests and return responses
   private async handle(request: ICometRequest): Promise<ICometResponse> {
-    console.log(request.body);
-    return { statusCode: 200, body: { ok: true } };
+    for (const route in this.routes) {
+      const matches = match<IParams>(route)(request.path);
+      if (!matches) continue;
+      if (!this.routes[route][request.method] && !this.routes[route]['ALL']) {
+        const allow = Object.keys(this.routes[route]).join(',');
+        return { statusCode: 405, body: { success: false }, headers: { allow } };
+      } else {
+        request.params = matches.params;
+        for (const method in this.routes[route]) {
+          if (method !== request.method && method !== 'ALL') continue;
+          for (const handler of this.routes[route][method]) {
+            handler(request);
+            return { statusCode: 200, body: { success: true } };
+          }
+        }
+      }
+    }
+    return { statusCode: 404, body: { success: false, message: 'Route not found.' } };
   }
 
   // HTTP request/response parser
@@ -44,6 +90,9 @@ export class Comet {
       if (response.body) {
         res.setHeader('content-type', 'application/json');
         res.write(JSON.stringify(response.body));
+      }
+      if (response.headers) {
+        Object.entries(response.headers).forEach(([name, value]) => res.setHeader(name, value));
       }
       res.end();
     }).listen(port);

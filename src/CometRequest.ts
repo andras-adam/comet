@@ -1,4 +1,4 @@
-export type IBody = Record<string, any>;
+export type IBody = any;
 export type IParams = Record<string, string>;
 export type IQuery = Record<string, string>;
 export type IHeaders = Record<string, string | string[] | undefined>;
