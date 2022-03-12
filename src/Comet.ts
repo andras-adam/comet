@@ -48,7 +48,7 @@ export class Comet {
         const allow = Object.keys(this.routes[route]).join(',');
         return { statusCode: 405, body: { success: false }, headers: { allow } };
       } else {
-        request.params = matches.params;
+        request.params = Object.assign({}, matches.params);
         for (const method in this.routes[route]) {
           if (method !== request.method && method !== 'ALL') continue;
           for (const handler of this.routes[route][method]) {
@@ -87,12 +87,12 @@ export class Comet {
       };
       const response = await this.handle(request);
       res.statusCode = response.statusCode;
+      if (response.headers) {
+        Object.entries(response.headers).forEach(([name, value]) => res.setHeader(name, value));
+      }
       if (response.body) {
         res.setHeader('content-type', 'application/json');
         res.write(JSON.stringify(response.body));
-      }
-      if (response.headers) {
-        Object.entries(response.headers).forEach(([name, value]) => res.setHeader(name, value));
       }
       res.end();
     }).listen(port);
