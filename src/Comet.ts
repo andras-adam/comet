@@ -73,7 +73,7 @@ export class Comet {
 
   // HTTP request/response parser
   public http(port: number) {
-    http.createServer(async (req, res) => {
+    return http.createServer(async (req, res) => {
       let body: any;
       switch (req.headers['content-type']) {
         case 'application/json': {
