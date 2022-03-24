@@ -16,9 +16,8 @@ export class Responder {
 
   private sendResponse(statusCode: number, body?: IBody, headers?: IHeaders) {
     if (this.completed) throw new Error('Cannot send another response after the one has been sent.');
-    if (!this.resolver) throw new Error('The response resolver has not been set.');
     const response: ICometResponse = { statusCode, body, headers };
-    this.resolver(response);
+    if (this.resolver) this.resolver(response);
     return response;
   }
 
