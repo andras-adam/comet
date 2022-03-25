@@ -39,6 +39,10 @@ export class Comet {
     if (!this.routes[safePath][method]) this.routes[safePath][method] = [];
     this.routes[safePath][method].push(...handlers);
   }
+
+  // Reset the router and unset all routes
+  public reset() {
+    this.routes = {};
   }
 
   // Handle incoming requests and return responses

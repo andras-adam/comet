@@ -6,7 +6,7 @@
     "build": "tsc",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix",
-    "test": "mocha --require ts-node/register --extension ts --spec test/**/*.ts"
+    "test": "mocha --require ts-node/register --extension ts --spec test/**/*.ts --ui tdd"
   },
   "dependencies": {
     "path-to-regexp": "^6.2.0",
