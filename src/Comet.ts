@@ -34,9 +34,11 @@ export class Comet {
 
   // Register a new route
   private registerRoute(method: string, path: string, handlers: Handler[]) {
-    if (!this.routes[path]) this.routes[path] = {};
-    if (!this.routes[path][method]) this.routes[path][method] = [];
-    this.routes[path][method].push(...handlers);
+    const safePath = path.startsWith('/') ? path : '/' + path;
+    if (!this.routes[safePath]) this.routes[safePath] = {};
+    if (!this.routes[safePath][method]) this.routes[safePath][method] = [];
+    this.routes[safePath][method].push(...handlers);
+  }
   }
 
   // Handle incoming requests and return responses
