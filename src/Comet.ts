@@ -1,4 +1,4 @@
-import http from 'http';
+import http from 'node:http';
 import getRawBody from 'raw-body';
 import { match } from 'path-to-regexp';
 import { ICometRequest, IParams } from './CometRequest';
