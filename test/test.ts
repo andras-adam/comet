@@ -54,42 +54,42 @@ suite('Pathname matching', () => {
     app.reset();
   });
 
-  test('should return status 200 for registered pathname with no segments', async () => {
+  test('should match correctly pathnames with no segments', async () => {
     const res = await server.get('/');
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('handler');
     expect(res.body.handler).to.equal(0);
   });
 
-  test('should return status 200 for registered pathname with single segment', async () => {
+  test('should match correctly pathnames with a single segment', async () => {
     const res = await server.get('/products');
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('handler');
     expect(res.body.handler).to.equal(1);
   });
 
-  test('should return status 200 for registered pathname with multiple segments', async () => {
+  test('should match correctly pathnames with multiple segments', async () => {
     const res = await server.get('/products/search');
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('handler');
     expect(res.body.handler).to.equal(2);
   });
 
-  test('should return status 200 for registered pathname with parameter segment', async () => {
+  test('should match correctly pathnames with parameter segments', async () => {
     const res = await server.get('/products/123456');
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('handler');
     expect(res.body.handler).to.equal(3);
   });
 
-  test('should return status 200 for registered pathname with trailing slash', async () => {
+  test('should match correctly pathnames with a trailing slash', async () => {
     const res = await server.get('/products/');
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('handler');
     expect(res.body.handler).to.equal(1);
   });
 
-  test('should return status 404 for unregistered pathname', async () => {
+  test('should not match unsupported pathnames', async () => {
     const res = await server.get('/categories');
     expect(res.status).to.equal(404);
   });
@@ -99,21 +99,32 @@ suite('Pathname matching', () => {
 suite('Method matching', () => {
 
   suiteSetup(() => {
-    app.get('/api/users', (req: Request, res: Response) => res.ok());
-    app.post('/api/users', (req: Request, res: Response) => res.ok());
+    app.get('/products', (req: Request, res: Response) => res.ok({ handler: 0 }));
+    app.post('/products', (req: Request, res: Response) => res.ok({ handler: 1 }));
+    app.all('/users', (req: Request, res: Response) => res.ok({ handler: 2 }));
   });
 
   suiteTeardown(() => {
     app.reset();
   });
 
-  test('should return status 406 not acceptable', async () => {
-    const res = await server.delete('/api/users');
-    expect(res.status).to.equal(406);
+  test('should match correctly methods with direct support', async () => {
+    const res = await server.get('/products');
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property('handler');
+    expect(res.body.handler).to.equal(0);
   });
 
-  test('should have allow header set to acceptable methods', async () => {
-    const res = await server.delete('/api/users');
+  test('should match correclty methods with indirect support', async () => {
+    const res = await server.delete('/users');
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property('handler');
+    expect(res.body.handler).to.equal(2);
+  });
+
+  test('should not match unsupported methods', async () => {
+    const res = await server.delete('/products');
+    expect(res.status).to.equal(406);
     expect(res.header).to.have.property('allow');
     expect(res.header['allow']).to.equal('GET,POST');
   });
