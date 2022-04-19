@@ -12,31 +12,19 @@ suiteTeardown(() => {
   server.close();
 });
 
-suite('Health endpoint', () => {
+suite('Server', () => {
 
   suiteSetup(() => {
-    app.get('/api', (req: Request, res: Response) => res.ok({ ok: true }));
+    app.get('/api', (req: Request, res: Response) => res.ok());
   });
 
   suiteTeardown(() => {
     app.reset();
   });
 
-  test('should return status 200 OK', async () => {
+  test('should send response with 200 OK', async () => {
     const res = await server.get('/api');
     expect(res.status).to.equal(200);
-  });
-
-  test('should return application/json', async () => {
-    const res = await server.get('/api');
-    expect(res.header).to.have.property('content-type');
-    expect(res.header['content-type']).to.equal('application/json');
-  });
-
-  test('should return body with ok: true', async () => {
-    const res = await server.get('/api');
-    expect(res.body).to.have.property('ok');
-    expect(res.body.ok).to.equal(true);
   });
 
 });
