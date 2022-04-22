@@ -1,8 +1,10 @@
 import chai, { expect } from 'chai';
 import chaiHttp from 'chai-http';
-import { comet, Request, Response } from '../src';
+import chaiAsPromised from 'chai-as-promised';
+import { comet, NextFunction, Request, Response } from '../src';
 
 chai.use(chaiHttp);
+chai.use(chaiAsPromised);
 
 const app = comet();
 
@@ -115,6 +117,50 @@ suite('Method matching', () => {
     expect(res.status).to.equal(406);
     expect(res.header).to.have.property('allow');
     expect(res.header['allow']).to.equal('GET,POST');
+  });
+
+});
+
+suite('Unspecified', () => {
+
+  suiteSetup(() => {
+    //
+  });
+
+  suiteTeardown(() => {
+    app.reset();
+  });
+
+  teardown(() => {
+    app.reset();
+  });
+
+  test('calling next should should continue to the next handler', async () => {
+    app.get('/', (req: Request, res: Response, next: NextFunction) => next());
+    app.get('/', (req: Request, res: Response) => res.ok({  }));
+    const res = await server.get('/');
+    expect(res.status).to.equal(200);
+  });
+
+  test('requests with no response should time out', async () => {
+    app.get('/', () => { /* do nothing */ });
+    app.get('/', (req: Request, res: Response) => res.ok());
+    await expect(server.get('/').timeout(1000)).to.eventually.be.rejected;
+  });
+
+  test('return status 500 if the last handler calls the next function', async () => {
+    app.get('/', (req: Request, res: Response, next: NextFunction) => next());
+    const res = await server.get('/');
+    expect(res.status).to.equal(500);
+  });
+
+  test('multiple responses', async () => {
+    app.get('/', (req: Request, res: Response) => {
+      res.ok({ handler: 0 });
+      res.ok({ handler: 1 });
+    });
+    const res = await server.get('/');
+    console.log(res.body);
   });
 
 });
