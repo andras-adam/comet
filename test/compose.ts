@@ -1,88 +1,80 @@
 /* eslint-disable max-len */
 
-type UnaryFn<A = any, R = any> = (a: A) => R;
-type Argument<F> = F extends UnaryFn<infer A, unknown> ? A : never;
-type Return<F> = F extends UnaryFn<unknown, infer R> ? R : never;
-type LastInArray<T> = T extends [...unknown[], infer R] ? R : never;
+import { Event, CompletedEvent, BaseEvent } from '../src/types/types';
 
-// Return F1 if its return type is assignable to F2's argument type, otherwise
-// return the required function type for the error message.
-type ValidCompose<Prev, Curr> = Return<Prev> extends Argument<Curr> ? Curr : UnaryFn<Return<Prev>, Return<Curr>>;
+type ValidatedEvent = Event & { data: { isValid: true } };
+function validate(event: Event) {
+  if (event.body.password !== 'admin') {
+    event.data.isValid = true;
+    return event.next<ValidatedEvent>();
+  } else {
+    return event.reply.badRequest();
+  }
+}
 
-// For each function, validate the composition with its successor.
-type ValidPipe<FS> = FS extends [infer F1, infer F2, ...infer Rest]
-  ? [ValidCompose<F1, F2>, ...ValidPipe<[F2, ...Rest]>]
-  : [];
+type AuthenticatedEvent = ValidatedEvent & { data: { isAuthenticated: true } };
+function authenticate(event: ValidatedEvent) {
+  if (event.headers.authorization) {
+    event.data.isAuthenticated = true;
+    return event.next<AuthenticatedEvent>();
+  } else {
+    return event.reply.unauthorized();
+  }
+}
 
-type ValidPipeX<FS> = FS extends [infer F1, infer F2, ...infer Rest]
-  ? [F1, ...ValidPipe<[F1, F2, ...Rest]>]
-  : FS;
+// Middlewares (UnaryFn)
 
-// type ReverseValidCompose<F1, F2> = Return<F1> extends Argument<F2> ? F2 : (arg: Return<F1>) => Return<F2>;
+declare function one(arg: Event): ValidatedEvent | CompletedEvent;
+declare function two(arg: ValidatedEvent): AuthenticatedEvent | CompletedEvent;
+declare function three(arg: AuthenticatedEvent): AuthenticatedEvent | CompletedEvent;
+declare function four(arg: ValidatedEvent): ValidatedEvent | CompletedEvent;
+declare function five(arg: CompletedEvent): CompletedEvent;
+declare function six(arg: ValidatedEvent): CompletedEvent;
 
-// type ReverseValidPipe<FS> = FS extends [...infer Rest, infer F1, infer F2] ? [...ReverseValidPipe<[...Rest, F1]>, ReverseValidCompose<F1, F2>] : FS;
+// Pre/before middleware
 
-type Test = ValidPipe<[(s: string) => boolean, (n: number) => number]>;
+type PreMiddleware = (arg: never) => BaseEvent;
 
-type TestX = ValidPipeX<[(s: string) => boolean, (n: number) => number]>;
+type PreMiddlewareChainBuilder<PrevType, Middlewares extends PreMiddleware[]> = Middlewares extends [infer Middleware, ...infer Rest]
+  ? Middleware extends PreMiddleware
+    ? Rest extends PreMiddleware[]
+      ? [
+        (argument: Exclude<PrevType, CompletedEvent>) => ReturnType<Middleware>,
+        ...PreMiddlewareChainBuilder<ReturnType<Middleware>, Rest>,
+      ]
+      : never
+    : never
+  : Middlewares;
 
-const one = (s: string) => !!s;
-const two = (b: boolean) => +b;
-const three = (n: number) => n ** n;
+type PreMiddlewareChain<Middlewares extends PreMiddleware[]> = [...PreMiddlewareChainBuilder<Event, Middlewares>];
 
-type TestY = ValidPipeX<[typeof one, typeof three]>;
+type PreMiddlewareChainResult<Middlewares extends PreMiddleware[]> = Middlewares extends [...unknown[], infer Middleware]
+  ? Middleware extends PreMiddleware
+    ? Exclude<ReturnType<Middleware>, CompletedEvent>
+    : never
+  : Event;
 
-declare function useComet<FS extends UnaryFn[]>(
-  options: {
+// Post/after middleware
+type PostMiddleware = (arg: CompletedEvent) => CompletedEvent;
+type PostMiddlewareChain = [...PostMiddleware[]];
+
+// useComet
+
+declare function useComet<Middlewares extends PreMiddleware[]>(
+  endpoint: {
     method: string,
     path: string,
-    middlewares: [...ValidPipeX<FS>],
+    before?: PreMiddlewareChain<Middlewares>,
+    after?: PostMiddlewareChain,
   },
-  // handler: (x: Return<LastInArray<FS>>) => void,
-): unknown;
+  handler: (arg: PreMiddlewareChainResult<Middlewares>) => CompletedEvent,
+): void;
 
 useComet({
-  method: 'post',
+  method: 'get',
   path: '/api/users/:userId',
-  middlewares: [one, three],
-}/* , event => {
+  before: [one, two, three, one, three, four],
+  after: [five, six],
+}, event => {
   console.log(event);
-} */);
-
-//
-//
-//
-//
-//
-
-// type Chain<In, Out, Tmp1 = any, Tmp2 = any> = [] | [(arg: In) => Out] | [(arg: In) => Tmp1, (i: Tmp1) => Tmp2, ...Chain<Tmp2, Out>];
-
-// type Lookup<T, K extends keyof any, Else = never> = K extends keyof T ? T[K] : Else
-// type Tail<T extends any[]> = T extends [any, ...infer R] ? R : never;
-// type Func1 = (arg: any) => any;
-// type ArgType<F, Else = never> = F extends (arg: infer A) => any ? A : Else;
-// type AsChain<F extends [Func1, ...Func1[]], G extends Func1[] = Tail<F>> =
-//   { [K in keyof F]: (arg: ArgType<F[K]>) => ArgType<Lookup<G, K, any>, any> };
-//
-// type Last<T extends any[]> = T extends [...infer F, infer L] ? L : never;
-//
-// type LaxReturnType<F> = F extends (...args: any) => infer R ? R : never;
-//
-// declare function flow<F extends [(arg: any) => any, ...Array<(arg: any) => any>]>(
-//   ...f: F & AsChain<F>
-// ): (arg: ArgType<F[0]>) => LaxReturnType<Last<F>>;
-//
-// const stringToString = flow(
-//   (x: string) => x.length,
-//   (y: number) => y + "!"
-// ); // okay
-// const str = stringToString("hey"); // it's a string
-// str.toUpperCase();
-//
-// const tooFewParams = flow(); // error
-//
-// const badChain = flow(
-//   (x: number) => "string",
-//   (y: string) => false,
-//   (z: number) => "oops"
-// ); // error, boolean not assignable to number
+});
