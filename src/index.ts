@@ -1,3 +1,5 @@
-export { comet, NextFunction } from './Comet';
-export { ICometRequest as Request } from './CometRequest';
-export { IResponder as Response } from './CometResponse';
+export default {
+  async fetch(request: Request) {
+    return new Response(JSON.stringify({ foo: 'bar' }))
+  }
+}

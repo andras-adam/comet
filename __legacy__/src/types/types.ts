@@ -1,4 +1,7 @@
+/* eslint-disable max-len */
+
 export enum Method {
+  ALL = 'ALL',
   GET = 'GET',
   HEAD = 'HEAD',
   POST = 'POST',
@@ -32,10 +35,10 @@ export interface BaseEvent {
   headers: IHeaders;
   query: IQuery;
   params: IParams;
+  // isComplete: boolean;
 }
 
-export interface Event extends BaseEvent {
-  next: <NextEventType extends Event>() => NextEventType;
+export interface HandlerEvent extends BaseEvent {
   reply: {
     ok: (body?: IBody, headers?: IHeaders) => CompletedEvent;
     badRequest: (body?: IBody, headers?: IHeaders) => CompletedEvent;
@@ -43,6 +46,16 @@ export interface Event extends BaseEvent {
   };
 }
 
+export interface MiddlewareEvent extends HandlerEvent {
+  next: () => this;
+}
+
 export interface CompletedEvent extends BaseEvent {
   isComplete: true;
 }
+
+export type PreMiddleware = (event: MiddlewareEvent) => Promise<MiddlewareEvent | CompletedEvent> | MiddlewareEvent | CompletedEvent;
+
+export type PostMiddleware = (event: CompletedEvent) => unknown;
+
+export type Handler = (event: HandlerEvent) => CompletedEvent;

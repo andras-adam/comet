@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
-    "target": "ES2021",
-    "module": "commonjs",
-    "lib": ["ES2021"],
-    "alwaysStrict": true,
-    "esModuleInterop": true,
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext"],
+    "types": ["@cloudflare/workers-types"],
+    "moduleResolution": "node",
     "strict": true,
-    "sourceMap": true,
-    "moduleResolution": "node"
+    "noEmit": true,
+    "esModuleInterop": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src", "test"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"]
 }
