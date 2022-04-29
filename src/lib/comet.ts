@@ -1,13 +1,8 @@
 import { Method, PostMiddleware, PreMiddleware, ValidMethod, Handler } from './types'
+import { getPathParameters, toSafeMethod, toSafePathname } from './utils'
+import { Event } from './event'
+import { Route } from './route'
 
-
-interface Route {
-  method: Method
-  pathname: string
-  before: PreMiddleware[]
-  after: PostMiddleware[]
-  handler: Handler
-}
 
 const routes: Record<string, Record<string, Route>> = {}
 
@@ -18,8 +13,8 @@ interface UseCometOptions {
   after?: PostMiddleware[]
 }
 
-// Find a registered handler for the provided pathname and method
-function findHandlerFor(searchPathname: string, searchMethod: Method) {
+// Find a registered route by the provided pathname and method
+function getMatchingRoute(searchPathname: string, searchMethod: Method) {
   const searchPathnameSegments = searchPathname.split('/').map(s => s.startsWith(':') ? ':' : s)
   for (const currentPathname in routes) {
     const currentPathnameSegments = currentPathname.split('/').map(s => s.startsWith(':') ? ':' : s)
@@ -37,25 +32,33 @@ function findHandlerFor(searchPathname: string, searchMethod: Method) {
 }
 
 export function useComet(options: UseCometOptions, handler: Handler) {
-  const { method: rawMethod, pathname: rawPathname, before, after } = options
-  // Get safe pathname and method
-  const safeMethod = Method[rawMethod.toUpperCase() as keyof typeof Method]
-  const safePathname = rawPathname.trim().replace(/^([^/])/, '/$1').replace(/\/$/, '')
+  const { method: unsafeMethod, pathname: unsafePathname, before, after } = options
+  // Get safe method and pathname
+  const safeMethod = toSafeMethod(unsafeMethod)
+  const safePathname = toSafePathname(unsafePathname)
   // Skip route and show warning if route will be unreachable
-  const foundHandler = findHandlerFor(safePathname, safeMethod)
-  if (foundHandler) {
-    const { pathname: foundPathname, method: foundMethod } = foundHandler
+  const foundRoute = getMatchingRoute(safePathname, safeMethod)
+  if (foundRoute) {
+    const { pathname: foundPathname, method: foundMethod } = foundRoute
     console.warn(`[Comet] Skipping route '${safeMethod} ${safePathname}' as it will be unreachable due to the already registered route '${foundMethod} ${foundPathname}'.`)
     return
   }
   // Add the route to the routes if it doesn't yet exist
   if (!routes[safePathname]) routes[safePathname] = {}
   // Register route
-  routes[safePathname][safeMethod] = {
-    after: after || [],
-    before: before || [],
-    handler,
-    method: safeMethod,
-    pathname: safePathname
+  routes[safePathname][safeMethod] = new Route(safeMethod, safePathname, handler, before, after)
+}
+
+export async function handle(request: Request): Promise<Response> {
+  const event = await Event.fromRequest(request)
+  const route = getMatchingRoute(event.pathname, event.method)
+  if (route) {
+    event.params = getPathParameters(route.pathname, event.pathname)
+    for (const someHandler of route) {
+      await someHandler(event)
+      if (event.hasReplied) return await Event.toResponse(event)
+    }
+    return new Response(null, { status: 500 })
   }
+  return new Response(null, { status: 404 })
 }

@@ -1,3 +1,6 @@
+import { ReplyManager } from './reply'
+
+
 export enum Method {
   ALL = 'ALL',
   GET = 'GET',
@@ -21,27 +24,22 @@ export type IParams = Record<any, any>;
 
 export interface Reply {
   status: number
-  body: IBody
-  headers: IHeaders
+  body?: IBody
+  headers?: IHeaders
 }
 
 export interface BaseEvent {
   method: Method
-  path: string
-  data: IData
-  body: IBody
+  pathname: string
+  // data: IData
+  // body: IBody
   headers: IHeaders
   query: IQuery
   params: IParams
-  // isComplete: boolean;
 }
 
 export interface HandlerEvent extends BaseEvent {
-  reply: {
-    ok: (body?: IBody, headers?: IHeaders) => CompletedEvent
-    badRequest: (body?: IBody, headers?: IHeaders) => CompletedEvent
-    unauthorized: (body?: IBody, headers?: IHeaders) => CompletedEvent
-  }
+  reply: ReplyManager
 }
 
 export interface MiddlewareEvent extends HandlerEvent {
@@ -49,7 +47,7 @@ export interface MiddlewareEvent extends HandlerEvent {
 }
 
 export interface CompletedEvent extends BaseEvent {
-  isComplete: true
+  hasReplied: boolean
 }
 
 export type PreMiddleware = (event: MiddlewareEvent) => (

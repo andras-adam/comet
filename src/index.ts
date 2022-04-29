@@ -1,19 +1,33 @@
-import { useComet } from './lib'
-import { Method } from './lib/types'
+import { handle, Method, useComet } from './lib'
 
 
 useComet({
   method: Method.ALL,
-  pathname: '/api/users/:userId'
-}, event => event.reply.ok())
-
-useComet({
-  method: Method.POST,
-  pathname: '/api/users/search'
-}, event => event.reply.ok())
+  pathname: '/api/categories/:categoryId/products/:productId',
+  before: [
+    event => {
+      console.log(event.params)
+      event.params.test = 123
+      return event.next()
+    },
+    event => {
+      console.log(event.params)
+      return event.next()
+    }
+  ],
+  after: [
+    event => {
+      console.log(event.params)
+    }
+  ]
+}, event => {
+  console.log(event.params)
+  // return event.next()
+  return event.reply.ok()
+})
 
 export default {
   async fetch(request: Request) {
-    return new Response(JSON.stringify({ foo: 'bar' }))
+    return handle(request)
   }
 }
