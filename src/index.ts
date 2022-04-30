@@ -6,23 +6,24 @@ useComet({
   pathname: '/api/categories/:categoryId/products/:productId',
   before: [
     event => {
-      console.log(event.params)
+      console.log('Before 1', event.params)
       event.params.test = 123
       return event.next()
     },
     event => {
-      console.log(event.params)
-      return event.next()
+      console.log('Before 2', event.params)
+      event.params.foo = 'bar'
+      return event.reply.badRequest()
     }
   ],
   after: [
     event => {
-      console.log(event.params)
+      console.log('After 1', event.replyData)
       return event.next()
     }
   ]
 }, event => {
-  console.log(event.params)
+  console.log('Handler', event.params)
   return event.reply.ok()
 })
 
