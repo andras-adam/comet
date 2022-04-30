@@ -6,14 +6,14 @@ useComet({
   pathname: '/api/categories/:categoryId/products/:productId',
   before: [
     event => {
-      console.log('Before 1', event.params)
-      event.params.test = 123
+      console.log('Before 1')
+      event.body.test = 123
       return event.next()
     },
     event => {
-      console.log('Before 2', event.params)
-      event.params.foo = 'bar'
-      return event.reply.badRequest()
+      console.log('Before 2')
+      event.body.hello = 'there'
+      return event.next()
     }
   ],
   after: [
@@ -23,8 +23,8 @@ useComet({
     }
   ]
 }, event => {
-  console.log('Handler', event.params)
-  return event.reply.ok()
+  console.log('Handler', event.headers['content-type'], event.body)
+  return event.reply.ok({ success: true })
 })
 
 export default {

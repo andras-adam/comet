@@ -19,10 +19,12 @@ export type ValidMethod = Method | keyof typeof Method | Lowercase<keyof typeof 
 export type IHeaders = Record<any, any>
 export type IQuery = Record<any, any>
 export type IParams = Record<any, any>
+export type IBody = Record<any, any>
 
 export interface Reply {
   status: number
-  headers: IHeaders
+  body?: IBody
+  headers?: IHeaders
 }
 
 export interface BaseEvent {
@@ -31,6 +33,7 @@ export interface BaseEvent {
   headers: IHeaders
   query: IQuery
   params: IParams
+  body: IBody
 }
 
 export interface HandlerEvent extends BaseEvent {
