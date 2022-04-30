@@ -23,7 +23,6 @@ useComet({
   ]
 }, event => {
   console.log(event.params)
-  // return event.next()
   return event.reply.ok()
 })
 

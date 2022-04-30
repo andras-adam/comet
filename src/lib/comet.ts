@@ -6,15 +6,8 @@ import { Route } from './route'
 
 const routes: Record<string, Record<string, Route>> = {}
 
-interface UseCometOptions {
-  method: ValidMethod
-  pathname: string
-  before?: PreMiddleware[]
-  after?: PostMiddleware[]
-}
-
-// Find a registered route by the provided pathname and method
-function getMatchingRoute(searchPathname: string, searchMethod: Method) {
+// Find a registered route by the provided method and pathname
+function getMatchingRoute(searchMethod: Method, searchPathname: string) {
   const searchPathnameSegments = searchPathname.split('/').map(s => s.startsWith(':') ? ':' : s)
   for (const currentPathname in routes) {
     const currentPathnameSegments = currentPathname.split('/').map(s => s.startsWith(':') ? ':' : s)
@@ -31,6 +24,13 @@ function getMatchingRoute(searchPathname: string, searchMethod: Method) {
   }
 }
 
+interface UseCometOptions {
+  method: ValidMethod
+  pathname: string
+  before?: PreMiddleware[]
+  after?: PostMiddleware[]
+}
+
 export function useComet(options: UseCometOptions, handler: Handler) {
   try {
     const { method: unsafeMethod, pathname: unsafePathname, before, after } = options
@@ -38,7 +38,7 @@ export function useComet(options: UseCometOptions, handler: Handler) {
     const safeMethod = toSafeMethod(unsafeMethod)
     const safePathname = toSafePathname(unsafePathname)
     // Skip route and show warning if route will be unreachable
-    const foundRoute = getMatchingRoute(safePathname, safeMethod)
+    const foundRoute = getMatchingRoute(safeMethod, safePathname)
     if (foundRoute) {
       const { pathname: foundPathname, method: foundMethod } = foundRoute
       console.warn(`[Comet] Skipping route '${safeMethod} ${safePathname}' as it will be unreachable due to the already registered route '${foundMethod} ${foundPathname}'.`)
@@ -56,7 +56,7 @@ export function useComet(options: UseCometOptions, handler: Handler) {
 export async function handle(request: Request): Promise<Response> {
   try {
     const event = await Event.fromRequest(request)
-    const route = getMatchingRoute(event.pathname, event.method)
+    const route = getMatchingRoute(event.method, event.pathname)
     if (route) {
       event.params = getPathParameters(route.pathname, event.pathname)
       for (const preMiddleware of route.before) {

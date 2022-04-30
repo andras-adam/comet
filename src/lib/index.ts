@@ -1,2 +1,2 @@
 export { useComet, handle } from './comet'
-export { Method } from './types'
+export * from './types'

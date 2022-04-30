@@ -1,13 +1,13 @@
-import { CompletedEvent, IHeaders } from './types'
+import { IHeaders } from './types'
 
 
-type CreateReply = (status: number, headers?: IHeaders) => CompletedEvent
+type CreateReply<TReply> = (status: number, headers?: IHeaders) => TReply
 
-export class ReplyManager {
+export class ReplyManager<TReply> {
 
-  private readonly createReply: CreateReply
+  private readonly createReply: CreateReply<TReply>
 
-  constructor(createReply: CreateReply) {
+  constructor(createReply: CreateReply<TReply>) {
     this.createReply = createReply
   }
 

@@ -44,6 +44,7 @@ export class Event {
 
   public static async toResponse(event: Event): Promise<Response> {
     if (!event.replyData) {
+      console.error('[Comet] No reply was sent for this event')
       return new Response(null, { status: 500 })
     }
     const { status, headers } = event.replyData

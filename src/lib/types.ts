@@ -14,18 +14,18 @@ export enum Method {
   PATCH = 'PATCH',
 }
 
-export type ValidMethod = Method | keyof typeof Method | Lowercase<keyof typeof Method>;
+export type ValidMethod = Method | keyof typeof Method | Lowercase<keyof typeof Method>
 
-export type IHeaders = Record<any, any>;
-export type IQuery = Record<any, any>;
-export type IParams = Record<any, any>;
+export type IHeaders = Record<any, any>
+export type IQuery = Record<any, any>
+export type IParams = Record<any, any>
 
 export interface Reply {
   status: number
   headers?: IHeaders
 }
 
-export interface BaseEvent {
+export interface Event {
   method: Method
   pathname: string
   headers: IHeaders
@@ -33,24 +33,22 @@ export interface BaseEvent {
   params: IParams
 }
 
-export interface HandlerEvent extends BaseEvent {
-  reply: ReplyManager
+export interface HandlerEvent extends Event {
+  reply: ReplyManager<Event>
 }
 
-export interface MiddlewareEvent extends BaseEvent {
+export interface PreMiddlewareEvent extends Event {
   next: () => this
-  reply: ReplyManager
+  reply: ReplyManager<Event>
 }
 
-export interface CompletedEvent extends BaseEvent {
+export interface PostMiddlewareEvent extends Event {
   next: () => this
   replyData: Reply | null
 }
 
-export type PreMiddleware = (event: MiddlewareEvent) => (
-  Promise<MiddlewareEvent | CompletedEvent> | MiddlewareEvent | CompletedEvent
-)
+export type Handler = (event: HandlerEvent) => Promise<Event> | Event
 
-export type PostMiddleware = (event: CompletedEvent) => Promise<CompletedEvent> | CompletedEvent;
+export type PreMiddleware = (event: PreMiddlewareEvent) => Promise<Event> | Event
 
-export type Handler = (event: HandlerEvent) => Promise<CompletedEvent> | CompletedEvent;
+export type PostMiddleware = (event: PostMiddlewareEvent) => Promise<Event> | Event
