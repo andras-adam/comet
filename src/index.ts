@@ -18,6 +18,7 @@ useComet({
   after: [
     event => {
       console.log(event.params)
+      return event.next()
     }
   ]
 }, event => {

@@ -32,33 +32,46 @@ function getMatchingRoute(searchPathname: string, searchMethod: Method) {
 }
 
 export function useComet(options: UseCometOptions, handler: Handler) {
-  const { method: unsafeMethod, pathname: unsafePathname, before, after } = options
-  // Get safe method and pathname
-  const safeMethod = toSafeMethod(unsafeMethod)
-  const safePathname = toSafePathname(unsafePathname)
-  // Skip route and show warning if route will be unreachable
-  const foundRoute = getMatchingRoute(safePathname, safeMethod)
-  if (foundRoute) {
-    const { pathname: foundPathname, method: foundMethod } = foundRoute
-    console.warn(`[Comet] Skipping route '${safeMethod} ${safePathname}' as it will be unreachable due to the already registered route '${foundMethod} ${foundPathname}'.`)
-    return
+  try {
+    const { method: unsafeMethod, pathname: unsafePathname, before, after } = options
+    // Get safe method and pathname
+    const safeMethod = toSafeMethod(unsafeMethod)
+    const safePathname = toSafePathname(unsafePathname)
+    // Skip route and show warning if route will be unreachable
+    const foundRoute = getMatchingRoute(safePathname, safeMethod)
+    if (foundRoute) {
+      const { pathname: foundPathname, method: foundMethod } = foundRoute
+      console.warn(`[Comet] Skipping route '${safeMethod} ${safePathname}' as it will be unreachable due to the already registered route '${foundMethod} ${foundPathname}'.`)
+      return
+    }
+    // Add the route to the routes if it doesn't yet exist
+    if (!routes[safePathname]) routes[safePathname] = {}
+    // Register route
+    routes[safePathname][safeMethod] = new Route(safeMethod, safePathname, handler, before, after)
+  } catch (error) {
+    console.error('[Comet] Failed to register a route', error)
   }
-  // Add the route to the routes if it doesn't yet exist
-  if (!routes[safePathname]) routes[safePathname] = {}
-  // Register route
-  routes[safePathname][safeMethod] = new Route(safeMethod, safePathname, handler, before, after)
 }
 
 export async function handle(request: Request): Promise<Response> {
-  const event = await Event.fromRequest(request)
-  const route = getMatchingRoute(event.pathname, event.method)
-  if (route) {
-    event.params = getPathParameters(route.pathname, event.pathname)
-    for (const someHandler of route) {
-      await someHandler(event)
-      if (event.hasReplied) return await Event.toResponse(event)
+  try {
+    const event = await Event.fromRequest(request)
+    const route = getMatchingRoute(event.pathname, event.method)
+    if (route) {
+      event.params = getPathParameters(route.pathname, event.pathname)
+      for (const preMiddleware of route.before) {
+        await preMiddleware(event)
+        if (event.replyData) break
+      }
+      if (!event.replyData) await route.handler(event)
+      for (const postMiddleware of route.after) {
+        await postMiddleware(event)
+      }
+      return await Event.toResponse(event)
     }
+    return new Response(null, { status: 404 })
+  } catch (error) {
+    console.error('[Comet] Failed to handle request', error)
     return new Response(null, { status: 500 })
   }
-  return new Response(null, { status: 404 })
 }
