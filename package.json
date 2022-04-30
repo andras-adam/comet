@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "miniflare dist/index.mjs --live-reload --debug",
-    "build": "esbuild ./src/index.ts --bundle --outdir=dist --sourcemap --format=esm --target=esnext --out-extension:.js=.mjs",
+    "build": "esbuild ./src/index.ts --bundle --outdir=dist --format=esm --target=esnext --out-extension:.js=.mjs",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
   },
