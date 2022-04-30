@@ -49,7 +49,7 @@ export function useComet(options: UseCometOptions, handler: Handler) {
     // Register route
     routes[safePathname][safeMethod] = new Route(safeMethod, safePathname, handler, before, after)
   } catch (error) {
-    console.error('[Comet] Failed to register a route', error)
+    console.error('[Comet] Failed to register a route.', error)
   }
 }
 
@@ -71,7 +71,7 @@ export async function handle(request: Request): Promise<Response> {
     }
     return new Response(null, { status: 404 })
   } catch (error) {
-    console.error('[Comet] Failed to handle request', error)
+    console.error('[Comet] Failed to handle request.', error)
     return new Response(null, { status: 500 })
   }
 }

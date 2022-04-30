@@ -22,10 +22,10 @@ export type IParams = Record<any, any>
 
 export interface Reply {
   status: number
-  headers?: IHeaders
+  headers: IHeaders
 }
 
-export interface Event {
+export interface BaseEvent {
   method: Method
   pathname: string
   headers: IHeaders
@@ -33,22 +33,22 @@ export interface Event {
   params: IParams
 }
 
-export interface HandlerEvent extends Event {
-  reply: ReplyManager<Event>
+export interface HandlerEvent extends BaseEvent {
+  reply: ReplyManager
 }
 
-export interface PreMiddlewareEvent extends Event {
-  next: () => this
-  reply: ReplyManager<Event>
+export interface PreMiddlewareEvent extends BaseEvent {
+  next: () => BaseEvent
+  reply: ReplyManager
 }
 
-export interface PostMiddlewareEvent extends Event {
-  next: () => this
+export interface PostMiddlewareEvent extends BaseEvent {
+  next: () => BaseEvent
   replyData: Reply | null
 }
 
-export type Handler = (event: HandlerEvent) => Promise<Event> | Event
+export type Handler = (event: HandlerEvent) => Promise<BaseEvent> | BaseEvent
 
-export type PreMiddleware = (event: PreMiddlewareEvent) => Promise<Event> | Event
+export type PreMiddleware = (event: PreMiddlewareEvent) => Promise<BaseEvent> | BaseEvent
 
-export type PostMiddleware = (event: PostMiddlewareEvent) => Promise<Event> | Event
+export type PostMiddleware = (event: PostMiddlewareEvent) => Promise<BaseEvent> | BaseEvent

@@ -1,4 +1,4 @@
-import { IHeaders, IParams, IQuery, Method, Reply } from './types'
+import { BaseEvent, IHeaders, IParams, IQuery, Method, Reply } from './types'
 import { toSafeMethod, toSafePathname } from './utils'
 import { ReplyManager } from './reply'
 
@@ -11,7 +11,7 @@ export class Event {
   public query: IQuery
   public params: IParams
 
-  public readonly reply = new ReplyManager(this.createReply)
+  public readonly reply = new ReplyManager(this)
   public replyData: Reply | null = null
 
   private constructor(method: Method, pathname: string, headers: IHeaders, query: IQuery, params: IParams) {
@@ -22,15 +22,15 @@ export class Event {
     this.params = params
   }
 
-  public next(): Event {
+  public next(): BaseEvent {
     return this
   }
 
-  private createReply(status: number, headers?: IHeaders): Event {
+  public createReply(status: number, headers?: IHeaders): BaseEvent {
     if (this.replyData) {
-      console.warn('[Comet] Sending a reply multiple times will overwrite the previous reply')
+      console.warn('[Comet] Sending a reply multiple times will overwrite the previous reply.')
     }
-    this.replyData = { status, headers }
+    this.replyData = { status, headers: headers || {} }
     return this
   }
 
@@ -44,7 +44,7 @@ export class Event {
 
   public static async toResponse(event: Event): Promise<Response> {
     if (!event.replyData) {
-      console.error('[Comet] No reply was sent for this event')
+      console.error('[Comet] No reply was sent for this event.')
       return new Response(null, { status: 500 })
     }
     const { status, headers } = event.replyData
