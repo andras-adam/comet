@@ -1,6 +1,6 @@
 # Comet
 
-Convenient routing framework for node and cloudflare-workers.
+Convenient routing framework for Cloudflare Workers.
 
 ## Contributing
 
