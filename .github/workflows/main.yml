@@ -36,7 +36,7 @@ jobs:
 
     - name: "Tag latest commit"
       run: |
-        echo ${{ GITHUB_TOKEN }} | gh auth login --with-token
+        echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
         gh auth setup-git
         git config user.name "GitHub Actions"
         git tag "v${{ steps.package-version.outputs.current-version }}" -a -m "${{ github.event.commits[0].message }}"
