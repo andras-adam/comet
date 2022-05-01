@@ -1,0 +1,13 @@
+name = "comet"
+type = "javascript"
+
+account_id = ""
+workers_dev = true
+
+[build]
+command = "npm run build:example"
+
+[build.upload]
+format = "modules"
+dir = "example/dist"
+main = "index.mjs"
