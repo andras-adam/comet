@@ -5,15 +5,21 @@
   "scripts": {
     "dev": "miniflare example/dist/index.mjs --live-reload --debug",
     "build": "rimraf dist && npm-run-all build:esm build:cjs gen-declarations",
-    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2020",
-    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --target=es2020",
+    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/comet.mjs --format=esm --target=es2020",
+    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/comet.cjs --format=cjs --target=es2020",
     "build:example": "esbuild example/index.ts --bundle --outfile=example/dist/index.mjs --format=esm --target=esnext",
-    "gen-declarations": "tsc -p tsconfig.json --out dist/index.ts --noEmit false --declaration --emitDeclarationOnly",
+    "gen-declarations": "tsc -p tsconfig.json --out dist/comet.ts --noEmit false --declaration --emitDeclarationOnly",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
   },
-  "main": "dist/index.js",
   "files": ["dist"],
+  "exports": {
+    ".": {
+      "import": "./dist/comet.mjs",
+      "require": "./dist/comet.cjs"
+    }
+  },
+  "types": "./dist/comet.d.ts",
   "repository": "github:neoaren/comet",
   "keywords": [
     "cloudflare-workers",
