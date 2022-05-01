@@ -5,9 +5,9 @@ account_id = ""
 workers_dev = true
 
 [build]
-command = "npm run build"
+command = "npm run build:example"
 
 [build.upload]
 format = "modules"
-dir = "dist"
-main = "./index.mjs"
+dir = "example/dist"
+main = "index.mjs"

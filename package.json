@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "miniflare dist/index.mjs --live-reload --debug",
-    "build": "esbuild ./src/index.ts --bundle --outdir=dist --format=esm --target=esnext --out-extension:.js=.mjs",
+    "dev": "miniflare example/dist/index.mjs --live-reload --debug",
+    "build:example": "esbuild example/index.ts --bundle --outdir=example/dist --format=esm --target=esnext --out-extension:.js=.mjs",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
   },
