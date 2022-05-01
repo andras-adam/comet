@@ -4,9 +4,6 @@ on:
   push:
     branches:
     - main
-  pull_request:
-    branches:
-    - main
 
 jobs:
   npm-publish:
@@ -37,11 +34,11 @@ jobs:
       run: |
         npm run build
 
-    - name: Create GitHub release
-      run: |
-        gh release create --generate-notes "v${{ steps.package-version.outputs.current-version }}"
-
     - name: Publish to NPM
       uses: JS-DevTools/npm-publish@v1
       with:
         token: ${{ secrets.NPM_TOKEN }}
+
+    - name: Create GitHub release
+      run: |
+        gh release create --generate-notes "v${{ steps.package-version.outputs.current-version }}"
