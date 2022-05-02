@@ -25,10 +25,10 @@ function getMatchingRoute(searchMethod: Method, searchPathname: string) {
 }
 
 interface UseCometOptions {
+  after?: PostMiddleware[]
+  before?: PreMiddleware[]
   method: ValidMethod
   pathname: string
-  before?: PreMiddleware[]
-  after?: PostMiddleware[]
 }
 
 export function useComet(options: UseCometOptions, handler: Handler) {

@@ -22,18 +22,18 @@ export type IParams = Record<any, any>
 export type IBody = Record<any, any>
 
 export interface Reply {
-  status: number
   body?: IBody
   headers?: IHeaders
+  status: number
 }
 
 export interface BaseEvent {
-  method: Method
-  pathname: string
-  headers: IHeaders
-  query: IQuery
-  params: IParams
   body: IBody
+  headers: IHeaders
+  method: Method
+  params: IParams
+  pathname: string
+  query: IQuery
 }
 
 export interface HandlerEvent extends BaseEvent {
