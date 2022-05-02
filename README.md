@@ -1,6 +1,6 @@
 # Comet
 
-Convenient routing framework for Cloudflare Workers.
+☄️ A convenient declarative routing library for Cloudflare Workers.
 
 ## Contributing
 
