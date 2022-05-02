@@ -37,7 +37,7 @@
   "homepage": "https://github.com/NeoAren/comet#readme",
   "devDependencies": {
     "@cloudflare/workers-types": "^3.7.1",
-    "@danifoldi/eslint-plugin-eslint-presets": "^1.0.12",
+    "@danifoldi/eslint-plugin-eslint-presets": "^1.1.1",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
     "esbuild": "^0.14.38",
