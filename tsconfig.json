@@ -6,9 +6,11 @@
     "types": ["@cloudflare/workers-types"],
     "moduleResolution": "node",
     "strict": true,
-    "noEmit": true,
     "esModuleInterop": true,
-    "baseUrl": "./"
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "declaration": true,
+    "emitDeclarationOnly": true
   },
   "include": ["src/**/*"]
 }
