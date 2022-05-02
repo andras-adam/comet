@@ -1,6 +1,6 @@
 {
   "name": "@neoaren/comet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A convenient declarative routing libarary for Cloudflare Workers.",
   "scripts": {
     "dev": "miniflare example/dist/index.mjs --live-reload --debug",
