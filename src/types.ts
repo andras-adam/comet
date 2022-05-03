@@ -14,6 +14,16 @@ export enum Method {
   PATCH = 'PATCH',
 }
 
+export const ALL = Method.ALL
+export const GET = Method.GET
+export const HEAD = Method.HEAD
+export const POST = Method.POST
+export const PUT = Method.PUT
+export const DELETE = Method.DELETE
+export const CONNECT = Method.CONNECT
+export const OPTIONS = Method.OPTIONS
+export const TRACE = Method.TRACE
+
 export type ValidMethod = Method | keyof typeof Method | Lowercase<keyof typeof Method>
 
 export type IHeaders = Record<any, any>
