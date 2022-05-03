@@ -27,8 +27,4 @@ useComet({
   return event.reply.ok({ success: true })
 })
 
-export default {
-  async fetch(request: Request) {
-    return handle(request)
-  }
-}
+export default { fetch: handle }

@@ -1,2 +1,2 @@
-export { useComet, handle } from './comet'
+export { handle, useComet } from './comet'
 export * from './types'

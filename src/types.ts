@@ -29,11 +29,14 @@ export interface Reply {
 
 export interface BaseEvent {
   body: IBody
+  ctx: ExecutionContext
+  env: Environment
   headers: IHeaders
   method: Method
   params: IParams
   pathname: string
   query: IQuery
+  request: Request
 }
 
 export interface HandlerEvent extends BaseEvent {

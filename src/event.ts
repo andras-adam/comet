@@ -9,17 +9,26 @@ export class Event {
   public readonly pathname: string
   public headers: IHeaders
   public query: IQuery
-  public params: IParams = {}
-  public body: IBody = {}
+  public params: IParams
+  public body: IBody
+
+  public readonly request: Request
+  public readonly env: Environment
+  public readonly ctx: ExecutionContext
 
   public readonly reply = new ReplyManager(this)
   public replyData: Reply | null = null
 
-  private constructor(method: Method, pathname: string, headers: IHeaders, query: IQuery) {
-    this.method = method
-    this.pathname = pathname
-    this.headers = headers
-    this.query = query
+  private constructor(baseEvent: BaseEvent) {
+    this.method = baseEvent.method
+    this.pathname = baseEvent.pathname
+    this.headers = baseEvent.headers
+    this.query = baseEvent.query
+    this.params = baseEvent.params
+    this.body = baseEvent.body
+    this.request = baseEvent.request
+    this.env = baseEvent.env
+    this.ctx = baseEvent.ctx
   }
 
   public next(): BaseEvent {
@@ -34,13 +43,13 @@ export class Event {
     return this
   }
 
-  public static async fromRequest(request: Request): Promise<Event> {
+  public static async fromRequest(request: Request, env: Environment, ctx: ExecutionContext): Promise<Event> {
     const url = new URL(request.url)
     const method = toSafeMethod(request.method)
     const pathname = toSafePathname(url.pathname)
     const query = Object.fromEntries(url.searchParams.entries())
     const headers = Object.fromEntries(request.headers.entries())
-    const event = new Event(method, pathname, headers, query)
+    const event = new Event({ body: {}, ctx, env, headers, method, params: {}, pathname, query, request })
     if (method !== Method.GET && headers['content-type'] === 'application/json') {
       event.body = await request.json()
     }
