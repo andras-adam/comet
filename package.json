@@ -1,7 +1,7 @@
 {
   "name": "@neoaren/comet",
   "version": "0.1.2",
-  "description": "A convenient declarative routing libarary for Cloudflare Workers.",
+  "description": "A convenient declarative routing library for Cloudflare Workers.",
   "scripts": {
     "dev": "miniflare example/dist/index.mjs --live-reload --debug",
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:tsc",
