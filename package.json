@@ -13,14 +13,14 @@
     "lint:fix": "eslint . --ext ts --fix"
   },
   "files": ["dist"],
-  "main": "dist/comet.mjs",
+  "main": "./dist/comet.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/comet.mjs",
       "require": "./dist/comet.cjs"
     }
   },
-  "types": "./dist/index.d.ts",
   "repository": "github:neoaren/comet",
   "keywords": [
     "cloudflare-workers",
