@@ -50,8 +50,24 @@ export class Event {
     const query = Object.fromEntries(url.searchParams.entries())
     const headers = Object.fromEntries(request.headers.entries())
     const event = new Event({ body: {}, ctx, env, headers, method, params: {}, pathname, query, request })
-    if (method !== Method.GET && headers['content-type'] === 'application/json') {
-      event.body = await request.json()
+    if (method !== Method.GET) {
+      switch (headers['content-type'].split(';')[0]) {
+        case 'application/json': {
+          event.body = await request.json()
+          break
+        }
+        case 'multipart/form-data': {
+          const fromData = await request.formData()
+          event.body = Object.fromEntries(fromData.entries())
+          break
+        }
+        case 'application/x-www-form-urlencoded': {
+          const text = await request.text()
+          const entries = text.split('&').map(x => x.split('=').map(decodeURIComponent))
+          event.body = Object.fromEntries(entries)
+          break
+        }
+      }
     }
     return event
   }
