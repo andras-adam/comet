@@ -15,6 +15,7 @@ export class Event {
   public readonly request: Request
   public readonly env: Environment
   public readonly ctx: ExecutionContext
+  public readonly state?: DurableObjectState
 
   public readonly reply = new ReplyManager(this)
   public replyData: Reply | null = null
@@ -29,6 +30,7 @@ export class Event {
     this.request = baseEvent.request
     this.env = baseEvent.env
     this.ctx = baseEvent.ctx
+    this.state = baseEvent.state
   }
 
   public next(): BaseEvent {
@@ -43,13 +45,18 @@ export class Event {
     return this
   }
 
-  public static async fromRequest(request: Request, env: Environment, ctx: ExecutionContext): Promise<Event> {
+  public static async fromRequest(
+    request: Request,
+    env: Environment,
+    ctx: ExecutionContext,
+    state?: DurableObjectState
+  ): Promise<Event> {
     const url = new URL(request.url)
     const method = toSafeMethod(request.method)
     const pathname = toSafePathname(url.pathname)
     const query = Object.fromEntries(url.searchParams.entries())
     const headers = Object.fromEntries(request.headers.entries())
-    const event = new Event({ body: {}, ctx, env, headers, method, params: {}, pathname, query, request })
+    const event = new Event({ body: {}, ctx, env, headers, method, params: {}, pathname, query, request, state })
     if (method !== Method.GET) {
       switch (headers['content-type'].split(';')[0]) {
         case 'application/json': {

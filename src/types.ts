@@ -27,9 +27,9 @@ export const TRACE = Method.TRACE
 export type ValidMethod = Method | keyof typeof Method | Lowercase<keyof typeof Method>
 
 export type IHeaders = Record<any, any>
-export type IQuery = Record<any, any>
-export type IParams = Record<any, any>
-export type IBody = Record<any, any>
+export type IQuery = Record<string, string>
+export type IParams = Record<string, string>
+export type IBody = any
 
 export interface Reply {
   body?: IBody
@@ -47,6 +47,7 @@ export interface BaseEvent {
   pathname: string
   query: IQuery
   request: Request
+  state?: DurableObjectState
 }
 
 export interface HandlerEvent extends BaseEvent {

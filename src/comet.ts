@@ -53,9 +53,14 @@ export function useComet(options: UseCometOptions, handler: Handler) {
   }
 }
 
-export async function handle(request: Request, env: Environment, ctx: ExecutionContext): Promise<Response> {
+export async function handle(
+  request: Request,
+  env: Environment,
+  ctx: ExecutionContext,
+  state?: DurableObjectState
+): Promise<Response> {
   try {
-    const event = await Event.fromRequest(request, env, ctx)
+    const event = await Event.fromRequest(request, env, ctx, state)
     const route = getMatchingRoute(event.method, event.pathname)
     if (route) {
       event.params = getPathParameters(route.pathname, event.pathname)
