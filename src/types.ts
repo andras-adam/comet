@@ -23,17 +23,17 @@ export const DELETE = Method.DELETE
 export const CONNECT = Method.CONNECT
 export const OPTIONS = Method.OPTIONS
 export const TRACE = Method.TRACE
+export const PATCH = Method.PATCH
 
 export type ValidMethod = Method | keyof typeof Method | Lowercase<keyof typeof Method>
 
-export type IHeaders = Record<any, any>
 export type IQuery = Record<string, string>
 export type IParams = Record<string, string>
 export type IBody = any
 
 export interface Reply {
   body?: IBody
-  headers?: IHeaders
+  headers: Headers
   status: number
 }
 
@@ -41,7 +41,7 @@ export interface BaseEvent<TBody = IBody> {
   body: TBody
   ctx: ExecutionContext
   env: Environment
-  headers: IHeaders
+  headers: Headers
   method: Method
   params: IParams
   pathname: string

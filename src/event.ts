@@ -1,4 +1,4 @@
-import { BaseEvent, IBody, IHeaders, IParams, IQuery, Method, Reply } from './types'
+import { BaseEvent, IBody, IParams, IQuery, Method, Reply } from './types'
 import { toSafeMethod, toSafePathname } from './utils'
 import { ReplyManager } from './reply'
 
@@ -7,7 +7,7 @@ export class Event {
 
   public readonly method: Method
   public readonly pathname: string
-  public headers: IHeaders
+  public headers: Headers
   public query: IQuery
   public params: IParams
   public body: IBody
@@ -37,7 +37,7 @@ export class Event {
     return this
   }
 
-  public createReply(status: number, body?: IBody, headers?: IHeaders): BaseEvent {
+  public createReply(status: number, headers: Headers, body?: IBody): BaseEvent {
     if (this.replyData) {
       console.warn('[Comet] Sending a reply multiple times will overwrite the previous reply.')
     }
@@ -55,10 +55,10 @@ export class Event {
     const method = toSafeMethod(request.method)
     const pathname = toSafePathname(url.pathname)
     const query = Object.fromEntries(url.searchParams.entries())
-    const headers = Object.fromEntries(request.headers.entries())
+    const headers = new Headers(request.headers)
     const event = new Event({ body: {}, ctx, env, headers, method, params: {}, pathname, query, request, state })
     if (method !== Method.GET) {
-      switch (headers['content-type'].split(';')[0]) {
+      switch (headers.get('content-type')?.split(';')[0]) {
         case 'application/json': {
           event.body = await request.json()
           break
@@ -85,10 +85,10 @@ export class Event {
       return new Response(null, { status: 500 })
     }
     const status = event.replyData.status
-    const headers = event.replyData.headers || {}
+    const headers = event.replyData.headers
     let body: string | null = null
     if (event.replyData.body) {
-      headers['content-type'] = 'application/json'
+      headers.set('content-type', 'application/json')
       body = JSON.stringify(event.replyData.body)
     }
     return new Response(body, { status, headers })

@@ -12,7 +12,7 @@ useComet<{ foo: string }>({
     },
     event => {
       console.log('Before 2')
-      event.body.foo = 'there'
+      event.reply.headers.set('x-powered-by', 'Comet')
       return event.next()
     }
   ],
@@ -23,7 +23,7 @@ useComet<{ foo: string }>({
     }
   ]
 }, event => {
-  console.log('Handler', event.headers['content-type'], event.body)
+  console.log('Handler', event.headers.get('content-type'), event.reply.headers.get('x-powered-by'), event.body)
   return event.reply.ok({ success: true })
 })
 
