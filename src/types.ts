@@ -37,8 +37,8 @@ export interface Reply {
   status: number
 }
 
-export interface BaseEvent {
-  body: IBody
+export interface BaseEvent<TBody = IBody> {
+  body: TBody
   ctx: ExecutionContext
   env: Environment
   headers: IHeaders
@@ -50,22 +50,32 @@ export interface BaseEvent {
   state?: DurableObjectState
 }
 
-export interface HandlerEvent extends BaseEvent {
+export interface HandlerEvent<TBody = IBody> extends BaseEvent<TBody> {
   reply: ReplyManager
 }
 
-export interface PreMiddlewareEvent extends BaseEvent {
-  next: () => BaseEvent
+export interface PreMiddlewareEvent<TBody = IBody> extends BaseEvent<TBody> {
+  next: () => BaseEvent<TBody>
   reply: ReplyManager
 }
 
-export interface PostMiddlewareEvent extends BaseEvent {
-  next: () => BaseEvent
+export interface PostMiddlewareEvent<TBody = IBody> extends BaseEvent<TBody> {
+  next: () => BaseEvent<TBody>
   replyData: Reply | null
 }
 
-export type Handler = (event: HandlerEvent) => Promise<BaseEvent> | BaseEvent
+export type Handler<TBody = IBody> = (event: HandlerEvent<TBody>) =>
+  Promise<BaseEvent<TBody>> | BaseEvent<TBody>
 
-export type PreMiddleware = (event: PreMiddlewareEvent) => Promise<BaseEvent> | BaseEvent
+export type PreMiddleware<TBody = IBody> = (event: PreMiddlewareEvent<TBody>) =>
+  Promise<BaseEvent<TBody>> | BaseEvent<TBody>
 
-export type PostMiddleware = (event: PostMiddlewareEvent) => Promise<BaseEvent> | BaseEvent
+export type PostMiddleware<TBody = IBody> = (event: PostMiddlewareEvent<TBody>) =>
+  Promise<BaseEvent<TBody>> | BaseEvent<TBody>
+
+export interface UseCometOptions<TBody = IBody> {
+  after?: PostMiddleware<TBody>[]
+  before?: PreMiddleware<TBody>[]
+  method: ValidMethod
+  pathname: string
+}

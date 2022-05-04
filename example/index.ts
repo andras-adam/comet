@@ -1,18 +1,18 @@
 import { handle, Method, useComet } from '../src'
 
 
-useComet({
+useComet<{ foo: string }>({
   method: Method.ALL,
   pathname: '/api/categories/:categoryId/products/:productId',
   before: [
     event => {
       console.log('Before 1')
-      event.body.test = 123
+      event.body.foo = '123'
       return event.next()
     },
     event => {
       console.log('Before 2')
-      event.body.hello = 'there'
+      event.body.foo = 'there'
       return event.next()
     }
   ],

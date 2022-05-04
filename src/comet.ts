@@ -1,4 +1,4 @@
-import { Method, PostMiddleware, PreMiddleware, ValidMethod, Handler } from './types'
+import { Method, Handler, IBody, UseCometOptions } from './types'
 import { getPathParameters, toSafeMethod, toSafePathname } from './utils'
 import { Event } from './event'
 import { Route } from './route'
@@ -24,14 +24,7 @@ function getMatchingRoute(searchMethod: Method, searchPathname: string) {
   }
 }
 
-interface UseCometOptions {
-  after?: PostMiddleware[]
-  before?: PreMiddleware[]
-  method: ValidMethod
-  pathname: string
-}
-
-export function useComet(options: UseCometOptions, handler: Handler) {
+export function useComet<TBody = IBody>(options: UseCometOptions<TBody>, handler: Handler<TBody>) {
   try {
     const { method: unsafeMethod, pathname: unsafePathname, before, after } = options
     // Get safe method and pathname
