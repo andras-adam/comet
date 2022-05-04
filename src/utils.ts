@@ -2,8 +2,9 @@ import { IParams, Method } from './types'
 
 
 // Converts the given string to a valid HTTP method
-export function toSafeMethod(unsafeMethod: string): Method {
-  return Method[unsafeMethod.toUpperCase() as keyof typeof Method]
+export function toSafeMethod(unsafeMethod?: string): Method {
+  const method = String(unsafeMethod)?.toUpperCase()
+  return Method[method as keyof typeof Method] ?? Method.ALL
 }
 
 // Ensures that the given pathname is valid, has a leading slash, and has no trailing slash

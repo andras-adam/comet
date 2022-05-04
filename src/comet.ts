@@ -1,4 +1,4 @@
-import { Method, Handler, IBody, UseCometOptions } from './types'
+import { Handler, IBody, Method, UseCometOptions } from './types'
 import { getPathParameters, toSafeMethod, toSafePathname } from './utils'
 import { Event } from './event'
 import { Route } from './route'

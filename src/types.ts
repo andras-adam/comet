@@ -76,6 +76,6 @@ export type PostMiddleware<TBody = IBody> = (event: PostMiddlewareEvent<TBody>) 
 export interface UseCometOptions<TBody = IBody> {
   after?: PostMiddleware<TBody>[]
   before?: PreMiddleware<TBody>[]
-  method: ValidMethod
+  method?: ValidMethod
   pathname: string
 }
