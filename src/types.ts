@@ -73,9 +73,25 @@ export type PreMiddleware<TBody = IBody> = (event: PreMiddlewareEvent<TBody>) =>
 export type PostMiddleware<TBody = IBody> = (event: PostMiddlewareEvent<TBody>) =>
   Promise<BaseEvent<TBody>> | BaseEvent<TBody>
 
+export type CorsOptions = {
+  headers?: string[] | string
+  maxAge?: number
+  methods?: string[] | string
+  origins?: string[] | string
+}
+
 export interface UseCometOptions<TBody = IBody> {
   after?: PostMiddleware<TBody>[]
   before?: PreMiddleware<TBody>[]
+  cors?: CorsOptions
   method?: ValidMethod
   pathname: string
+}
+
+export interface CometOptions {
+  cors?: CorsOptions
+}
+
+export interface Configuration {
+  cors: Required<CorsOptions>
 }

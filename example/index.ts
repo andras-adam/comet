@@ -1,4 +1,4 @@
-import { handle, Method, useComet } from '../src'
+import { comet, Method, useComet } from '../src'
 
 
 useComet<{ foo: string }>({
@@ -27,4 +27,12 @@ useComet<{ foo: string }>({
   return event.reply.ok({ success: true })
 })
 
-export default { fetch: handle }
+export default {
+  fetch: comet({
+    cors: {
+      origins: 'http://localhost:3000',
+      methods: '*',
+      headers: '*'
+    }
+  })
+}
