@@ -65,7 +65,7 @@ export function applyCorsHeaders(event: Event, route: Route) {
   if (origin) {
     // Allowed origins
     const allowedOriginsRaw = route.cors?.origins ?? config.cors.origins
-    const allowedOrigins = Array.isArray(allowedOriginsRaw) ? allowedOriginsRaw : allowedOriginsRaw.split(',')
+    const allowedOrigins = Array.isArray(allowedOriginsRaw) ? allowedOriginsRaw : allowedOriginsRaw.split(',').map(s => s.trim())
     if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
       event.reply.headers.set('access-control-allow-origin', origin)
       event.reply.headers.append('vary', 'origin')
@@ -74,11 +74,11 @@ export function applyCorsHeaders(event: Event, route: Route) {
   if (event.method === Method.OPTIONS) {
     // Allowed headers
     const allowedHeadersRaw = route.cors?.headers ?? config.cors.headers
-    const allowedHeaders = Array.isArray(allowedHeadersRaw) ? allowedHeadersRaw : allowedHeadersRaw.split(',')
+    const allowedHeaders = Array.isArray(allowedHeadersRaw) ? allowedHeadersRaw : allowedHeadersRaw.split(',').map(s => s.trim())
     if (allowedHeaders.length > 0) event.reply.headers.set('access-control-allow-headers', allowedHeaders.join(','))
     // Allowed methods
     const allowedMethodsRaw = route.cors?.methods ?? config.cors.methods
-    const allowedMethods = Array.isArray(allowedMethodsRaw) ? allowedMethodsRaw : allowedMethodsRaw.split(',')
+    const allowedMethods = Array.isArray(allowedMethodsRaw) ? allowedMethodsRaw : allowedMethodsRaw.split(',').map(s => s.trim())
     if (allowedMethods.length > 0) event.reply.headers.set('access-control-allow-methods', allowedMethods.join(','))
     // Max age
     const maxAge = route.cors?.maxAge ?? config.cors.maxAge
