@@ -8,6 +8,29 @@ This library is currently **work in progress**. It is not recommended to be used
 
 ## Usage
 
+### Basic usage
+
+```ts
+import { comet, useComet } from '@neoaren/comet'
+
+// Register a new route
+useComet({
+  method: 'GET',
+  pathname: '/api/users/:userId'
+}, async event => {
+  const user = await getUserById(event.params.userId)
+  if (user) {
+    return event.reply.ok({ user }) 
+  }
+  return event.reply.notFound()
+})
+
+// Export fetch for Cloudflare Workers
+export default {
+  fetch: comet()
+}
+```
+
 ### Cross-Origin Resource Sharing (CORS)
 
 Comet ships with built-in support for [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). Permitted origins, methods, headers, as well as the maximum age for cached preflight responses can be configured globally for the entire API and locally on a per-route basis. Local configuration will always take precedence over the global one. The default configuration follows a zero-tolerance policy and permits no origins, no methods, no headers, and a 24 hour maximum age for cached preflight responses. Origins, methods and headers can be specified with an array of values, comma separated values, single values, or the `*` wildcard.
@@ -46,7 +69,7 @@ useComet({
 
 ## Contributing
 
-Use commit names with the following prefixes to indicate its purpose
+Use commit names with the following prefixes to indicate their purpose
 
 | Emoji                    | Prefix                     | Description                                                |
 |--------------------------|----------------------------|------------------------------------------------------------|
