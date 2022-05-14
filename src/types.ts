@@ -25,73 +25,75 @@ export const OPTIONS = Method.OPTIONS
 export const TRACE = Method.TRACE
 export const PATCH = Method.PATCH
 
-export type ValidMethod = Method | keyof typeof Method | Lowercase<keyof typeof Method>
-
-export type IQuery = Record<string, string>
-export type IParams = Record<string, string>
-export type IBody = any
+export type Query = Record<string, string>
+export type Params = Record<string, string>
+export type Body = any
+export type Env = any
 
 export interface Reply {
-  body?: IBody
+  body?: Body
   headers: Headers
   status: number
 }
 
-export interface BaseEvent<TBody = IBody> {
+export interface BaseEvent<TEnv = Env, TBody = Body> {
   body: TBody
   ctx: ExecutionContext
-  env: Environment
+  env: TEnv
   headers: Headers
   method: Method
-  params: IParams
+  params: Params
   pathname: string
-  query: IQuery
+  query: Query
   request: Request
   state?: DurableObjectState
 }
 
-export interface HandlerEvent<TBody = IBody> extends BaseEvent<TBody> {
+export interface HandlerEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
   reply: ReplyManager
 }
 
-export interface PreMiddlewareEvent<TBody = IBody> extends BaseEvent<TBody> {
-  next: () => BaseEvent<TBody>
+export interface PreMiddlewareEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
+  next: () => BaseEvent
   reply: ReplyManager
 }
 
-export interface PostMiddlewareEvent<TBody = IBody> extends BaseEvent<TBody> {
-  next: () => BaseEvent<TBody>
+export interface PostMiddlewareEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
+  next: () => BaseEvent
   replyData: Reply | null
 }
 
-export type Handler<TBody = IBody> = (event: HandlerEvent<TBody>) =>
-  Promise<BaseEvent<TBody>> | BaseEvent<TBody>
+export type Handler<TEnv = Env, TBody = Body> =
+  (event: HandlerEvent<TEnv, TBody>) => Promise<BaseEvent> | BaseEvent
 
-export type PreMiddleware<TBody = IBody> = (event: PreMiddlewareEvent<TBody>) =>
-  Promise<BaseEvent<TBody>> | BaseEvent<TBody>
+export type PreMiddleware<TEnv = Env, TBody = Body> =
+  (event: PreMiddlewareEvent<TEnv, TBody>) => Promise<BaseEvent> | BaseEvent
 
-export type PostMiddleware<TBody = IBody> = (event: PostMiddlewareEvent<TBody>) =>
-  Promise<BaseEvent<TBody>> | BaseEvent<TBody>
+export type PostMiddleware<TEnv = Env, TBody = Body> =
+  (event: PostMiddlewareEvent<TEnv, TBody>) => Promise<BaseEvent> | BaseEvent
 
 export type CorsOptions = {
-  headers?: string[] | string
-  maxAge?: number
-  methods?: string[] | string
-  origins?: string[] | string
+  headers: string[] | string
+  maxAge: number
+  methods: string[] | string
+  origins: string[] | string
 }
 
-export interface UseCometOptions<TBody = IBody> {
-  after?: PostMiddleware<TBody>[]
-  before?: PreMiddleware<TBody>[]
-  cors?: CorsOptions
-  method?: ValidMethod
+export interface ServerConfiguration {
+  cors: CorsOptions
+  name: string
+}
+
+export interface UseCometOptions<TEnv = Env, TBody = Body> {
+  after?: PostMiddleware<TEnv, TBody>[]
+  before?: PreMiddleware<TEnv, TBody>[]
+  cors?: Partial<CorsOptions>
+  method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
   pathname: string
+  server?: string
 }
 
 export interface CometOptions {
-  cors?: CorsOptions
-}
-
-export interface Configuration {
-  cors: Required<CorsOptions>
+  cors?: Partial<CorsOptions>
+  name?: string
 }

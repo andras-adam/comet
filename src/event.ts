@@ -1,4 +1,4 @@
-import { BaseEvent, IBody, IParams, IQuery, Method, Reply } from './types'
+import { BaseEvent, Body, Env, Params, Query, Method, Reply } from './types'
 import { toSafeMethod, toSafePathname } from './utils'
 import { ReplyManager } from './reply'
 
@@ -8,12 +8,12 @@ export class Event {
   public readonly method: Method
   public readonly pathname: string
   public headers: Headers
-  public query: IQuery
-  public params: IParams
-  public body: IBody
+  public query: Query
+  public params: Params
+  public body: Body
 
   public readonly request: Request
-  public readonly env: Environment
+  public readonly env: Env
   public readonly ctx: ExecutionContext
   public readonly state?: DurableObjectState
 
@@ -37,7 +37,7 @@ export class Event {
     return this
   }
 
-  public createReply(status: number, headers: Headers, body?: IBody): BaseEvent {
+  public createReply(status: number, headers: Headers, body?: Body): BaseEvent {
     if (this.replyData) {
       console.warn('[Comet] Sending a reply multiple times will overwrite the previous reply.')
     }
@@ -47,7 +47,7 @@ export class Event {
 
   public static async fromRequest(
     request: Request,
-    env: Environment,
+    env: unknown,
     ctx: ExecutionContext,
     state?: DurableObjectState
   ): Promise<Event> {

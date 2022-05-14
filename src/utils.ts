@@ -1,4 +1,4 @@
-import { IParams, Method } from './types'
+import { Method, Params } from './types'
 
 
 // Converts the given string to a valid HTTP method
@@ -15,10 +15,10 @@ export function toSafePathname(unsafePathname: string): string {
 }
 
 // Get the path parameters from the given template and pathname
-export function getPathParameters(template: string, pathname: string): IParams {
+export function getPathParameters(template: string, pathname: string): Params {
   const templateSegments = template.split('/')
   const pathSegments = pathname.split('/')
-  const params: IParams = {}
+  const params: Params = {}
   for (const [ i, templateSegment ] of templateSegments.entries()) {
     if (templateSegment.startsWith(':')) {
       params[templateSegment.slice(1)] = pathSegments[i]
