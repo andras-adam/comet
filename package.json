@@ -8,7 +8,7 @@
     "build:esm": "esbuild src/index.ts --bundle --outfile=dist/comet.mjs --format=esm --target=es2020",
     "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/comet.cjs --format=cjs --target=es2020",
     "build:example": "esbuild example/index.ts --bundle --outfile=example/dist/index.mjs --format=esm --target=esnext",
-    "build:tsc": "tsc -p tsconfig.json",
+    "build:tsc": "tsc -p tsconfig.build.json",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
   },
