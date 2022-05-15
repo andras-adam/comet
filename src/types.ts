@@ -72,7 +72,9 @@ export type PreMiddleware<TEnv = Env, TBody = Body> =
 export type PostMiddleware<TEnv = Env, TBody = Body> =
   (event: PostMiddlewareEvent<TEnv, TBody>) => Promise<BaseEvent> | BaseEvent
 
-export type CorsOptions = {
+export interface CorsOptions {
+  credentials: boolean
+  exposedHeaders: string[] | string
   headers: string[] | string
   maxAge: number
   methods: string[] | string

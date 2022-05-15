@@ -8,10 +8,12 @@ import { getPathParameters } from './utils'
 const defaultConfig: ServerConfiguration = {
   name: 'main',
   cors: {
-    origins: [],
+    credentials: false,
+    exposedHeaders: [],
     headers: [],
+    maxAge: 86400,
     methods: [],
-    maxAge: 86400
+    origins: []
   }
 }
 
