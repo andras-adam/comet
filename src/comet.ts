@@ -55,7 +55,7 @@ export function comet(options: CometOptions) {
         // Handle preflight requests
         const requestedMethod = event.headers.get('access-control-request-method')
         if (!requestedMethod) return new Response(null, { status: 400 })
-        const route = Routes.find(config.name, requestedMethod, event.pathname)
+        const route = Routes.find(config.name, event.pathname, requestedMethod)
         if (route) {
           applyCorsHeaders(event, { ...config.cors, ...route.cors })
           return new Response(null, { status: 204, headers: event.reply.headers })
