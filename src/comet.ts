@@ -68,9 +68,9 @@ export function comet(options: CometOptions) {
           event.params = getPathParameters(route.pathname, event.pathname)
           for (const preMiddleware of route.before) {
             await preMiddleware(event)
-            if (event.replyData) break
+            if (event.reply.sent) break
           }
-          if (!event.replyData) await route.handler(event)
+          if (!event.reply.sent) await route.handler(event)
           for (const postMiddleware of route.after) {
             await postMiddleware(event)
           }

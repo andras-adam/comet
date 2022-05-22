@@ -1,4 +1,4 @@
-import { ReplyManager } from './reply'
+import { Reply } from './reply'
 
 
 export enum Method {
@@ -30,12 +30,6 @@ export type Params = Record<string, string>
 export type Body = any
 export type Env = any
 
-export interface Reply {
-  body?: Body
-  headers: Headers
-  status: number
-}
-
 export interface BaseEvent<TEnv = Env, TBody = Body> {
   body: TBody
   ctx: ExecutionContext
@@ -50,17 +44,17 @@ export interface BaseEvent<TEnv = Env, TBody = Body> {
 }
 
 export interface HandlerEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
-  reply: ReplyManager
+  reply: Reply
 }
 
 export interface PreMiddlewareEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
   next: () => BaseEvent
-  reply: ReplyManager
+  reply: Reply
 }
 
 export interface PostMiddlewareEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
   next: () => BaseEvent
-  replyData: Reply | null
+  reply: Reply
 }
 
 export type Handler<TEnv = Env, TBody = Body> =

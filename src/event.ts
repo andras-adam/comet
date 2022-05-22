@@ -1,6 +1,6 @@
-import { BaseEvent, Body, Env, Params, Query, Method, Reply } from './types'
+import { BaseEvent, Body, Env, Params, Query, Method } from './types'
 import { toSafeMethod, toSafePathname } from './utils'
-import { ReplyManager } from './reply'
+import { Reply } from './reply'
 
 
 export class Event {
@@ -17,8 +17,7 @@ export class Event {
   public readonly ctx: ExecutionContext
   public readonly state?: DurableObjectState
 
-  public readonly reply = new ReplyManager(this)
-  public replyData: Reply | null = null
+  public readonly reply = new Reply(this)
 
   private constructor(baseEvent: BaseEvent) {
     this.method = baseEvent.method
@@ -34,14 +33,6 @@ export class Event {
   }
 
   public next(): BaseEvent {
-    return this
-  }
-
-  public createReply(status: number, headers: Headers, body?: Body): BaseEvent {
-    if (this.replyData) {
-      console.warn('[Comet] Sending a reply multiple times will overwrite the previous reply.')
-    }
-    this.replyData = { status, body, headers }
     return this
   }
 
@@ -80,16 +71,16 @@ export class Event {
   }
 
   public static async toResponse(event: Event): Promise<Response> {
-    if (!event.replyData) {
+    if (!event.reply.sent) {
       console.error('[Comet] No reply was sent for this event.')
       return new Response(null, { status: 500 })
     }
-    const status = event.replyData.status
-    const headers = event.replyData.headers
+    const status = event.reply.status
+    const headers = event.reply.headers
     let body: string | null = null
-    if (event.replyData.body) {
+    if (event.reply.body) {
       headers.set('content-type', 'application/json')
-      body = JSON.stringify(event.replyData.body)
+      body = JSON.stringify(event.reply.body)
     }
     return new Response(body, { status, headers })
   }

@@ -17,7 +17,7 @@ useComet<{ foo: string }, { bar: string }>({
   ],
   after: [
     event => {
-      console.log('After 1', event.replyData)
+      console.log('After 1', event.reply.body)
       return event.next()
     }
   ]
