@@ -1,4 +1,4 @@
-import { comet, Method, useComet } from '../src'
+import { comet, Method, useComet } from '../../src'
 
 
 useComet<{ foo: string }, { bar: string }>({
@@ -22,12 +22,16 @@ useComet<{ foo: string }, { bar: string }>({
     }
   ]
 }, event => {
-  console.log('Handler', event.headers.get('content-type'), event.reply.headers.get('x-powered-by'), event.body)
+  console.log('Handler', event.cookies.get('foo'))
+  event.reply.cookies.set('foo', 'bar', { httpOnly: true })
   return event.reply.ok({ success: true })
 })
 
 export default {
   fetch: comet({
+    cookies: {
+      limit: 32
+    },
     cors: {
       origins: 'http://localhost:3000',
       methods: '*',

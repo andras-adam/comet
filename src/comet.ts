@@ -7,6 +7,11 @@ import { getPathParameters } from './utils'
 
 const defaultConfig: ServerConfiguration = {
   name: 'main',
+  cookies: {
+    decode: decodeURIComponent,
+    encode: encodeURIComponent,
+    limit: 64
+  },
   cors: {
     credentials: false,
     exposedHeaders: [],
@@ -40,6 +45,7 @@ export function comet(options: CometOptions) {
   // Construct the server's configuration
   const config: ServerConfiguration = {
     name: options.name ?? defaultConfig.name,
+    cookies: { ...defaultConfig.cookies, ...options.cookies },
     cors: { ...defaultConfig.cors, ...options.cors }
   }
   // Return handler function
@@ -50,7 +56,7 @@ export function comet(options: CometOptions) {
     state?: DurableObjectState
   ): Promise<Response> => {
     try {
-      const event = await Event.fromRequest(request, env, ctx, state)
+      const event = await Event.fromRequest(request, config, env, ctx, state)
       if (event.method === Method.OPTIONS) {
         // Handle preflight requests
         const requestedMethod = event.headers.get('access-control-request-method')
@@ -74,7 +80,7 @@ export function comet(options: CometOptions) {
           for (const postMiddleware of route.after) {
             await postMiddleware(event)
           }
-          return await Event.toResponse(event)
+          return await Event.toResponse(event, config)
         }
       }
       return new Response(null, { status: 404 })

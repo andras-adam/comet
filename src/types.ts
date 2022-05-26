@@ -1,4 +1,5 @@
 import { Reply } from './reply'
+import { Cookies } from './cookies'
 
 
 export enum Method {
@@ -32,6 +33,7 @@ export type Env = any
 
 export interface BaseEvent<TEnv = Env, TBody = Body> {
   body: TBody
+  cookies: Cookies
   ctx: ExecutionContext
   env: TEnv
   headers: Headers
@@ -75,7 +77,14 @@ export interface CorsOptions {
   origins: string[] | string
 }
 
+export interface CookiesOptions {
+  decode: ((arg: string) => Promise<string> | string) | null
+  encode: ((arg: string) => Promise<string> | string) | null
+  limit: number
+}
+
 export interface ServerConfiguration {
+  cookies: CookiesOptions
   cors: CorsOptions
   name: string
 }
@@ -83,6 +92,7 @@ export interface ServerConfiguration {
 export interface UseCometOptions<TEnv = Env, TBody = Body> {
   after?: PostMiddleware<TEnv, TBody>[]
   before?: PreMiddleware<TEnv, TBody>[]
+  cookies?: Partial<CookiesOptions>
   cors?: Partial<CorsOptions>
   method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
   pathname: string
@@ -90,6 +100,7 @@ export interface UseCometOptions<TEnv = Env, TBody = Body> {
 }
 
 export interface CometOptions {
+  cookies?: Partial<CookiesOptions>
   cors?: Partial<CorsOptions>
   name?: string
 }

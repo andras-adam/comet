@@ -1,6 +1,7 @@
-import { BaseEvent, Body, Env, Params, Query, Method } from './types'
+import { BaseEvent, Body, Env, Params, Query, Method, ServerConfiguration } from './types'
 import { toSafeMethod, toSafePathname } from './utils'
 import { Reply } from './reply'
+import { Cookies } from './cookies'
 
 
 export class Event {
@@ -8,6 +9,7 @@ export class Event {
   public readonly method: Method
   public readonly pathname: string
   public headers: Headers
+  public cookies: Cookies
   public query: Query
   public params: Params
   public body: Body
@@ -19,17 +21,18 @@ export class Event {
 
   public readonly reply = new Reply(this)
 
-  private constructor(baseEvent: BaseEvent) {
-    this.method = baseEvent.method
-    this.pathname = baseEvent.pathname
-    this.headers = baseEvent.headers
-    this.query = baseEvent.query
-    this.params = baseEvent.params
-    this.body = baseEvent.body
-    this.request = baseEvent.request
-    this.env = baseEvent.env
-    this.ctx = baseEvent.ctx
-    this.state = baseEvent.state
+  private constructor(init: BaseEvent) {
+    this.method = init.method
+    this.pathname = init.pathname
+    this.headers = init.headers
+    this.cookies = init.cookies
+    this.query = init.query
+    this.params = init.params
+    this.body = init.body
+    this.request = init.request
+    this.env = init.env
+    this.ctx = init.ctx
+    this.state = init.state
   }
 
   public next(): BaseEvent {
@@ -38,18 +41,27 @@ export class Event {
 
   public static async fromRequest(
     request: Request,
+    config: ServerConfiguration,
     env: unknown,
     ctx: ExecutionContext,
     state?: DurableObjectState
   ): Promise<Event> {
     const url = new URL(request.url)
-    const method = toSafeMethod(request.method)
-    const pathname = toSafePathname(url.pathname)
-    const query = Object.fromEntries(url.searchParams.entries())
-    const headers = new Headers(request.headers)
-    const event = new Event({ body: {}, ctx, env, headers, method, params: {}, pathname, query, request, state })
-    if (method !== Method.GET) {
-      switch (headers.get('content-type')?.split(';')[0]) {
+    const event = new Event({
+      body: {},
+      cookies: await Cookies.parse(request.headers, config.cookies),
+      ctx,
+      env,
+      headers: request.headers,
+      method: toSafeMethod(request.method),
+      params: {},
+      pathname: toSafePathname(url.pathname),
+      query: Object.fromEntries(url.searchParams.entries()),
+      request,
+      state
+    })
+    if (event.method !== Method.GET) {
+      switch (event.headers.get('content-type')?.split(';')[0]) {
         case 'application/json': {
           event.body = await request.json()
           break
@@ -70,13 +82,14 @@ export class Event {
     return event
   }
 
-  public static async toResponse(event: Event): Promise<Response> {
+  public static async toResponse(event: Event, config: ServerConfiguration): Promise<Response> {
     if (!event.reply.sent) {
       console.error('[Comet] No reply was sent for this event.')
       return new Response(null, { status: 500 })
     }
     const status = event.reply.status
     const headers = event.reply.headers
+    await Cookies.serialize(event.reply.cookies, event.reply.headers, config.cookies)
     let body: string | null = null
     if (event.reply.body) {
       headers.set('content-type', 'application/json')

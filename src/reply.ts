@@ -1,5 +1,6 @@
 import { Event } from './event'
 import { Body } from './types'
+import { Cookies } from './cookies'
 
 
 export class Reply {
@@ -10,6 +11,7 @@ export class Reply {
   public status = 200
   public body?: Body
   public readonly headers = new Headers()
+  public readonly cookies = new Cookies()
 
   constructor(event: Event) {
     this.event = event

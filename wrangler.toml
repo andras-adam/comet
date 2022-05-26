@@ -1,13 +1,15 @@
-name = "comet"
-type = "javascript"
+name = 'comet'
+type = 'javascript'
+workers_dev = false
+account_id = ''
 
-account_id = ""
-workers_dev = true
+[miniflare]
+build_watch_dirs = [ 'src', 'example/src' ]
 
 [build]
-command = "npm run build:example"
+command = 'npm run build:example'
 
 [build.upload]
-format = "modules"
-dir = "example/dist"
-main = "index.mjs"
+format = 'modules'
+dir = 'example/dist'
+main = 'index.mjs'
