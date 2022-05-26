@@ -3,18 +3,18 @@ import { Event } from './event'
 
 
 // Get an array or CSV as an array
-const parseListValue = (value: string | string[]) => {
+function parseListValue(value: string | string[]) {
   return Array.isArray(value) ? value : value.split(',').map(s => s.trim())
 }
 
 // Apply CORS headers to an event's reply
-export function applyCorsHeaders(event: Event, cors: CorsOptions) {
+export function applyCorsHeaders(event: Event, options: CorsOptions) {
   // Parse options
-  const allowedOrigins = parseListValue(cors.origins)
-  const allowedHeaders = parseListValue(cors.headers)
-  const allowedMethods = parseListValue(cors.methods)
-  const exposedHeaders = parseListValue(cors.exposedHeaders)
-  const { credentials, maxAge } = cors
+  const allowedOrigins = parseListValue(options.origins)
+  const allowedHeaders = parseListValue(options.headers)
+  const allowedMethods = parseListValue(options.methods)
+  const exposedHeaders = parseListValue(options.exposedHeaders)
+  const { credentials, maxAge } = options
   // Set allowed origin header
   const origin = event.headers.get('origin')
   if (origin) {
