@@ -1,10 +1,12 @@
-import { BaseEvent, Body, Env, Params, Query, Method, ServerConfiguration } from './types'
+import { Body, Env, Params, Query, Method, ServerConfiguration } from './types'
 import { toSafeMethod, toSafePathname } from './utils'
 import { Reply } from './reply'
 import { Cookies } from './cookies'
 
 
-export class Event {
+type EventInit = { [Property in Exclude<keyof Event, 'reply' | 'next'>]: Event[Property] }
+
+export class Event<TEnv = Env, TBody = Body> {
 
   public readonly method: Method
   public readonly pathname: string
@@ -12,16 +14,16 @@ export class Event {
   public cookies: Cookies
   public query: Query
   public params: Params
-  public body: Body
+  public body: TBody
 
   public readonly request: Request
-  public readonly env: Env
+  public readonly env: TEnv
   public readonly ctx: ExecutionContext
   public readonly state?: DurableObjectState
 
-  public readonly reply = new Reply(this)
+  public readonly reply: Reply
 
-  private constructor(init: BaseEvent) {
+  private constructor(init: EventInit) {
     this.method = init.method
     this.pathname = init.pathname
     this.headers = init.headers
@@ -33,9 +35,10 @@ export class Event {
     this.env = init.env
     this.ctx = init.ctx
     this.state = init.state
+    this.reply = new Reply()
   }
 
-  public next(): BaseEvent {
+  public next(): Event {
     return this
   }
 

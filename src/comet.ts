@@ -1,4 +1,4 @@
-import { CometOptions, ServerConfiguration, Handler, Body, Method, UseCometOptions, Env } from './types'
+import { CometOptions, ServerConfiguration, Body, Method, UseCometOptions, Env, EventHandler } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
 import { applyCorsHeaders } from './cors'
@@ -24,7 +24,7 @@ const defaultConfig: ServerConfiguration = {
 
 export function useComet<TEnv = Env, TBody = Body>(
   options: UseCometOptions<TEnv, TBody>,
-  handler: Handler<TEnv, TBody>
+  handler: EventHandler<TEnv, TBody>
 ) {
   try {
     Routes.register({

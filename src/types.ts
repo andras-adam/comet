@@ -1,5 +1,5 @@
+import { Event } from './event'
 import { Reply } from './reply'
-import { Cookies } from './cookies'
 
 
 export enum Method {
@@ -31,42 +31,8 @@ export type Params = Record<string, string>
 export type Body = any
 export type Env = any
 
-export interface BaseEvent<TEnv = Env, TBody = Body> {
-  body: TBody
-  cookies: Cookies
-  ctx: ExecutionContext
-  env: TEnv
-  headers: Headers
-  method: Method
-  params: Params
-  pathname: string
-  query: Query
-  request: Request
-  state?: DurableObjectState
-}
-
-export interface HandlerEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
-  reply: Reply
-}
-
-export interface PreMiddlewareEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
-  next: () => BaseEvent
-  reply: Reply
-}
-
-export interface PostMiddlewareEvent<TEnv = Env, TBody = Body> extends BaseEvent<TEnv, TBody> {
-  next: () => BaseEvent
-  reply: Reply
-}
-
-export type Handler<TEnv = Env, TBody = Body> =
-  (event: HandlerEvent<TEnv, TBody>) => Promise<BaseEvent> | BaseEvent
-
-export type PreMiddleware<TEnv = Env, TBody = Body> =
-  (event: PreMiddlewareEvent<TEnv, TBody>) => Promise<BaseEvent> | BaseEvent
-
-export type PostMiddleware<TEnv = Env, TBody = Body> =
-  (event: PostMiddlewareEvent<TEnv, TBody>) => Promise<BaseEvent> | BaseEvent
+export type EventHandler<TEnv = Env, TBody = Body> =
+  (event: Event<TEnv, TBody>) => Promise<Event | Reply> | Event | Reply
 
 export interface CorsOptions {
   credentials: boolean
@@ -90,8 +56,8 @@ export interface ServerConfiguration {
 }
 
 export interface UseCometOptions<TEnv = Env, TBody = Body> {
-  after?: PostMiddleware<TEnv, TBody>[]
-  before?: PreMiddleware<TEnv, TBody>[]
+  after?: EventHandler<TEnv, TBody>[]
+  before?: EventHandler<TEnv, TBody>[]
   cookies?: Partial<CookiesOptions>
   cors?: Partial<CorsOptions>
   method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>

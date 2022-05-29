@@ -1,11 +1,8 @@
-import { Event } from './event'
 import { Body } from './types'
 import { Cookies } from './cookies'
 
 
 export class Reply {
-
-  private readonly event: Event
 
   public sent = false
   public status = 200
@@ -13,20 +10,16 @@ export class Reply {
   public readonly headers = new Headers()
   public readonly cookies = new Cookies()
 
-  constructor(event: Event) {
-    this.event = event
-  }
-
   // Send a custom HTTP response
-  private send(status: number, body?: Body) {
+  private send(status: number, body?: Body): Reply {
     if (this.sent) {
       console.warn('[Comet] Cannot send a reply after one has already been sent.')
-      return this.event.next()
+      return this
     }
     this.sent = true
     this.status = status
     this.body = body
-    return this.event.next()
+    return this
   }
 
   // Send an HTTP `100 Continue` informational response

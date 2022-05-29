@@ -1,11 +1,11 @@
-import { CorsOptions, Handler, Method, PostMiddleware, PreMiddleware } from './types'
+import { CorsOptions, EventHandler, Method } from './types'
 
 
 export interface Route {
-  after: PostMiddleware[]
-  before: PreMiddleware[]
+  after: EventHandler[]
+  before: EventHandler[]
   cors?: Partial<CorsOptions>
-  handler: Handler
+  handler: EventHandler
   method: Method
   pathname: string
   server: string
