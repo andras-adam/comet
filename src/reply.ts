@@ -22,6 +22,11 @@ export class Reply {
     return this
   }
 
+  // Send a custom HTTP response
+  public custom(status: number, body?: Body) {
+    return this.send(status, body)
+  }
+
   // Send an HTTP `100 Continue` informational response
   public continue(body?: Body) {
     return this.send(100, body)
