@@ -4,7 +4,7 @@ import { Reply } from './reply'
 import { Cookies } from './cookies'
 
 
-type EventInit = { [Property in Exclude<keyof Event, 'reply' | 'next'>]: Event[Property] }
+export type EventInit = { [Property in Exclude<keyof Event, 'reply' | 'next'>]: Event[Property] }
 
 export class Event<TEnv = Env, TBody = Body> {
 
