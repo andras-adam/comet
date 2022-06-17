@@ -93,6 +93,15 @@ export class Event<TEnv = Env, TBody = Body> {
     const status = event.reply.status
     const headers = event.reply.headers
     await Cookies.serialize(event.reply.cookies, event.reply.headers, config.cookies)
+    // Handle websocket response
+    if (event.reply.body instanceof WebSocket) {
+      return new Response(null, { status, headers, webSocket: event.reply.body })
+    }
+    // Handle stream response
+    if (event.reply.body instanceof ReadableStream) {
+      return new Response(event.reply.body, { status, headers })
+    }
+    // Handle json response
     let body: string | null = null
     if (event.reply.body) {
       headers.set('content-type', 'application/json')
