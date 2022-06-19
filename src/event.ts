@@ -70,8 +70,8 @@ export class Event<TEnv = Env, TBody = Body> {
           break
         }
         case 'multipart/form-data': {
-          const fromData = await request.formData()
-          event.body = Object.fromEntries(fromData.entries())
+          const formData = await request.formData()
+          event.body = Object.fromEntries(formData.entries())
           break
         }
         case 'application/x-www-form-urlencoded': {
