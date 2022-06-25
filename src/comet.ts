@@ -2,7 +2,6 @@ import { CometOptions, ServerConfiguration, Body, Method, UseCometOptions, Env, 
 import { Event } from './event'
 import { Routes } from './routes'
 import { applyCorsHeaders } from './cors'
-import { getPathParameters } from './utils'
 
 
 const defaultConfig: ServerConfiguration = {
@@ -61,7 +60,7 @@ export function comet(options: CometOptions) {
         // Handle preflight requests
         const requestedMethod = event.headers.get('access-control-request-method')
         if (!requestedMethod) return new Response(null, { status: 400 })
-        const route = Routes.find(config.name, event.pathname, requestedMethod)
+        const route = Routes.find(config.name, event.pathname, requestedMethod as Method)
         if (route) {
           applyCorsHeaders(event, { ...config.cors, ...route.cors })
           return new Response(null, { status: 204, headers: event.reply.headers })
@@ -71,7 +70,7 @@ export function comet(options: CometOptions) {
         const route = Routes.find(config.name, event.pathname, event.method)
         if (route) {
           applyCorsHeaders(event, { ...config.cors, ...route.cors })
-          event.params = getPathParameters(route.pathname, event.pathname)
+          event.params = Routes.getPathnameParameters(event.pathname, route.pathname)
           for (const preMiddleware of route.before) {
             await preMiddleware(event)
             if (event.reply.sent) break

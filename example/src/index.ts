@@ -22,7 +22,7 @@ useComet<{ foo: string }, { bar: string }>({
     }
   ]
 }, event => {
-  console.log('Handler', event.cookies.get('foo'))
+  console.log('Handler', event.cookies.get('foo'), event.params)
   event.reply.cookies.set('foo', 'bar', { httpOnly: true })
   return event.reply.ok({ success: true })
 })

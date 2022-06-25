@@ -1,5 +1,4 @@
 import { Body, Env, Params, Query, Method, ServerConfiguration } from './types'
-import { toSafeMethod, toSafePathname } from './utils'
 import { Reply } from './reply'
 import { Cookies } from './cookies'
 
@@ -56,9 +55,9 @@ export class Event<TEnv = Env, TBody = Body> {
       ctx,
       env,
       headers: request.headers,
-      method: toSafeMethod(request.method),
+      method: request.method as Method,
       params: {},
-      pathname: toSafePathname(url.pathname),
+      pathname: url.pathname,
       query: Object.fromEntries(url.searchParams.entries()),
       request,
       state

@@ -1,5 +1,8 @@
-import { CorsOptions, EventHandler, Method } from './types'
+import { CorsOptions, EventHandler, Method, Params } from './types'
 
+
+// Base URL used in pathname matching, the actual value is irrelevant
+const BASE_URl = 'https://comet'
 
 export interface Route {
   after: EventHandler[]
@@ -14,7 +17,7 @@ export interface Route {
 export class Routes {
 
   // Registered routes
-  private static routes: Record<string, Record<string, Record<string, Route>>> = {}
+  private static routes: Route[] = []
 
   // Register a new route
   public static register(route: Route) {
@@ -23,33 +26,35 @@ export class Routes {
       console.warn(`[Comet] Skipping route '${method} ${pathname}', please consult the guide to learn how to configure CORS with Comet.`)
       return
     }
-    const blockingRoute = Routes.find(server, pathname, method)
+    try {
+      new URLPattern(pathname, BASE_URl)
+    } catch (error) {
+      console.error(`[Comet] Failed to set up route '${method} ${pathname}' due to an invalid pathname pattern.`, error)
+      return
+    }
+    const blockingRoute = this.find(server, pathname, method)
     if (blockingRoute) {
       const { pathname: blockingPathname, method: blockingMethod } = blockingRoute
       console.warn(`[Comet] Skipping route '${method} ${pathname}' as it will be unreachable due to the already registered route '${blockingMethod} ${blockingPathname}'.`)
       return
     }
-    if (!this.routes[server]) this.routes[server] = {}
-    if (!this.routes[server][pathname]) this.routes[server][pathname] = {}
-    if (!this.routes[server][pathname][method]) this.routes[server][pathname][method] = { ...route }
+    this.routes.push(route)
   }
 
-  // Find a route by server, pathname, and method
-  public static find(server: string, pathname: string, method: string): Route | undefined {
-    if (!this.routes[server]) return undefined
-    const searchPathnameSegments = pathname.split('/').map(s => s.startsWith(':') ? ':' : s)
-    for (const currentPathname in this.routes[server]) {
-      const currentPathnameSegments = currentPathname.split('/').map(s => s.startsWith(':') ? ':' : s)
-      if (currentPathnameSegments.length !== searchPathnameSegments.length) continue
-      const doPathnamesMatch = currentPathnameSegments.every((currentPathnameSegment, index) => (
-        currentPathnameSegment === ':' || currentPathnameSegment === searchPathnameSegments[index]
-      ))
-      if (!doPathnamesMatch) continue
-      for (const currentMethod in this.routes[server][currentPathname]) {
-        const doMethodsMatch = currentMethod === method || currentMethod === Method.ALL
-        if (doMethodsMatch) return this.routes[server][currentPathname][currentMethod]
-      }
+  // Find a route by server, pathname and method
+  public static find(server: string, pathname: string, method: Method): Route | undefined {
+    for (const currentRoute of this.routes) {
+      if (currentRoute.server !== server) continue
+      const doPathnamesMatch = new URLPattern(currentRoute.pathname, BASE_URl).test(pathname, BASE_URl)
+      const doMethodsMatch = currentRoute.method === method || currentRoute.method === Method.ALL
+      if (doPathnamesMatch && doMethodsMatch) return currentRoute
     }
+  }
+
+  // Get the pathname parameters from a pathname based on a template pathname
+  public static getPathnameParameters(pathname: string, template: string): Params {
+    const result = new URLPattern(template, BASE_URl).exec(pathname, BASE_URl)
+    return result?.pathname?.groups ?? {}
   }
 
 }
