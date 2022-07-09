@@ -1,7 +1,7 @@
 import { CometOptions, ServerConfiguration, Body, Method, UseCometOptions, Env, EventHandler } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
-import { applyCorsHeaders } from './cors'
+import { getCorsHeaders } from './cors'
 
 
 const defaultConfig: ServerConfiguration = {
@@ -29,6 +29,7 @@ export function useComet<TEnv = Env, TBody = Body>(
     Routes.register({
       after: options.after ?? [],
       before: options.before ?? [],
+      cookies: options.cookies,
       cors: options.cors,
       handler,
       method: options.method ? options.method.toUpperCase() as Method : Method.ALL,
@@ -55,21 +56,27 @@ export function comet(options: CometOptions) {
     state?: DurableObjectState
   ): Promise<Response> => {
     try {
-      const event = await Event.fromRequest(request, config, env, ctx, state)
-      if (event.method === Method.OPTIONS) {
+      if (request.method === Method.OPTIONS) {
         // Handle preflight requests
-        const requestedMethod = event.headers.get('access-control-request-method')
-        if (!requestedMethod) return new Response(null, { status: 400 })
-        const route = Routes.find(config.name, event.pathname, requestedMethod as Method)
+        const pathname = new URL(request.url).pathname
+        const method = request.headers.get('access-control-request-method') as Method
+        const route = Routes.find(config.name, pathname, method)
         if (route) {
-          applyCorsHeaders(event, { ...config.cors, ...route.cors })
-          return new Response(null, { status: 204, headers: event.reply.headers })
+          config.cookies = { ...config.cookies, ...route.cookies }
+          config.cors = { ...config.cors, ...route.cors }
+          const headers = getCorsHeaders(request, config.cors)
+          return new Response(null, { status: 204, headers })
         }
       } else {
         // Handle regular requests
-        const route = Routes.find(config.name, event.pathname, event.method)
+        const pathname = new URL(request.url).pathname
+        const method = request.method as Method
+        const route = Routes.find(config.name, pathname, method)
         if (route) {
-          applyCorsHeaders(event, { ...config.cors, ...route.cors })
+          config.cookies = { ...config.cookies, ...route.cookies }
+          config.cors = { ...config.cors, ...route.cors }
+          const event = await Event.fromRequest(request, config, env, ctx, state)
+          event.reply.headers = getCorsHeaders(request, config.cors)
           event.params = Routes.getPathnameParameters(event.pathname, route.pathname)
           for (const preMiddleware of route.before) {
             await preMiddleware(event)

@@ -1,5 +1,4 @@
 import { CorsOptions, Method } from './types'
-import { Event } from './event'
 
 
 // Get an array or CSV as an array
@@ -8,7 +7,8 @@ function parseListValue(value: string | string[]) {
 }
 
 // Apply CORS headers to an event's reply
-export function applyCorsHeaders(event: Event, options: CorsOptions) {
+export function getCorsHeaders(request: Request, options: CorsOptions): Headers {
+  const headers = new Headers()
   // Parse options
   const allowedOrigins = parseListValue(options.origins)
   const allowedHeaders = parseListValue(options.headers)
@@ -16,24 +16,25 @@ export function applyCorsHeaders(event: Event, options: CorsOptions) {
   const exposedHeaders = parseListValue(options.exposedHeaders)
   const { credentials, maxAge } = options
   // Set allowed origin header
-  const origin = event.headers.get('origin')
+  const origin = request.headers.get('origin')
   if (origin) {
     if (allowedOrigins.includes('*')) {
-      event.reply.headers.set('access-control-allow-origin', '*')
+      headers.set('access-control-allow-origin', '*')
     } else if (allowedOrigins.includes(origin)) {
-      event.reply.headers.set('access-control-allow-origin', origin)
-      event.reply.headers.append('vary', 'origin')
+      headers.set('access-control-allow-origin', origin)
+      headers.append('vary', 'origin')
     }
   }
   // Set allowed credentials header
-  if (credentials) event.reply.headers.set('access-control-allow-credentials', 'true')
+  if (credentials) headers.set('access-control-allow-credentials', 'true')
   // Set exposed headers header
-  if (exposedHeaders.length > 0) event.reply.headers.set('access-control-expose-headers', exposedHeaders.join(','))
+  if (exposedHeaders.length > 0) headers.set('access-control-expose-headers', exposedHeaders.join(','))
   // Set remaining CORS headers for preflight requests
-  if (event.method === Method.OPTIONS) {
-    if (allowedHeaders.length > 0) event.reply.headers.set('access-control-allow-headers', allowedHeaders.join(','))
-    if (allowedMethods.length > 0) event.reply.headers.set('access-control-allow-methods', allowedMethods.join(','))
-    event.reply.headers.set('access-control-max-age', maxAge.toString())
-    event.reply.headers.set('content-length', '0')
+  if (request.method === Method.OPTIONS) {
+    if (allowedHeaders.length > 0) headers.set('access-control-allow-headers', allowedHeaders.join(','))
+    if (allowedMethods.length > 0) headers.set('access-control-allow-methods', allowedMethods.join(','))
+    headers.set('access-control-max-age', maxAge.toString())
+    headers.set('content-length', '0')
   }
+  return headers
 }
