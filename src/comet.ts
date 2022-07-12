@@ -1,7 +1,7 @@
-import { CometOptions, ServerConfiguration, Body, Method, UseCometOptions, Env, EventHandler } from './types'
+import { Body, CometOptions, Env, EventHandler, Method, ServerConfiguration, UseCometOptions } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
-import { getCorsHeaders } from './cors'
+import { CORS } from './cors'
 
 
 const defaultConfig: ServerConfiguration = {
@@ -10,14 +10,6 @@ const defaultConfig: ServerConfiguration = {
     decode: decodeURIComponent,
     encode: encodeURIComponent,
     limit: 64
-  },
-  cors: {
-    credentials: false,
-    exposedHeaders: [],
-    headers: [],
-    maxAge: 86400,
-    methods: [],
-    origins: []
   }
 }
 
@@ -30,7 +22,6 @@ export function useComet<TEnv = Env, TBody = Body>(
       after: options.after ?? [],
       before: options.before ?? [],
       cookies: options.cookies,
-      cors: options.cors,
       handler,
       method: options.method ? options.method.toUpperCase() as Method : Method.ALL,
       pathname: options.pathname,
@@ -46,7 +37,7 @@ export function comet(options: CometOptions) {
   const config: ServerConfiguration = {
     name: options.name ?? defaultConfig.name,
     cookies: { ...defaultConfig.cookies, ...options.cookies },
-    cors: { ...defaultConfig.cors, ...options.cors }
+    cors: options.cors
   }
   // Return handler function
   return async (
@@ -56,28 +47,21 @@ export function comet(options: CometOptions) {
     state?: DurableObjectState
   ): Promise<Response> => {
     try {
-      if (request.method === Method.OPTIONS) {
-        // Handle preflight requests
-        const pathname = new URL(request.url).pathname
-        const method = request.headers.get('access-control-request-method') as Method
-        const route = Routes.find(config.name, pathname, method)
-        if (route) {
-          config.cookies = { ...config.cookies, ...route.cookies }
-          config.cors = { ...config.cors, ...route.cors }
-          const headers = getCorsHeaders(request, config.cors)
-          return new Response(null, { status: 204, headers })
-        }
-      } else {
-        // Handle regular requests
-        const pathname = new URL(request.url).pathname
-        const method = request.method as Method
-        const route = Routes.find(config.name, pathname, method)
-        if (route) {
-          config.cookies = { ...config.cookies, ...route.cookies }
-          config.cors = { ...config.cors, ...route.cors }
-          const event = await Event.fromRequest(request, config, env, ctx, state)
-          event.reply.headers = getCorsHeaders(request, config.cors)
-          event.params = Routes.getPathnameParameters(event.pathname, route.pathname)
+      const pathname = new URL(request.url).pathname
+      const isPreflight = request.method === Method.OPTIONS
+      const method = isPreflight
+        ? request.headers.get('access-control-request-method') as Method
+        : request.method as Method
+      const route = Routes.find(config.name, pathname, method)
+      if (route) {
+        config.cookies = { ...config.cookies, ...route.cookies } // fixme overrides config each time
+        const event = await Event.fromRequest(request, config, env, ctx, state)
+        event.params = Routes.getPathnameParameters(event.pathname, route.pathname)
+        const origin = request.headers.get('origin') as string
+        event.reply.headers = CORS.getHeaders(config.name, event.pathname, config.cors, isPreflight, origin)
+        if (isPreflight) {
+          event.reply.noContent()
+        } else {
           for (const preMiddleware of route.before) {
             await preMiddleware(event)
             if (event.reply.sent) break
@@ -86,8 +70,8 @@ export function comet(options: CometOptions) {
           for (const postMiddleware of route.after) {
             await postMiddleware(event)
           }
-          return await Event.toResponse(event, config)
         }
+        return await Event.toResponse(event, config)
       }
       return new Response(null, { status: 404 })
     } catch (error) {

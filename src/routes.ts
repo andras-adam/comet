@@ -1,4 +1,4 @@
-import { CookiesOptions, CorsOptions, EventHandler, Method, Params } from './types'
+import { CookiesOptions, EventHandler, Method, Params } from './types'
 
 
 // Base URL used in pathname matching, the actual value is irrelevant
@@ -8,7 +8,6 @@ export interface Route {
   after: EventHandler[]
   before: EventHandler[]
   cookies?: Partial<CookiesOptions>
-  cors?: Partial<CorsOptions>
   handler: EventHandler
   method: Method
   pathname: string

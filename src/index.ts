@@ -1,3 +1,4 @@
+export * from './hooks/useCors'
 export { comet, useComet } from './comet'
 export * from './cookies'
 export * from './event'
