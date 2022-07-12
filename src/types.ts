@@ -47,15 +47,6 @@ export interface ServerConfiguration {
   name: string
 }
 
-export interface UseCometOptions<TEnv = Env, TBody = Body> {
-  after?: EventHandler<TEnv, TBody>[]
-  before?: EventHandler<TEnv, TBody>[]
-  cookies?: Partial<CookiesOptions>
-  method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
-  pathname: string
-  server?: string
-}
-
 export interface CometOptions {
   cookies?: Partial<CookiesOptions>
   cors?: Partial<CorsOptions>

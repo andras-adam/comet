@@ -1,4 +1,4 @@
-import { Body, CometOptions, Env, EventHandler, Method, ServerConfiguration, UseCometOptions } from './types'
+import { CometOptions, Method, ServerConfiguration } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
 import { CORS } from './cors'
@@ -10,25 +10,6 @@ const defaultConfig: ServerConfiguration = {
     decode: decodeURIComponent,
     encode: encodeURIComponent,
     limit: 64
-  }
-}
-
-export function useComet<TEnv = Env, TBody = Body>(
-  options: UseCometOptions<TEnv, TBody>,
-  handler: EventHandler<TEnv, TBody>
-) {
-  try {
-    Routes.register({
-      after: options.after ?? [],
-      before: options.before ?? [],
-      cookies: options.cookies,
-      handler,
-      method: options.method ? options.method.toUpperCase() as Method : Method.ALL,
-      pathname: options.pathname,
-      server: options.server ?? defaultConfig.name
-    })
-  } catch (error) {
-    console.error('[Comet] Failed to register a route.', error)
   }
 }
 
