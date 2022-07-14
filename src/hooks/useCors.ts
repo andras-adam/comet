@@ -1,7 +1,7 @@
 import { CORS, CorsOptions } from '../cors'
 
 
-export interface UseCorsOptions extends Partial<CorsOptions> {
+export interface UseCorsOptions extends CorsOptions {
   pathname?: string
   server?: string
 }

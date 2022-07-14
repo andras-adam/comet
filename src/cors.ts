@@ -1,16 +1,16 @@
-import { checkPathname, parseListValue } from './utils'
+import { BASE_URL, parseListValue } from './utils'
 
 
 export interface CorsOptions {
-  credentials: boolean
-  exposedHeaders: string[] | string
-  headers: string[] | string
-  maxAge: number
-  methods: string[] | string
-  origins: string[] | string
+  credentials?: boolean
+  exposedHeaders?: string[] | string
+  headers?: string[] | string
+  maxAge?: number
+  methods?: string[] | string
+  origins?: string[] | string
 }
 
-export const defaultCorsOptions: CorsOptions = {
+export const defaultCorsOptions: Required<CorsOptions> = {
   credentials: false,
   exposedHeaders: [],
   headers: [],
@@ -22,10 +22,10 @@ export const defaultCorsOptions: CorsOptions = {
 export class CORS {
 
   // Registry mapping CORS options to a server and pathname
-  private static registry: Record<string, Record<string, Partial<CorsOptions>>> = {}
+  private static registry: Record<string, Record<string, CorsOptions>> = {}
 
   // Register new CORS options to a server and pathname
-  public static register(server: string, pathname: string, options: Partial<CorsOptions>) {
+  public static register(server: string, pathname: string, options: CorsOptions) {
     if (!this.registry[server]) this.registry[server] = {}
     if (this.registry[server][pathname]) {
       console.warn(`[Comet] A CORS policy has already been set up for the path '${pathname}'.`)
@@ -35,9 +35,9 @@ export class CORS {
   }
 
   // Find the CORS options for a server and pathname
-  public static find(server: string, pathname: string): Partial<CorsOptions> | undefined {
+  public static find(server: string, pathname: string): CorsOptions | undefined {
     for (const currentPathname in this.registry[server]) {
-      const doPathnamesMatch = checkPathname(pathname, currentPathname)
+      const doPathnamesMatch = new URLPattern(currentPathname, BASE_URL).test(pathname, BASE_URL)
       if (doPathnamesMatch) return this.registry[server][currentPathname]
     }
   }
@@ -46,7 +46,7 @@ export class CORS {
   public static getHeaders(
     server: string,
     pathname: string,
-    fallbackOptions?: Partial<CorsOptions>,
+    fallbackOptions?: CorsOptions,
     isPreflight?: boolean,
     origin?: string
   ): Headers {

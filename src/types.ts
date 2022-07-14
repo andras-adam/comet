@@ -43,12 +43,12 @@ export interface CookiesOptions {
 
 export interface ServerConfiguration {
   cookies: CookiesOptions
-  cors?: Partial<CorsOptions>
+  cors?: CorsOptions
   name: string
 }
 
 export interface CometOptions {
   cookies?: Partial<CookiesOptions>
-  cors?: Partial<CorsOptions>
+  cors?: CorsOptions
   name?: string
 }

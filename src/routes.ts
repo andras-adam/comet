@@ -1,8 +1,6 @@
 import { CookiesOptions, EventHandler, Method, Params } from './types'
+import { BASE_URL } from './utils'
 
-
-// Base URL used in pathname matching, the actual value is irrelevant
-const BASE_URl = 'https://comet'
 
 export interface Route {
   after: EventHandler[]
@@ -23,7 +21,7 @@ export class Routes {
   public static register(route: Route) {
     const { server, pathname, method } = route
     if (method === Method.OPTIONS) {
-      console.warn(`[Comet] Skipping route '${method} ${pathname}', please consult the guide to learn how to configure CORS with Comet.`)
+      console.warn(`[Comet] Skipping route '${method} ${pathname}', please consult the guide on how CORS can be configured via Comet.`)
       return
     }
     try {
