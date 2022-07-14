@@ -14,10 +14,10 @@ export interface Route {
 
 export class Routes {
 
-  // Registered routes
-  private static routes: Route[] = []
+  // Registry mapping routes to a server, pathname and method
+  private static registry: Record<string, Record<string, Record<string, Route>>> = {}
 
-  // Register a new route
+  // Register a new route to a server, pathname and method
   public static register(route: Route) {
     const { server, pathname, method } = route
     if (method === Method.OPTIONS) {
@@ -25,33 +25,35 @@ export class Routes {
       return
     }
     try {
-      new URLPattern(pathname, BASE_URl)
+      new URLPattern(pathname, BASE_URL)
     } catch (error) {
       console.error(`[Comet] Failed to set up route '${method} ${pathname}' due to an invalid pathname pattern.`, error)
       return
     }
-    const blockingRoute = this.find(server, pathname, method)
-    if (blockingRoute) {
-      const { pathname: blockingPathname, method: blockingMethod } = blockingRoute
-      console.warn(`[Comet] Skipping route '${method} ${pathname}' as it will be unreachable due to the already registered route '${blockingMethod} ${blockingPathname}'.`)
+    if (!this.registry[server]) this.registry[server] = {}
+    if (!this.registry[server][pathname]) this.registry[server][pathname] = {}
+    if (this.registry[server][pathname][method]) {
+      console.warn(`[Comet] A route has already been registered for the path '${method} ${pathname}'.`)
       return
     }
-    this.routes.push(route)
+    this.registry[server][pathname][method] = route
   }
 
   // Find a route by server, pathname and method
   public static find(server: string, pathname: string, method: Method): Route | undefined {
-    for (const currentRoute of this.routes) {
-      if (currentRoute.server !== server) continue
-      const doPathnamesMatch = new URLPattern(currentRoute.pathname, BASE_URl).test(pathname, BASE_URl)
-      const doMethodsMatch = currentRoute.method === method || currentRoute.method === Method.ALL
-      if (doPathnamesMatch && doMethodsMatch) return currentRoute
+    for (const currentPathname in this.registry[server]) {
+      const doPathnamesMatch = new URLPattern(currentPathname, BASE_URL).test(pathname, BASE_URL)
+      if (!doPathnamesMatch) continue
+      for (const currentMethod in this.registry[server][currentPathname]) {
+        const doMethodsMatch = currentMethod === method || currentMethod === Method.ALL
+        if (doMethodsMatch) return this.registry[server][currentPathname][currentMethod]
+      }
     }
   }
 
   // Get the pathname parameters from a pathname based on a template pathname
   public static getPathnameParameters(pathname: string, template: string): Params {
-    const result = new URLPattern(template, BASE_URl).exec(pathname, BASE_URl)
+    const result = new URLPattern(template, BASE_URL).exec(pathname, BASE_URL)
     return result?.pathname?.groups ?? {}
   }
 
