@@ -16,6 +16,7 @@ export interface Route {
   cookies?: Partial<CookiesOptions>
   handler: EventHandler
   method: Method
+  name: string
   pathname: string
   server: string
 }
@@ -27,19 +28,19 @@ export class Routes {
 
   // Register a new route to a server, pathname and method
   public static register(route: Route) {
-    const { server, pathname, method, compatibilityDate } = route
+    const { server, pathname, method, name, compatibilityDate } = route
     if (method === Method.OPTIONS) {
-      console.warn(`[Comet] Skipping route '${method} ${pathname}', please consult the guide on how CORS can be configured via Comet.`)
+      console.warn(`[Comet] Skipping route '${name}', please consult the guide on how CORS can be configured via Comet.`)
       return
     }
     try {
       new URLPattern(pathname, BASE_URL)
     } catch (error) {
-      console.error(`[Comet] Failed to set up route '${method} ${pathname}' due to an invalid pathname pattern.`, error)
+      console.error(`[Comet] Failed to set up route '${name}' due to an invalid pathname pattern.`, error)
       return
     }
-    if (compatibilityDate && Number.isNaN(new Date(compatibilityDate).valueOf())) {
-      console.error(`[Comet] Failed to set up route '${method} ${pathname}' due to an invalid compatibility date.`)
+    if (typeof compatibilityDate === 'string' && Number.isNaN(new Date(compatibilityDate).valueOf())) {
+      console.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
       return
     }
     if (!this.registry[server]) this.registry[server] = {}

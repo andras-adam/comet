@@ -8,6 +8,7 @@ export interface UseRouteOptions<TEnv = Env, TBody = Body> {
   compatibilityDate?: string
   cookies?: Partial<CookiesOptions>
   method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
+  name?: string
   pathname?: string
   server?: string
 }
@@ -17,15 +18,19 @@ export function useRoute<TEnv = Env, TBody = Body>(
   handler: EventHandler<TEnv, TBody>
 ) {
   try {
+    const server = options.server ?? 'main'
+    const pathname = options.pathname ?? '*'
+    const method = options.method ? options.method.toUpperCase() as Method : Method.ALL
     Routes.register({
       after: options.after ?? [],
       before: options.before ?? [],
       compatibilityDate: options.compatibilityDate,
       cookies: options.cookies,
       handler,
-      method: options.method ? options.method.toUpperCase() as Method : Method.ALL,
-      pathname: options.pathname ?? '*',
-      server: options.server ?? 'main'
+      method,
+      name: options.name ?? `${method} ${pathname}`,
+      pathname,
+      server
     })
   } catch (error) {
     console.error('[Comet] Failed to register a route.', error)
