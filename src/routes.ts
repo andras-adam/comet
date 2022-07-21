@@ -2,9 +2,17 @@ import { CookiesOptions, EventHandler, Method, Params } from './types'
 import { BASE_URL } from './utils'
 
 
+// Check a compatibility date against another one
+export function compareCompatibilityDates(check?: string, against?: string) {
+  if (!against) return true // Checking anything against a default will match
+  if (!check) return false // Checking nothing against a non-default will not match
+  return new Date(check) >= new Date(against) // Checking a newer date against an older one will match
+}
+
 export interface Route {
   after: EventHandler[]
   before: EventHandler[]
+  compatibilityDate?: string
   cookies?: Partial<CookiesOptions>
   handler: EventHandler
   method: Method
@@ -15,11 +23,11 @@ export interface Route {
 export class Routes {
 
   // Registry mapping routes to a server, pathname and method
-  private static registry: Record<string, Record<string, Record<string, Route>>> = {}
+  private static registry: Record<string, Record<string, Record<string, Route[]>>> = {}
 
   // Register a new route to a server, pathname and method
   public static register(route: Route) {
-    const { server, pathname, method } = route
+    const { server, pathname, method, compatibilityDate } = route
     if (method === Method.OPTIONS) {
       console.warn(`[Comet] Skipping route '${method} ${pathname}', please consult the guide on how CORS can be configured via Comet.`)
       return
@@ -30,23 +38,40 @@ export class Routes {
       console.error(`[Comet] Failed to set up route '${method} ${pathname}' due to an invalid pathname pattern.`, error)
       return
     }
-    if (!this.registry[server]) this.registry[server] = {}
-    if (!this.registry[server][pathname]) this.registry[server][pathname] = {}
-    if (this.registry[server][pathname][method]) {
-      console.warn(`[Comet] A route has already been registered for the path '${method} ${pathname}'.`)
+    if (compatibilityDate && Number.isNaN(new Date(compatibilityDate).valueOf())) {
+      console.error(`[Comet] Failed to set up route '${method} ${pathname}' due to an invalid compatibility date.`)
       return
     }
-    this.registry[server][pathname][method] = route
+    if (!this.registry[server]) this.registry[server] = {}
+    if (!this.registry[server][pathname]) this.registry[server][pathname] = {}
+    if (!this.registry[server][pathname][method]) this.registry[server][pathname][method] = []
+    this.registry[server][pathname][method].push(route)
   }
 
   // Find a route by server, pathname and method
-  public static find(server: string, pathname: string, method: Method): Route | undefined {
+  public static find(server: string, pathname: string, method: Method, compatibilityDate?: string): Route | undefined {
     for (const currentPathname in this.registry[server]) {
       const doPathnamesMatch = new URLPattern(currentPathname, BASE_URL).test(pathname, BASE_URL)
       if (!doPathnamesMatch) continue
       for (const currentMethod in this.registry[server][currentPathname]) {
         const doMethodsMatch = currentMethod === method || currentMethod === Method.ALL
-        if (doMethodsMatch) return this.registry[server][currentPathname][currentMethod]
+        if (!doMethodsMatch) continue
+        for (const currentRoute of this.registry[server][currentPathname][currentMethod]) {
+          const isCompatible = compareCompatibilityDates(compatibilityDate, currentRoute.compatibilityDate)
+          if (isCompatible) return currentRoute
+        }
+      }
+    }
+  }
+
+  // Initialize routes for a server by sorting them by compatibility date in
+  // descending order to ensure the correct functioning of the find algorithm
+  public static init(server: string): void {
+    for (const pathname in this.registry[server]) {
+      for (const method in this.registry[server][pathname]) {
+        this.registry[server][pathname][method].sort((a, b) => {
+          return compareCompatibilityDates(a.compatibilityDate, b.compatibilityDate) ? -1 : 1
+        })
       }
     }
   }

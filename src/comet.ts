@@ -20,6 +20,8 @@ export function comet(options: CometOptions) {
     cookies: { ...defaultConfig.cookies, ...options.cookies },
     cors: options.cors
   }
+  // Initialize routes
+  Routes.init(config.name)
   // Return handler function
   return async (
     request: Request,
@@ -33,7 +35,8 @@ export function comet(options: CometOptions) {
       const method = isPreflight
         ? request.headers.get('access-control-request-method') as Method
         : request.method as Method
-      const route = Routes.find(config.name, pathname, method)
+      const compatibilityDate = request.headers.get('x-compatibility-date') as string
+      const route = Routes.find(config.name, pathname, method, compatibilityDate)
       if (route) {
         config.cookies = { ...config.cookies, ...route.cookies } // fixme overrides config each time
         const event = await Event.fromRequest(request, config, env, ctx, state)
