@@ -1,4 +1,4 @@
-import { Body, CookiesOptions, Env, EventHandler, Method } from '../types'
+import { Body, Env, EventHandler, Method } from '../types'
 import { Routes } from '../routes'
 
 
@@ -6,7 +6,6 @@ export interface UseRouteOptions<TEnv = Env, TBody = Body> {
   after?: EventHandler<TEnv, TBody>[]
   before?: EventHandler<TEnv, TBody>[]
   compatibilityDate?: string
-  cookies?: Partial<CookiesOptions>
   method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
   name?: string
   pathname?: string
@@ -25,7 +24,6 @@ export function useRoute<TEnv = Env, TBody = Body>(
       after: options.after ?? [],
       before: options.before ?? [],
       compatibilityDate: options.compatibilityDate,
-      cookies: options.cookies,
       handler,
       method,
       name: options.name ?? `${method} ${pathname}`,

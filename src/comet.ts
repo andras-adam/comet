@@ -1,27 +1,23 @@
-import { CometOptions, Method, ServerConfiguration } from './types'
+import { Method, Configuration } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
 import { CORS } from './cors'
 
 
-const defaultConfig: ServerConfiguration = {
-  name: 'main',
-  cookies: {
-    decode: decodeURIComponent,
-    encode: encodeURIComponent,
-    limit: 64
-  }
+export interface CometOptions extends Omit<Partial<Configuration>, 'server'> {
+  name?: string
 }
 
 export function comet(options: CometOptions) {
   // Construct the server's configuration
-  const config: ServerConfiguration = {
-    name: options.name ?? defaultConfig.name,
-    cookies: { ...defaultConfig.cookies, ...options.cookies },
-    cors: options.cors
+  const config: Configuration = {
+    server: options.name ?? 'main',
+    cookies: options.cookies,
+    cors: options.cors,
+    prefix: options.prefix
   }
   // Initialize routes
-  Routes.init(config.name)
+  Routes.init(config.server)
   // Return handler function
   return async (
     request: Request,
@@ -36,13 +32,12 @@ export function comet(options: CometOptions) {
         ? request.headers.get('access-control-request-method') as Method
         : request.method as Method
       const compatibilityDate = request.headers.get('x-compatibility-date') as string
-      const route = Routes.find(config.name, pathname, method, compatibilityDate)
+      const route = Routes.find(config, config.server, pathname, method, compatibilityDate)
       if (route) {
-        config.cookies = { ...config.cookies, ...route.cookies } // fixme overrides config each time
-        const event = await Event.fromRequest(request, config, env, ctx, state)
+        const event = await Event.fromRequest(config, request, env, ctx, state)
         event.params = Routes.getPathnameParameters(event.pathname, route.pathname)
         const origin = request.headers.get('origin') as string
-        event.reply.headers = CORS.getHeaders(config.name, event.pathname, config.cors, isPreflight, origin)
+        event.reply.headers = CORS.getHeaders(config.server, event.pathname, config.cors, isPreflight, origin)
         if (isPreflight) {
           event.reply.noContent()
         } else {

@@ -1,4 +1,4 @@
-import { CookiesOptions, EventHandler, Method, Params } from './types'
+import { EventHandler, Method, Params, Configuration } from './types'
 import { BASE_URL } from './utils'
 
 
@@ -13,7 +13,6 @@ export interface Route {
   after: EventHandler[]
   before: EventHandler[]
   compatibilityDate?: string
-  cookies?: Partial<CookiesOptions>
   handler: EventHandler
   method: Method
   name: string
@@ -50,9 +49,16 @@ export class Routes {
   }
 
   // Find a route by server, pathname and method
-  public static find(server: string, pathname: string, method: Method, compatibilityDate?: string): Route | undefined {
+  public static find(
+    config: Configuration,
+    server: string,
+    pathname: string,
+    method: Method,
+    compatibilityDate?: string
+  ): Route | undefined {
+    const searchPathname = config.prefix ? `${config.prefix}${pathname}` : pathname
     for (const currentPathname in this.registry[server]) {
-      const doPathnamesMatch = new URLPattern(currentPathname, BASE_URL).test(pathname, BASE_URL)
+      const doPathnamesMatch = new URLPattern(currentPathname, BASE_URL).test(searchPathname, BASE_URL)
       if (!doPathnamesMatch) continue
       for (const currentMethod in this.registry[server][currentPathname]) {
         const doMethodsMatch = currentMethod === method || currentMethod === Method.ALL

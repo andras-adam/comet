@@ -1,5 +1,17 @@
-import { CookiesOptions } from './types'
+import { Configuration } from './types'
 
+
+export interface CookiesOptions {
+  decode?: ((arg: string) => Promise<string> | string) | null
+  encode?: ((arg: string) => Promise<string> | string) | null
+  limit?: number
+}
+
+export const defaultCookiesOptions: Required<CookiesOptions> = {
+  decode: decodeURIComponent,
+  encode: encodeURIComponent,
+  limit: 64
+}
 
 export enum SameSite {
   Strict = 'Strict',
@@ -67,7 +79,8 @@ export class Cookies {
   }
 
   // Parse cookies from headers
-  public static async parse(headers: Headers, options: CookiesOptions): Promise<Cookies> {
+  public static async parse(headers: Headers, config: Configuration): Promise<Cookies> {
+    const options = this.getOptions(config.cookies)
     const cookies = new Cookies()
     const pairs = headers.get('Cookie')?.split(';', options.limit) ?? []
     for (const pair of pairs) {
@@ -93,7 +106,8 @@ export class Cookies {
   }
 
   // Serialize cookies to headers
-  public static async serialize(cookies: Cookies, headers: Headers, options: CookiesOptions): Promise<void> {
+  public static async serialize(cookies: Cookies, headers: Headers, config: Configuration): Promise<void> {
+    const options = this.getOptions(config.cookies)
     for (const cookie of cookies.data.values()) {
       const serialized: string[] = []
       try {
@@ -117,6 +131,11 @@ export class Cookies {
       // Append the cookie to the headers
       headers.append('Set-Cookie', serialized.join('; '))
     }
+  }
+
+  // Get all options with fallback to default options
+  public static getOptions(options?: CookiesOptions): Required<CookiesOptions> {
+    return { ...defaultCookiesOptions, ...options }
   }
 
 }
