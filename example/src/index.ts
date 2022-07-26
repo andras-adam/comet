@@ -8,7 +8,7 @@ useCors({
 
 useRoute<{ foo: string }, { bar: string }>({
   method: Method.ALL,
-  pathname: '/api',
+  pathname: '/test',
   before: [
     event => {
       console.log('Before 1')
@@ -41,6 +41,7 @@ export default {
       origins: 'http://localhost:3000',
       methods: '*',
       headers: '*'
-    }
+    },
+    prefix: '/api'
   })
 }

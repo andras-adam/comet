@@ -56,9 +56,9 @@ export class Routes {
     method: Method,
     compatibilityDate?: string
   ): Route | undefined {
-    const searchPathname = config.prefix ? `${config.prefix}${pathname}` : pathname
     for (const currentPathname in this.registry[server]) {
-      const doPathnamesMatch = new URLPattern(currentPathname, BASE_URL).test(searchPathname, BASE_URL)
+      const currentFullPathname = config.prefix ? `${config.prefix}${currentPathname}` : currentPathname
+      const doPathnamesMatch = new URLPattern(currentFullPathname, BASE_URL).test(pathname, BASE_URL)
       if (!doPathnamesMatch) continue
       for (const currentMethod in this.registry[server][currentPathname]) {
         const doMethodsMatch = currentMethod === method || currentMethod === Method.ALL
