@@ -7,8 +7,8 @@ export class Reply {
   public sent = false
   public status = 200
   public body?: Body
-  public readonly headers = new Headers()
-  public readonly cookies = new Cookies()
+  public headers = new Headers()
+  public cookies = new Cookies()
 
   // Send a custom HTTP response
   private send(status: number, body?: Body): Reply {

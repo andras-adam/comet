@@ -1,9 +1,14 @@
-import { comet, Method, useComet } from '../../src'
+import { comet, Method, useCors, useRoute } from '../../src'
 
 
-useComet<{ foo: string }, { bar: string }>({
+useCors({
+  pathname: '/api',
+  origins: [ 'http://localhost:3000', 'http://localhost:4000' ]
+})
+
+useRoute<{ foo: string }, { bar: string }>({
   method: Method.ALL,
-  pathname: '/api/categories/:categoryId/products/:productId',
+  pathname: '/api',
   before: [
     event => {
       console.log('Before 1')
