@@ -1,6 +1,7 @@
 import { Event } from './event'
 import { Reply } from './reply'
 import { CorsOptions } from './cors'
+import { CookiesOptions } from './cookies'
 
 
 export enum Method {
@@ -35,20 +36,9 @@ export type Env = any
 export type EventHandler<TEnv = Env, TBody = Body> =
   (event: Event<TEnv, TBody>) => Promise<Event | Reply> | Event | Reply
 
-export interface CookiesOptions {
-  decode: ((arg: string) => Promise<string> | string) | null
-  encode: ((arg: string) => Promise<string> | string) | null
-  limit: number
-}
-
-export interface ServerConfiguration {
-  cookies: CookiesOptions
+export interface Configuration {
+  cookies?: CookiesOptions
   cors?: CorsOptions
-  name: string
-}
-
-export interface CometOptions {
-  cookies?: Partial<CookiesOptions>
-  cors?: CorsOptions
-  name?: string
+  prefix?: string
+  server: string
 }

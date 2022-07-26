@@ -1,4 +1,4 @@
-import { Body, Env, Params, Query, Method, ServerConfiguration } from './types'
+import { Body, Env, Params, Query, Method, Configuration } from './types'
 import { Reply } from './reply'
 import { Cookies } from './cookies'
 
@@ -42,8 +42,8 @@ export class Event<TEnv = Env, TBody = Body> {
   }
 
   public static async fromRequest(
+    config: Configuration,
     request: Request,
-    config: ServerConfiguration,
     env: unknown,
     ctx: ExecutionContext,
     state?: DurableObjectState
@@ -51,7 +51,7 @@ export class Event<TEnv = Env, TBody = Body> {
     const url = new URL(request.url)
     const event = new Event({
       body: {},
-      cookies: await Cookies.parse(request.headers, config.cookies),
+      cookies: await Cookies.parse(request.headers, config),
       ctx,
       env,
       headers: request.headers,
@@ -84,14 +84,14 @@ export class Event<TEnv = Env, TBody = Body> {
     return event
   }
 
-  public static async toResponse(event: Event, config: ServerConfiguration): Promise<Response> {
+  public static async toResponse(event: Event, config: Configuration): Promise<Response> {
     if (!event.reply.sent) {
       console.error('[Comet] No reply was sent for this event.')
       return new Response(null, { status: 500 })
     }
     const status = event.reply.status
     const headers = event.reply.headers
-    await Cookies.serialize(event.reply.cookies, event.reply.headers, config.cookies)
+    await Cookies.serialize(event.reply.cookies, event.reply.headers, config)
     // Handle websocket response
     if (event.reply.body instanceof WebSocket) {
       return new Response(null, { status, headers, webSocket: event.reply.body })
