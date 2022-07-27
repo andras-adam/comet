@@ -20,15 +20,14 @@ export function useRoute<TEnv = Env, TBody = Body>(
     const server = options.server ?? 'main'
     const pathname = options.pathname ?? '*'
     const method = options.method ? options.method.toUpperCase() as Method : Method.ALL
-    Routes.register({
+    Routes.register(server, {
       after: options.after ?? [],
       before: options.before ?? [],
       compatibilityDate: options.compatibilityDate,
       handler,
       method,
       name: options.name ?? `${method} ${pathname}`,
-      pathname,
-      server
+      pathname
     })
   } catch (error) {
     console.error('[Comet] Failed to register a route.', error)

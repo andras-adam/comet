@@ -32,7 +32,7 @@ export function comet(options: CometOptions) {
         ? request.headers.get('access-control-request-method') as Method
         : request.method as Method
       const compatibilityDate = request.headers.get('x-compatibility-date') as string
-      const route = Routes.find(config, config.server, pathname, method, compatibilityDate)
+      const route = Routes.find(config.server, pathname, method, compatibilityDate, config.prefix)
       if (route) {
         const event = await Event.fromRequest(config, request, env, ctx, state)
         event.params = Routes.getPathnameParameters(event.pathname, route.pathname)

@@ -1,13 +1,6 @@
-import { EventHandler, Method, Params, Configuration } from './types'
-import { BASE_URL } from './utils'
+import { EventHandler, Method, Params } from './types'
+import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
 
-
-// Check a compatibility date against another one
-export function compareCompatibilityDates(check?: string, against?: string) {
-  if (!against) return true // Checking anything against a default will match
-  if (!check) return false // Checking nothing against a non-default will not match
-  return new Date(check) >= new Date(against) // Checking a newer date against an older one will match
-}
 
 export interface Route {
   after: EventHandler[]
@@ -17,17 +10,16 @@ export interface Route {
   method: Method
   name: string
   pathname: string
-  server: string
 }
 
 export class Routes {
 
-  // Registry mapping routes to a server, pathname and method
-  private static registry: Record<string, Record<string, Record<string, Route[]>>> = {}
+  // Registry mapping routes to a server
+  private static registry: Record<string, Route[]> = {}
 
-  // Register a new route to a server, pathname and method
-  public static register(route: Route) {
-    const { server, pathname, method, name, compatibilityDate } = route
+  // Register a new route to a server
+  public static register(server: string, route: Route): void {
+    const { pathname, method, name, compatibilityDate } = route
     if (method === Method.OPTIONS) {
       console.warn(`[Comet] Skipping route '${name}', please consult the guide on how CORS can be configured via Comet.`)
       return
@@ -42,45 +34,35 @@ export class Routes {
       console.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
       return
     }
-    if (!this.registry[server]) this.registry[server] = {}
-    if (!this.registry[server][pathname]) this.registry[server][pathname] = {}
-    if (!this.registry[server][pathname][method]) this.registry[server][pathname][method] = []
-    this.registry[server][pathname][method].push(route)
+    if (!this.registry[server]) this.registry[server] = []
+    this.registry[server].push(route)
   }
 
-  // Find a route by server, pathname and method
+  // Find a route on a server by pathname, method and compatibility date
   public static find(
-    config: Configuration,
     server: string,
     pathname: string,
     method: Method,
-    compatibilityDate?: string
+    compatibilityDate?: string,
+    prefix?: string
   ): Route | undefined {
-    for (const currentPathname in this.registry[server]) {
-      const currentFullPathname = config.prefix ? `${config.prefix}${currentPathname}` : currentPathname
-      const doPathnamesMatch = new URLPattern(currentFullPathname, BASE_URL).test(pathname, BASE_URL)
+    for (const route of this.registry[server]) {
+      const doPathnamesMatch = comparePathnames(pathname, `${prefix ?? ''}${route.pathname}`)
       if (!doPathnamesMatch) continue
-      for (const currentMethod in this.registry[server][currentPathname]) {
-        const doMethodsMatch = currentMethod === method || currentMethod === Method.ALL
-        if (!doMethodsMatch) continue
-        for (const currentRoute of this.registry[server][currentPathname][currentMethod]) {
-          const isCompatible = compareCompatibilityDates(compatibilityDate, currentRoute.compatibilityDate)
-          if (isCompatible) return currentRoute
-        }
-      }
+      const doMethodsMatch = compareMethods(method, route.method)
+      if (!doMethodsMatch) continue
+      const isCompatible = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
+      if (isCompatible) return route
     }
   }
 
   // Initialize routes for a server by sorting them by compatibility date in
   // descending order to ensure the correct functioning of the find algorithm
   public static init(server: string): void {
-    for (const pathname in this.registry[server]) {
-      for (const method in this.registry[server][pathname]) {
-        this.registry[server][pathname][method].sort((a, b) => {
-          return compareCompatibilityDates(a.compatibilityDate, b.compatibilityDate) ? -1 : 1
-        })
-      }
-    }
+    this.registry[server]?.sort((a, b) => {
+      if (a.pathname !== b.pathname || a.method !== b.method) return 0
+      return compareCompatibilityDates(a.compatibilityDate, b.compatibilityDate) ? -1 : 1
+    })
   }
 
   // Get the pathname parameters from a pathname based on a template pathname

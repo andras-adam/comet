@@ -6,31 +6,27 @@ useCors({
   origins: [ 'http://localhost:3000', 'http://localhost:4000' ]
 })
 
-useRoute<{ foo: string }, { bar: string }>({
-  method: Method.ALL,
-  pathname: '/test',
-  before: [
-    event => {
-      console.log('Before 1')
-      return event.next()
-    },
-    event => {
-      console.log('Before 2')
-      event.reply.headers.set('x-powered-by', 'Comet')
-      return event.next()
-    }
-  ],
-  after: [
-    event => {
-      console.log('After 1', event.reply.body)
-      return event.next()
-    }
-  ]
-}, event => {
-  console.log('Handler', event.cookies.get('foo'), event.params)
-  event.reply.cookies.set('foo', 'bar', { httpOnly: true })
-  return event.reply.ok({ success: true })
-})
+useRoute({
+  method: Method.POST,
+  pathname: '/books'
+}, event => event.reply.ok({ message: 1 }))
+
+useRoute({
+  method: Method.GET,
+  pathname: '/books'
+}, event => event.reply.ok({ message: 2 }))
+
+useRoute({
+  method: Method.GET,
+  pathname: '/books',
+  compatibilityDate: '2022-02-12'
+}, event => event.reply.ok({ message: 3 }))
+
+useRoute({
+  method: Method.GET,
+  pathname: '/books',
+  compatibilityDate: '2022-04-12'
+}, event => event.reply.ok({ message: 4 }))
 
 export default {
   fetch: comet({
