@@ -2,6 +2,7 @@ import { Method, Configuration } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
 import { CORS } from './cors'
+import { getPathnameParameters } from './utils'
 
 
 export interface CometOptions extends Omit<Partial<Configuration>, 'server'> {
@@ -35,7 +36,7 @@ export function comet(options: CometOptions) {
       const route = Routes.find(config.server, pathname, method, compatibilityDate, config.prefix)
       if (route) {
         const event = await Event.fromRequest(config, request, env, ctx, state)
-        event.params = Routes.getPathnameParameters(event.pathname, route.pathname)
+        event.params = getPathnameParameters(event.pathname, route.pathname)
         const origin = request.headers.get('origin') as string
         event.reply.headers = CORS.getHeaders(config.server, event.pathname, config.cors, isPreflight, origin)
         if (isPreflight) {

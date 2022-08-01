@@ -1,4 +1,4 @@
-import { Method } from './types'
+import { Method, Params } from './types'
 
 
 // Base URL for URLPattern pathname testing, the actual value is irrelevant
@@ -26,4 +26,10 @@ export function compareCompatibilityDates(check?: string, against?: string): boo
   if (!against) return true // Checking anything against a default will match
   if (!check) return false // Checking nothing against a non-default will not match
   return new Date(check) >= new Date(against) // Checking a newer date against an older one will match
+}
+
+// Get the pathname parameters from a pathname based on a template pathname
+export function getPathnameParameters(pathname: string, template: string): Params {
+  const result = new URLPattern(template, BASE_URL).exec(pathname, BASE_URL)
+  return result?.pathname?.groups ?? {}
 }

@@ -1,4 +1,4 @@
-import { EventHandler, Method, Params } from './types'
+import { EventHandler, Method } from './types'
 import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
 
 
@@ -63,12 +63,6 @@ export class Routes {
       if (a.pathname !== b.pathname || a.method !== b.method) return 0
       return compareCompatibilityDates(a.compatibilityDate, b.compatibilityDate) ? -1 : 1
     })
-  }
-
-  // Get the pathname parameters from a pathname based on a template pathname
-  public static getPathnameParameters(pathname: string, template: string): Params {
-    const result = new URLPattern(template, BASE_URL).exec(pathname, BASE_URL)
-    return result?.pathname?.groups ?? {}
   }
 
 }
