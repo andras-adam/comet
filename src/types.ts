@@ -2,6 +2,7 @@ import { Event } from './event'
 import { Reply } from './reply'
 import { CorsOptions } from './cors'
 import { CookiesOptions } from './cookies'
+import { LoggerMethods, LogLevel } from './logger'
 
 
 export enum Method {
@@ -39,6 +40,8 @@ export type EventHandler<TEnv = Env, TBody = Body> =
 export interface Configuration {
   cookies?: CookiesOptions
   cors?: CorsOptions
+  logger?: LoggerMethods
+  loglevel?: LogLevel
   prefix?: string
   server: string
 }
