@@ -1,4 +1,5 @@
 import { CORS, CorsOptions } from '../cors'
+import { cometLogger } from '../logger'
 
 
 export interface UseCorsOptions extends CorsOptions {
@@ -13,6 +14,6 @@ export function useCors(options: UseCorsOptions): void {
     const pathname = pathnameFromOptions ?? '*'
     CORS.register(server, pathname, corsOptions)
   } catch (error) {
-    console.error('[Comet] Failed to register a CORS policy.', error)
+    cometLogger.error('[Comet] Failed to register a CORS policy.', error)
   }
 }

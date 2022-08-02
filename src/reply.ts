@@ -1,5 +1,6 @@
 import { Body } from './types'
 import { Cookies } from './cookies'
+import { cometLogger } from './logger'
 
 
 export class Reply {
@@ -13,7 +14,7 @@ export class Reply {
   // Send a custom HTTP response
   private send(status: number, body?: Body): Reply {
     if (this.sent) {
-      console.warn('[Comet] Cannot send a reply after one has already been sent.')
+      cometLogger.warn('[Comet] Cannot send a reply after one has already been sent.')
       return this
     }
     this.sent = true

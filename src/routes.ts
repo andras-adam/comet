@@ -1,5 +1,6 @@
 import { EventHandler, Method } from './types'
 import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
+import { cometLogger } from './logger'
 
 
 export interface Route {
@@ -21,17 +22,17 @@ export class Routes {
   public static register(server: string, route: Route): void {
     const { pathname, method, name, compatibilityDate } = route
     if (method === Method.OPTIONS) {
-      console.warn(`[Comet] Skipping route '${name}', please consult the guide on how CORS can be configured via Comet.`)
+      cometLogger.warn(`[Comet] Skipping route '${name}', please consult the guide on how CORS can be configured via Comet.`)
       return
     }
     try {
       new URLPattern(pathname, BASE_URL)
     } catch (error) {
-      console.error(`[Comet] Failed to set up route '${name}' due to an invalid pathname pattern.`, error)
+      cometLogger.error(`[Comet] Failed to set up route '${name}' due to an invalid pathname pattern.`, error)
       return
     }
     if (typeof compatibilityDate === 'string' && Number.isNaN(new Date(compatibilityDate).valueOf())) {
-      console.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
+      cometLogger.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
       return
     }
     if (!this.registry[server]) this.registry[server] = []
