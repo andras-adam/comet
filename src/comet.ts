@@ -16,13 +16,14 @@ export function comet(options: CometOptions) {
     server: options.name ?? 'main',
     cookies: options.cookies,
     logger: options.logger ?? console,
+    loglevel: options.loglevel ?? 'debug',
     cors: options.cors,
     prefix: options.prefix
   }
   // Initialize routes
   Routes.init(config.server)
   // Initialize logger
-  setLogger(config.logger)
+  setLogger(config.logger, config.loglevel)
   // Return handler function
   return async (
     request: Request,

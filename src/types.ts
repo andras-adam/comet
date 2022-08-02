@@ -41,7 +41,7 @@ export interface Configuration {
   cookies?: CookiesOptions
   cors?: CorsOptions
   logger?: LoggerMethods
-  loglevel?: LogLevel
+  loglevel?: keyof typeof LogLevel
   prefix?: string
   server: string
 }
