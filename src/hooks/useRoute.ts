@@ -1,5 +1,6 @@
 import { Body, Env, EventHandler, Method } from '../types'
 import { Routes } from '../routes'
+import { cometLogger } from '../logger'
 
 
 export interface UseRouteOptions<TEnv = Env, TBody = Body> {
@@ -30,6 +31,6 @@ export function useRoute<TEnv = Env, TBody = Body>(
       pathname
     })
   } catch (error) {
-    console.error('[Comet] Failed to register a route.', error)
+    cometLogger.error('[Comet] Failed to register a route.', error)
   }
 }

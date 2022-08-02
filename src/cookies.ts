@@ -1,4 +1,5 @@
 import { Configuration } from './types'
+import { cometLogger } from './logger'
 
 
 export interface CookiesOptions {
@@ -87,7 +88,7 @@ export class Cookies {
       // Parse cookie name and value
       let [ name, value ] = pair.split('=', 2).map(component => component.trim())
       if (!name || !value) {
-        console.error(`[Comet] Failed to parse malformatted cookie "${pair}".`)
+        cometLogger.error(`[Comet] Failed to parse malformatted cookie "${pair}".`)
         continue
       }
       // Unwrap cookie value if it is wrapped in quotes
@@ -99,7 +100,7 @@ export class Cookies {
         // Set the cookie
         cookies.set(name, value)
       } catch (error) {
-        console.error(`[Comet] Failed to decode cookie "${pair}".`, error)
+        cometLogger.error(`[Comet] Failed to decode cookie "${pair}".`, error)
       }
     }
     return cookies
@@ -117,7 +118,7 @@ export class Cookies {
         // Set the cookie
         serialized.push(`${name}=${value}`)
       } catch (error) {
-        console.error(`[Comet] Failed to encode cookie "${cookie.name}".`, error)
+        cometLogger.error(`[Comet] Failed to encode cookie "${cookie.name}".`, error)
         continue
       }
       // Set cookie meta data

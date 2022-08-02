@@ -1,4 +1,5 @@
 import { BASE_URL, parseListValue } from './utils'
+import { cometLogger } from './logger'
 
 
 export interface CorsOptions {
@@ -28,7 +29,7 @@ export class CORS {
   public static register(server: string, pathname: string, options: CorsOptions) {
     if (!this.registry[server]) this.registry[server] = {}
     if (this.registry[server][pathname]) {
-      console.warn(`[Comet] A CORS policy has already been set up for the path '${pathname}'.`)
+      cometLogger.warn(`[Comet] A CORS policy has already been set up for the path '${pathname}'.`)
     } else {
       this.registry[server][pathname] = options
     }
