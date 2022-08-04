@@ -25,7 +25,8 @@ useCors({
 
 useRoute({
   method: Method.ALL,
-  pathname: '/books/:bookId'
+  pathname: '/books/:bookId',
+  compatibilityDate: '2022-06-30'
 }, event => {
   console.log('route', event.params)
   return event.reply.ok()
