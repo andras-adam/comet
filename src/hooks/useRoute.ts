@@ -14,10 +14,20 @@ export interface UseRouteOptions<TEnv = Env, TBody = Body> {
 }
 
 export function useRoute<TEnv = Env, TBody = Body>(
+  handler: EventHandler<TEnv, TBody>
+): void
+export function useRoute<TEnv = Env, TBody = Body>(
   options: UseRouteOptions<TEnv, TBody>,
   handler: EventHandler<TEnv, TBody>
+): void
+export function useRoute<TEnv = Env, TBody = Body>(
+  handlerOrOptions: EventHandler<TEnv, TBody> | UseRouteOptions<TEnv, TBody>,
+  handlerOrUndefined?: EventHandler<TEnv, TBody>
 ) {
   try {
+    const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : handlerOrUndefined
+    const options = typeof handlerOrOptions === 'object' ? handlerOrOptions : {}
+    if (!handler) return
     const server = options.server ?? 'main'
     const pathname = options.pathname ?? '*'
     const method = options.method ? options.method.toUpperCase() as Method : Method.ALL
