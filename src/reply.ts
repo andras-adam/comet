@@ -5,7 +5,7 @@ import { cometLogger } from './logger'
 
 export class Reply {
 
-  public sent = false
+  public sent?: Date
   public status = 200
   public body?: Body
   public headers = new Headers()
@@ -17,7 +17,7 @@ export class Reply {
       cometLogger.warn('[Comet] Cannot send a reply after one has already been sent.')
       return this
     }
-    this.sent = true
+    this.sent = new Date()
     this.status = status
     this.body = body
     return this
