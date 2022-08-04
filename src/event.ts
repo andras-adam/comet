@@ -22,6 +22,8 @@ export class Event<TEnv = Env, TBody = Body> {
 
   public readonly reply: Reply
 
+  public readonly config: Configuration
+
   private constructor(init: EventInit) {
     this.method = init.method
     this.pathname = init.pathname
@@ -35,6 +37,7 @@ export class Event<TEnv = Env, TBody = Body> {
     this.ctx = init.ctx
     this.state = init.state
     this.reply = new Reply()
+    this.config = init.config
   }
 
   public next(): Event {
@@ -51,6 +54,7 @@ export class Event<TEnv = Env, TBody = Body> {
     const url = new URL(request.url)
     const event = new Event({
       body: {},
+      config,
       cookies: await Cookies.parse(request.headers, config),
       ctx,
       env,
