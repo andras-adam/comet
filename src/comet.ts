@@ -4,6 +4,7 @@ import { Routes } from './routes'
 import { CORS } from './cors'
 import { getPathnameParameters } from './utils'
 import { cometLogger, setLogger } from './logger'
+import { Middlewares } from './middlewares'
 
 
 export interface CometOptions extends Omit<Partial<Configuration>, 'server'> {
@@ -32,33 +33,47 @@ export function comet(options: CometOptions) {
     state?: DurableObjectState
   ): Promise<Response> => {
     try {
-      const pathname = new URL(request.url).pathname
-      const isPreflight = request.method === Method.OPTIONS
+      // Construct event from request
+      const event = await Event.fromRequest(config, request, env, ctx, state)
+      const isPreflight = event.method === Method.OPTIONS
       const method = isPreflight
-        ? request.headers.get('access-control-request-method') as Method
-        : request.method as Method
-      const compatibilityDate = request.headers.get('x-compatibility-date') as string
-      const route = Routes.find(config.server, pathname, method, compatibilityDate, config.prefix)
-      if (route) {
-        const event = await Event.fromRequest(config, request, env, ctx, state)
-        event.params = getPathnameParameters(event.pathname, route.pathname)
-        const origin = request.headers.get('origin') as string
-        event.reply.headers = CORS.getHeaders(config.server, event.pathname, config.cors, isPreflight, origin)
-        if (isPreflight) {
-          event.reply.noContent()
+        ? event.headers.get('access-control-request-method') as Method
+        : event.method as Method
+      const compatibilityDate = event.headers.get('x-compatibility-date') as string
+      const origin = event.headers.get('origin') as string
+      // Run global before middlewares
+      for (const mw of Middlewares.getBefore(config.server)) {
+        await mw.handler(event)
+        if (event.reply.sent) break
+      }
+      // Handle route
+      if (!event.reply.sent) {
+        const route = Routes.find(config.server, event.pathname, method, compatibilityDate, config.prefix)
+        if (!route) {
+          event.reply.notFound()
         } else {
-          for (const preMiddleware of route.before) {
-            await preMiddleware(event)
-            if (event.reply.sent) break
-          }
-          if (!event.reply.sent) await route.handler(event)
-          for (const postMiddleware of route.after) {
-            await postMiddleware(event)
+          event.params = getPathnameParameters(event.pathname, route.pathname, config.prefix)
+          event.reply.headers = CORS.getHeaders(config.server, event.pathname, config.cors, isPreflight, origin)
+          if (isPreflight) {
+            event.reply.noContent()
+          } else {
+            for (const mw of route.before) {
+              await mw(event)
+              if (event.reply.sent) break
+            }
+            if (!event.reply.sent) await route.handler(event)
+            for (const mw of route.after) {
+              await mw(event)
+            }
           }
         }
-        return await Event.toResponse(event, config)
       }
-      return new Response(null, { status: 404 })
+      // Run global after middlewares
+      for (const mw of Middlewares.getAfter(config.server)) {
+        await mw.handler(event)
+      }
+      // Construct response from event
+      return await Event.toResponse(event, config)
     } catch (error) {
       cometLogger.error('[Comet] Failed to handle request.', error)
       return new Response(null, { status: 500 })

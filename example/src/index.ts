@@ -1,5 +1,22 @@
-import { comet, Method, useCors, useRoute } from '../../src'
+import { comet, Method, useAfter, useBefore, useCors, useRoute } from '../../src'
 
+
+useBefore(event => {
+  console.log('before 1', event.method, event.pathname, event.params)
+  return event.next()
+})
+
+useBefore({ name: 'check origin' }, event => {
+  const hasOrigin = !!event.headers.get('origin')
+  console.log('before 2', hasOrigin)
+  if (!hasOrigin) return event.reply.badRequest('An origin header must be present.')
+  return event.next()
+})
+
+useAfter(event => {
+  console.log('after', 'reply status is', event.reply.status)
+  return event.next()
+})
 
 useCors({
   pathname: '/api',
@@ -7,26 +24,12 @@ useCors({
 })
 
 useRoute({
-  method: Method.POST,
-  pathname: '/books'
-}, event => event.reply.ok({ message: 1 }))
-
-useRoute({
-  method: Method.GET,
-  pathname: '/books'
-}, event => event.reply.ok({ message: 2 }))
-
-useRoute({
-  method: Method.GET,
-  pathname: '/books',
-  compatibilityDate: '2022-02-12'
-}, event => event.reply.ok({ message: 3 }))
-
-useRoute({
-  method: Method.GET,
-  pathname: '/books',
-  compatibilityDate: '2022-04-12'
-}, event => event.reply.ok({ message: 4 }))
+  method: Method.ALL,
+  pathname: '/books/:bookId'
+}, event => {
+  console.log('route', event.params)
+  return event.reply.ok()
+})
 
 export default {
   fetch: comet({
