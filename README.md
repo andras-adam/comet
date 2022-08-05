@@ -16,6 +16,9 @@ useRoute(event => {
 export default { fetch: comet() }
 ```
 
+## Work in progress
+This library is currently **in development**. The syntax in this documentation is subject to change, and some features still need further testing to eliminate potential issues. A stable 1.0.0 release is expected in early fall 2022, until then use it at your own discretion.
+
 ## Table of contents
 - [Getting started](#getting-started)
 - [Using routes](#using-routes)
