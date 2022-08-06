@@ -1,4 +1,4 @@
-import { Body, Env, Params, Query, Method, Configuration } from './types'
+import { Body, Configuration, Env, Method, Params, Query } from './types'
 import { Reply } from './reply'
 import { Cookies } from './cookies'
 
@@ -66,7 +66,7 @@ export class Event<TEnv = Env, TBody = Body> {
       request,
       state
     })
-    if (event.method !== Method.GET) {
+    if (event.method !== Method.GET && event.method !== Method.HEAD) {
       switch (event.headers.get('content-type')?.split(';')[0]) {
         case 'application/json': {
           event.body = await request.json()
