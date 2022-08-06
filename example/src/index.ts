@@ -32,6 +32,19 @@ useRoute({
   return event.reply.ok()
 })
 
+useRoute({
+  method: Method.POST,
+  pathname: '/test',
+  schema: {
+    schema: {
+      firstname: 'string',
+      lastname: 'string(1,5)'
+    }
+  } as const
+}, event => {
+  return event.reply.ok(event.body)
+})
+
 export default {
   fetch: comet({
     cookies: {

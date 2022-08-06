@@ -1,17 +1,18 @@
 import { Middleware, Middlewares, MiddlewareType } from '../middlewares'
-import { Body, Env, EventHandler } from '../types'
+import { EmptySchema, Env, EventHandler } from '../types'
 import { cometLogger } from '../logger'
+import type { Schema } from '@danifoldi/spartan-schema'
 
 
 export interface UseBeforeOptions extends Omit<Middleware, 'handler' | 'type'> {
   server?: string
 }
 
-export function useBefore<TEnv = Env, TBody = Body>(handler: EventHandler<TEnv, TBody>): void
-export function useBefore<TEnv = Env, TBody = Body>(options: UseBeforeOptions, handler: EventHandler<TEnv, TBody>): void
-export function useBefore<TEnv = Env, TBody = Body>(
-  handlerOrOptions: EventHandler<TEnv, TBody> | UseBeforeOptions,
-  handlerOrUndefined?: EventHandler<TEnv, TBody>
+export function useBefore<TEnv = Env, TSchema extends Schema = EmptySchema>(handler: EventHandler<TEnv, TSchema>): void
+export function useBefore<TEnv = Env, TSchema extends Schema = EmptySchema>(options: UseBeforeOptions, handler: EventHandler<TEnv, TSchema>): void
+export function useBefore<TEnv = Env, TSchema extends Schema = EmptySchema>(
+  handlerOrOptions: EventHandler<TEnv, TSchema> | UseBeforeOptions,
+  handlerOrUndefined?: EventHandler<TEnv, TSchema>
 ) {
   try {
     const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : handlerOrUndefined

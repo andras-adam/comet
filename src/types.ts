@@ -3,6 +3,8 @@ import { Reply } from './reply'
 import { CorsOptions } from './cors'
 import { CookiesOptions } from './cookies'
 import { LoggerMethods, LogLevel } from './logger'
+import type { Schema } from '@danifoldi/spartan-schema'
+import { EMPTY_SCHEMA } from './utils'
 
 
 export enum Method {
@@ -33,9 +35,10 @@ export type Query = Record<string, string>
 export type Params = Record<string, string>
 export type Body = any
 export type Env = any
+export type EmptySchema = typeof EMPTY_SCHEMA
 
-export type EventHandler<TEnv = Env, TBody = Body> =
-  (event: Event<TEnv, TBody>) => Promise<Event | Reply> | Event | Reply
+export type EventHandler<TEnv = Env, TSchema extends Schema = EmptySchema> =
+  (event: Event<TEnv, TSchema>) => Promise<Event | Reply> | Event | Reply
 
 export interface Configuration {
   cookies?: CookiesOptions

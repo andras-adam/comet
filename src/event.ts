@@ -1,11 +1,12 @@
-import { Body, Configuration, Env, Method, Params, Query } from './types'
+import { EmptySchema, Env, Params, Query, Method, Configuration } from './types'
 import { Reply } from './reply'
 import { Cookies } from './cookies'
+import type { MatchesSchema, Schema } from '@danifoldi/spartan-schema'
 
 
 export type EventInit = { [Property in Exclude<keyof Event, 'reply' | 'next'>]: Event[Property] }
 
-export class Event<TEnv = Env, TBody = Body> {
+export class Event<TEnv = Env, TSchema extends Schema = EmptySchema> {
 
   public readonly method: Method
   public readonly pathname: string
@@ -13,7 +14,7 @@ export class Event<TEnv = Env, TBody = Body> {
   public cookies: Cookies
   public query: Query
   public params: Params
-  public body: TBody
+  public body: MatchesSchema<TSchema>
 
   public readonly request: Request
   public readonly env: TEnv
@@ -31,7 +32,7 @@ export class Event<TEnv = Env, TBody = Body> {
     this.cookies = init.cookies
     this.query = init.query
     this.params = init.params
-    this.body = init.body
+    this.body = init.body as MatchesSchema<TSchema>
     this.request = init.request
     this.env = init.env
     this.ctx = init.ctx
@@ -40,7 +41,7 @@ export class Event<TEnv = Env, TBody = Body> {
     this.config = init.config
   }
 
-  public next(): Event {
+  public next(): Event<TEnv, TSchema> {
     return this
   }
 
@@ -66,7 +67,7 @@ export class Event<TEnv = Env, TBody = Body> {
       request,
       state
     })
-    if (event.method !== Method.GET && event.method !== Method.HEAD) {
+    if (event.method !== Method.GET) {
       switch (event.headers.get('content-type')?.split(';')[0]) {
         case 'application/json': {
           event.body = await request.json()

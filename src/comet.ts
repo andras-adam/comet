@@ -1,3 +1,4 @@
+import { matchesSchema } from '@danifoldi/spartan-schema'
 import { Method, Configuration } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
@@ -60,6 +61,11 @@ export function comet(options: CometOptions) {
             event.reply.headers = CORS.getHeaders(config.server, event.pathname, config.cors, isPreflight, origin)
             if (isPreflight) {
               event.reply.noContent()
+            } else if (route.schema) {
+              const match = matchesSchema(route.schema)(event.body)
+              if (!match) {
+                event.reply.badRequest({ message: 'Invalid request body' })
+              }
             } else {
               event.params = getPathnameParameters(event.pathname, route.pathname, config.prefix)
               for (const mw of route.before) {
