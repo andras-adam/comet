@@ -5,6 +5,7 @@ import { CORS } from './cors'
 import { getPathnameParameters } from './utils'
 import { cometLogger, setLogger } from './logger'
 import { Middlewares } from './middlewares'
+import { cors } from './middleware/cors'
 
 
 export interface CometOptions extends Omit<Partial<Configuration>, 'server'> {
@@ -35,41 +36,33 @@ export function comet(options: CometOptions) {
     try {
       // Construct event from request
       const event = await Event.fromRequest(config, request, env, ctx, state)
-      const isPreflight = event.method === Method.OPTIONS
-      const method = isPreflight
-        ? event.headers.get('access-control-request-method') as Method
-        : event.method as Method
-      const origin = event.headers.get('origin') as string
       // Run global before middlewares
       for (const mw of Middlewares.getBefore(config.server)) {
         await mw.handler(event)
         if (event.reply.sent) break
       }
+      // Run special global middleware
+      if (!event.reply.sent) cors(event)
       // Main logic
       if (!event.reply.sent) {
         // Get and validate the compatibility date
-        const compatibilityDate = event.headers.get('x-compatibility-date') as string
+        const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
         if (compatibilityDate && new Date(compatibilityDate) > new Date()) {
           event.reply.badRequest({ message: 'Invalid compatibility date' })
         } else {
           // Find route
-          const route = Routes.find(config.server, event.pathname, method, compatibilityDate, config.prefix)
+          const route = Routes.find(config.server, event.pathname, event.method, compatibilityDate, config.prefix)
           if (!route) {
             event.reply.notFound()
           } else {
-            event.reply.headers = CORS.getHeaders(config.server, event.pathname, config.cors, isPreflight, origin)
-            if (isPreflight) {
-              event.reply.noContent()
-            } else {
-              event.params = getPathnameParameters(event.pathname, route.pathname, config.prefix)
-              for (const mw of route.before) {
-                await mw(event)
-                if (event.reply.sent) break
-              }
-              if (!event.reply.sent) await route.handler(event)
-              for (const mw of route.after) {
-                await mw(event)
-              }
+            event.params = getPathnameParameters(event.pathname, route.pathname, config.prefix)
+            for (const mw of route.before) {
+              await mw(event)
+              if (event.reply.sent) break
+            }
+            if (!event.reply.sent) await route.handler(event)
+            for (const mw of route.after) {
+              await mw(event)
             }
           }
         }

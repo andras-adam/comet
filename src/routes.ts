@@ -43,17 +43,19 @@ export class Routes {
   public static find(
     server: string,
     pathname: string,
-    method: Method,
+    method?: string,
     compatibilityDate?: string,
-    prefix?: string
+    prefix?: string,
+    ignoreCompatibilityDate?: boolean
   ): Route | undefined {
     for (const route of this.registry[server]) {
       const doPathnamesMatch = comparePathnames(pathname, `${prefix ?? ''}${route.pathname}`)
       if (!doPathnamesMatch) continue
       const doMethodsMatch = compareMethods(method, route.method)
       if (!doMethodsMatch) continue
-      const isCompatible = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
-      if (isCompatible) return route
+      if (ignoreCompatibilityDate) return route
+      const doCompatibilityDatesMatch = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
+      if (doCompatibilityDatesMatch) return route
     }
   }
 
