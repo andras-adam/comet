@@ -30,6 +30,6 @@ export function compareCompatibilityDates(check?: string, against?: string): boo
 
 // Get the pathname parameters from a pathname based on a template pathname
 export function getPathnameParameters(pathname: string, template: string, prefix?: string): Params {
-  const result = new URLPattern(`${prefix}${template}`, BASE_URL).exec(pathname, BASE_URL)
+  const result = new URLPattern(`${prefix ?? ''}${template}`, BASE_URL).exec(pathname, BASE_URL)
   return result?.pathname?.groups ?? {}
 }
