@@ -2,9 +2,9 @@ import { Event } from './event'
 import { Reply } from './reply'
 
 
-export type Handler<TMutation = unknown, TEnv = unknown, TBody = unknown> = (event: Event<TEnv, TBody> & TMutation) => Promise<Reply | Event> | Event | Reply
+type Handler<TMutation = unknown, TEnv = unknown, TBody = unknown> = (event: Event<TEnv, TBody> & TMutation) => Promise<Reply | Event> | Event | Reply
 
-export function defineMutatingHandler<TMutation = unknown, TEnv = unknown, TBody = unknown>(handler: Handler<TMutation, TEnv, TBody>) {
+function defineMutatingHandler<TMutation = unknown, TEnv = unknown, TBody = unknown>(handler: Handler<TMutation, TEnv, TBody>) {
   return handler
 }
 
