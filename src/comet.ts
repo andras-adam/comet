@@ -1,7 +1,6 @@
-import { Method, Configuration } from './types'
+import { Configuration } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
-import { CORS } from './cors'
 import { getPathnameParameters } from './utils'
 import { cometLogger, setLogger } from './logger'
 import { Middlewares } from './middlewares'
@@ -15,12 +14,12 @@ export interface CometOptions extends Omit<Partial<Configuration>, 'server'> {
 export function comet(options: CometOptions) {
   // Construct the server's configuration
   const config: Configuration = {
-    server: options.name ?? 'main',
     cookies: options.cookies,
+    cors: options.cors,
     logger: options.logger ?? console,
     loglevel: options.loglevel ?? 'debug',
-    cors: options.cors,
-    prefix: options.prefix
+    prefix: options.prefix,
+    server: options.name ?? 'main'
   }
   // Initialize routes
   Routes.init(config.server)
@@ -74,7 +73,7 @@ export function comet(options: CometOptions) {
       // Construct response from event
       return await Event.toResponse(event, config)
     } catch (error) {
-      cometLogger.error('[Comet] Failed to handle request.', error)
+      cometLogger.error('[Comet] Failed to handle request.', error instanceof Error ? error.message : error)
       return new Response(null, { status: 500 })
     }
   }
