@@ -1,20 +1,30 @@
-import { comet, Method, useAfter, useBefore, useCors, useRoute } from '../../src'
+import { comet, Method, middleware, mw, useAfter, useBefore, useCors, useRoute } from '../../src'
 
 
-useBefore(event => {
-  console.log('before 1', event.method, event.pathname, event.params)
+const test = middleware(event => {
+  console.log('[local mw] test')
+  return event.reply.badRequest({ message: 'test mw sending error and breaking the middleware chain' })
+})
+
+const logger = middleware<{ logged: boolean }>(event => {
+  console.log('[local mw] logger')
+  event.logged = true
   return event.next()
 })
 
-useBefore({ name: 'check origin' }, event => {
-  const hasOrigin = !!event.headers.get('origin')
-  console.log('before 2', hasOrigin)
-  if (!hasOrigin) return event.reply.badRequest('An origin header must be present.')
+const auth = middleware<{ user: { userId: string } }>(event => {
+  console.log('[local mw] auth')
+  event.user = { userId: 'NeoAren' }
+  return event.next()
+})
+
+useBefore(event => {
+  console.log('[global mw] before')
   return event.next()
 })
 
 useAfter(event => {
-  console.log('after', 'reply status is', event.reply.status)
+  console.log('[global mw] after')
   return event.next()
 })
 
@@ -26,9 +36,18 @@ useCors({
 useRoute({
   method: Method.ALL,
   pathname: '/books/:bookId',
-  compatibilityDate: '2022-06-30'
+  compatibilityDate: '2022-06-30',
+  before: [
+    logger,
+    // test,
+    auth,
+    mw(event => {
+      console.log('[local mw] inline')
+      return event.next()
+    })
+  ]
 }, event => {
-  console.log('route', event.params)
+  console.log('[handler]', event.logged, event.user)
   return event.reply.ok()
 })
 

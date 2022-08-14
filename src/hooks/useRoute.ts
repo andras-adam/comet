@@ -1,11 +1,17 @@
-import { Body, Env, EventHandler, Method } from '../types'
 import { Routes } from '../routes'
+import { Event, EventHandler } from '../event'
+import { Method } from '../types'
 import { cometLogger } from '../logger'
 
 
-export interface UseRouteOptions<TEnv = Env, TBody = Body> {
-  after?: EventHandler<TEnv, TBody>[]
-  before?: EventHandler<TEnv, TBody>[]
+type ExtensionFrom<Handler> = Handler extends (event: infer Arg) => unknown ? Exclude<Arg, keyof Event> : never
+type ExtensionsFrom<Handlers, Extensions = unknown> = Handlers extends [infer Current, ...infer Rest]
+  ? ExtensionsFrom<Rest, Extensions & ExtensionFrom<Current>>
+  : Extensions
+
+export interface UseRouteOptions<After extends EventHandler<never>[], Before extends EventHandler<never>[]> {
+  after?: [...After]
+  before?: [...Before]
   compatibilityDate?: string
   method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
   name?: string
@@ -13,16 +19,14 @@ export interface UseRouteOptions<TEnv = Env, TBody = Body> {
   server?: string
 }
 
-export function useRoute<TEnv = Env, TBody = Body>(
-  handler: EventHandler<TEnv, TBody>
+export function useRoute(handler: EventHandler): void
+export function useRoute<After extends EventHandler<never>[], Before extends EventHandler<never>[]>(
+  options: UseRouteOptions<After, Before>,
+  handler: EventHandler<ExtensionsFrom<Before>>
 ): void
-export function useRoute<TEnv = Env, TBody = Body>(
-  options: UseRouteOptions<TEnv, TBody>,
-  handler: EventHandler<TEnv, TBody>
-): void
-export function useRoute<TEnv = Env, TBody = Body>(
-  handlerOrOptions: EventHandler<TEnv, TBody> | UseRouteOptions<TEnv, TBody>,
-  handlerOrUndefined?: EventHandler<TEnv, TBody>
+export function useRoute<After extends EventHandler<never>[], Before extends EventHandler<never>[]>(
+  handlerOrOptions: EventHandler<ExtensionsFrom<Before>> | UseRouteOptions<After, Before>,
+  handlerOrUndefined?: EventHandler<ExtensionsFrom<Before>>
 ) {
   try {
     const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : handlerOrUndefined
@@ -32,10 +36,10 @@ export function useRoute<TEnv = Env, TBody = Body>(
     const pathname = options.pathname ?? '*'
     const method = options.method ? options.method.toUpperCase() as Method : Method.ALL
     Routes.register(server, {
-      after: options.after ?? [],
-      before: options.before ?? [],
+      after: options.after ? options.after as unknown as EventHandler[] : [],
+      before: options.before ? options.before as unknown as EventHandler[] : [],
       compatibilityDate: options.compatibilityDate,
-      handler,
+      handler: handler as unknown as EventHandler,
       method,
       name: options.name ?? `${method} ${pathname}`,
       pathname

@@ -1,5 +1,5 @@
 import { Middleware, Middlewares, MiddlewareType } from '../middlewares'
-import { Body, Env, EventHandler } from '../types'
+import { EventHandler } from '../event'
 import { cometLogger } from '../logger'
 
 
@@ -7,12 +7,9 @@ export interface UseAfterOptions extends Omit<Middleware, 'handler' | 'type'> {
   server?: string
 }
 
-export function useAfter<TEnv = Env, TBody = Body>(handler: EventHandler<TEnv, TBody>): void
-export function useAfter<TEnv = Env, TBody = Body>(options: UseAfterOptions, handler: EventHandler<TEnv, TBody>): void
-export function useAfter<TEnv = Env, TBody = Body>(
-  handlerOrOptions: EventHandler<TEnv, TBody> | UseAfterOptions,
-  handlerOrUndefined?: EventHandler<TEnv, TBody>
-) {
+export function useAfter(handler: EventHandler): void
+export function useAfter(options: UseAfterOptions, handler: EventHandler): void
+export function useAfter(handlerOrOptions: EventHandler | UseAfterOptions, handlerOrUndefined?: EventHandler) {
   try {
     const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : handlerOrUndefined
     const options = typeof handlerOrOptions === 'object' ? handlerOrOptions : {}

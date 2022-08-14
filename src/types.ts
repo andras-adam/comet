@@ -1,5 +1,3 @@
-import { Event } from './event'
-import { Reply } from './reply'
 import { CorsOptions } from './cors'
 import { CookiesOptions } from './cookies'
 import { LoggerMethods, LogLevel } from './logger'
@@ -28,14 +26,6 @@ export const CONNECT = Method.CONNECT
 export const OPTIONS = Method.OPTIONS
 export const TRACE = Method.TRACE
 export const PATCH = Method.PATCH
-
-export type Query = Record<string, string>
-export type Params = Record<string, string>
-export type Body = any
-export type Env = any
-
-export type EventHandler<TEnv = Env, TBody = Body> =
-  (event: Event<TEnv, TBody>) => Promise<Event | Reply> | Event | Reply
 
 export interface Configuration {
   cookies?: CookiesOptions

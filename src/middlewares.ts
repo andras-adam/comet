@@ -1,4 +1,4 @@
-import { EventHandler } from './types'
+import { EventHandler } from './event'
 
 
 export enum MiddlewareType {

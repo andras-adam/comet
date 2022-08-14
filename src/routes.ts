@@ -1,4 +1,5 @@
-import { EventHandler, Method } from './types'
+import { EventHandler } from './event'
+import { Method } from './types'
 import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
 import { cometLogger } from './logger'
 
