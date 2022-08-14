@@ -47,6 +47,7 @@ useRoute({
     })
   ]
 }, event => {
+  // event.env.MY_KV
   console.log('[handler]', event.logged, event.user)
   return event.reply.ok()
 })

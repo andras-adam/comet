@@ -21,7 +21,7 @@ export class Event {
   public params: Record<string, string>
   public body: any
   public readonly request: Request
-  public readonly env: any
+  public readonly env: Environment
   public readonly ctx: ExecutionContext
   public readonly state?: DurableObjectState
   public readonly reply: Reply
@@ -50,7 +50,7 @@ export class Event {
   public static async fromRequest(
     config: Configuration,
     request: Request,
-    env: unknown,
+    env: Environment,
     ctx: ExecutionContext,
     state?: DurableObjectState
   ): Promise<Event> {

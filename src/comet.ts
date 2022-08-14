@@ -28,7 +28,7 @@ export function comet(options: CometOptions) {
   // Return handler function
   return async (
     request: Request,
-    env: unknown,
+    env: Environment,
     ctx: ExecutionContext,
     state?: DurableObjectState
   ): Promise<Response> => {
