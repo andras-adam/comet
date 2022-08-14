@@ -1,28 +1,30 @@
-import { EmptySchema, Env, Params, Query, Method, Configuration } from './types'
+import { Configuration, Method } from './types'
 import { Reply } from './reply'
 import { Cookies } from './cookies'
-import type { MatchesSchema, Schema } from '@danifoldi/spartan-schema'
 
+
+export type EventHandler<Extension = unknown> = (event: Event & Extension) => Promise<Event | Reply> | Event | Reply
+
+export function defineEventHandler<Extension = unknown>(handler: EventHandler<Extension>) {
+  return handler
+}
 
 export type EventInit = { [Property in Exclude<keyof Event, 'reply' | 'next'>]: Event[Property] }
 
-export class Event<TEnv = Env, TSchema extends Schema = EmptySchema> {
+export class Event {
 
   public readonly method: Method
   public readonly pathname: string
   public headers: Headers
   public cookies: Cookies
-  public query: Query
-  public params: Params
-  public body: MatchesSchema<TSchema>
-
+  public query: Record<string, string>
+  public params: Record<string, string>
+  public body: unknown
   public readonly request: Request
-  public readonly env: TEnv
+  public readonly env: Environment
   public readonly ctx: ExecutionContext
   public readonly state?: DurableObjectState
-
   public readonly reply: Reply
-
   public readonly config: Configuration
 
   private constructor(init: EventInit) {
@@ -32,7 +34,7 @@ export class Event<TEnv = Env, TSchema extends Schema = EmptySchema> {
     this.cookies = init.cookies
     this.query = init.query
     this.params = init.params
-    this.body = init.body as MatchesSchema<TSchema>
+    this.body = init.body
     this.request = init.request
     this.env = init.env
     this.ctx = init.ctx
@@ -41,14 +43,14 @@ export class Event<TEnv = Env, TSchema extends Schema = EmptySchema> {
     this.config = init.config
   }
 
-  public next(): Event<TEnv, TSchema> {
+  public next(): this {
     return this
   }
 
   public static async fromRequest(
     config: Configuration,
     request: Request,
-    env: unknown,
+    env: Environment,
     ctx: ExecutionContext,
     state?: DurableObjectState
   ): Promise<Event> {
@@ -67,7 +69,7 @@ export class Event<TEnv = Env, TSchema extends Schema = EmptySchema> {
       request,
       state
     })
-    if (event.method !== Method.GET) {
+    if (event.method !== Method.GET && event.method !== Method.HEAD) {
       switch (event.headers.get('content-type')?.split(';')[0]) {
         case 'application/json': {
           event.body = await request.json()

@@ -1,4 +1,4 @@
-import { Method, Params } from './types'
+import { Method } from './types'
 
 
 export const EMPTY_SCHEMA = {
@@ -33,7 +33,7 @@ export function compareCompatibilityDates(check?: string, against?: string): boo
 }
 
 // Get the pathname parameters from a pathname based on a template pathname
-export function getPathnameParameters(pathname: string, template: string, prefix?: string): Params {
-  const result = new URLPattern(`${prefix}${template}`, BASE_URL).exec(pathname, BASE_URL)
+export function getPathnameParameters(pathname: string, template: string, prefix?: string): Record<string, string> {
+  const result = new URLPattern(`${prefix ?? ''}${template}`, BASE_URL).exec(pathname, BASE_URL)
   return result?.pathname?.groups ?? {}
 }

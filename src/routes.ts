@@ -1,7 +1,8 @@
-import { Schema } from '@danifoldi/spartan-schema'
-import { EventHandler, Method } from './types'
+import { EventHandler } from './event'
+import { Method } from './types'
 import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
 import { cometLogger } from './logger'
+import type { SchemaType } from '@danifoldi/spartan-schema'
 
 
 export interface Route {
@@ -12,7 +13,7 @@ export interface Route {
   method: Method
   name: string
   pathname: string
-  schema?: Schema
+  schema?: SchemaType
 }
 
 export class Routes {
@@ -45,17 +46,19 @@ export class Routes {
   public static find(
     server: string,
     pathname: string,
-    method: Method,
+    method?: string,
     compatibilityDate?: string,
-    prefix?: string
+    prefix?: string,
+    ignoreCompatibilityDate?: boolean
   ): Route | undefined {
     for (const route of this.registry[server]) {
       const doPathnamesMatch = comparePathnames(pathname, `${prefix ?? ''}${route.pathname}`)
       if (!doPathnamesMatch) continue
       const doMethodsMatch = compareMethods(method, route.method)
       if (!doMethodsMatch) continue
-      const isCompatible = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
-      if (isCompatible) return route
+      if (ignoreCompatibilityDate) return route
+      const doCompatibilityDatesMatch = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
+      if (doCompatibilityDatesMatch) return route
     }
   }
 
