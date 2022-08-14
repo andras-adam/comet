@@ -45,11 +45,22 @@ useRoute({
       console.log('[local mw] inline')
       return event.next()
     })
-  ]
+  ],
+  schema: { id: 'string(0,10)' }
 }, event => {
-  // event.env.MY_KV
-  console.log('[handler]', event.logged, event.user)
+  console.log('[handler]', event.logged, event.user, event.body)
   return event.reply.ok()
+})
+
+useRoute({
+  method: Method.POST,
+  pathname: '/test',
+  schema: {
+    firstname: 'string',
+    lastname: 'string(1,5)'
+  }
+}, event => {
+  return event.reply.ok(event.body)
 })
 
 export default {

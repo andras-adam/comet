@@ -19,7 +19,7 @@ export class Event {
   public cookies: Cookies
   public query: Record<string, string>
   public params: Record<string, string>
-  public body: any
+  public body: unknown
   public readonly request: Request
   public readonly env: Environment
   public readonly ctx: ExecutionContext

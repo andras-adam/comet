@@ -1,7 +1,8 @@
 import { Routes } from '../routes'
-import { Event, EventHandler } from '../event'
+import { EventHandler } from '../event'
 import { Method } from '../types'
 import { cometLogger } from '../logger'
+import type { MatchesSchemaType, SchemaType } from '@danifoldi/spartan-schema'
 
 
 type ExtensionFrom<Handler> = Handler extends (event: infer Arg) => unknown ? Exclude<Arg, keyof Event> : never
@@ -9,24 +10,27 @@ type ExtensionsFrom<Handlers, Extensions = unknown> = Handlers extends [infer Cu
   ? ExtensionsFrom<Rest, Extensions & ExtensionFrom<Current>>
   : Extensions
 
-export interface UseRouteOptions<After extends EventHandler<never>[], Before extends EventHandler<never>[]> {
+type BodyFrom<Schema extends SchemaType> = { body: MatchesSchemaType<Schema, Record<never, never>> }
+
+export interface UseRouteOptions<After extends EventHandler<never>[], Before extends EventHandler<never>[], Schema extends SchemaType> {
   after?: [...After]
   before?: [...Before]
   compatibilityDate?: string
   method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
   name?: string
   pathname?: string
+  schema?: Schema
   server?: string
 }
 
 export function useRoute(handler: EventHandler): void
-export function useRoute<After extends EventHandler<never>[], Before extends EventHandler<never>[]>(
-  options: UseRouteOptions<After, Before>,
-  handler: EventHandler<ExtensionsFrom<Before>>
+export function useRoute<After extends EventHandler<never>[], Before extends EventHandler<never>[], Schema extends SchemaType>(
+  options: UseRouteOptions<After, Before, Schema>,
+  handler: EventHandler<ExtensionsFrom<Before> & BodyFrom<Schema>>
 ): void
-export function useRoute<After extends EventHandler<never>[], Before extends EventHandler<never>[]>(
-  handlerOrOptions: EventHandler<ExtensionsFrom<Before>> | UseRouteOptions<After, Before>,
-  handlerOrUndefined?: EventHandler<ExtensionsFrom<Before>>
+export function useRoute<After extends EventHandler<never>[], Before extends EventHandler<never>[], Schema extends SchemaType>(
+  handlerOrOptions: EventHandler | UseRouteOptions<After, Before, Schema>,
+  handlerOrUndefined?: EventHandler<ExtensionsFrom<Before> & BodyFrom<Schema>>
 ) {
   try {
     const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : handlerOrUndefined
@@ -42,7 +46,8 @@ export function useRoute<After extends EventHandler<never>[], Before extends Eve
       handler: handler as unknown as EventHandler,
       method,
       name: options.name ?? `${method} ${pathname}`,
-      pathname
+      pathname,
+      schema: options.schema
     })
   } catch (error) {
     cometLogger.error('[Comet] Failed to register a route.', error)

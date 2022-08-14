@@ -2,6 +2,7 @@ import { EventHandler } from './event'
 import { Method } from './types'
 import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
 import { cometLogger } from './logger'
+import type { SchemaType } from '@danifoldi/spartan-schema'
 
 
 export interface Route {
@@ -12,6 +13,7 @@ export interface Route {
   method: Method
   name: string
   pathname: string
+  schema?: SchemaType
 }
 
 export class Routes {
