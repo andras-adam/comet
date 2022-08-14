@@ -43,7 +43,7 @@ export class Event {
     this.config = init.config
   }
 
-  public next(): this {
+  public next(): Event {
     return this
   }
 
