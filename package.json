@@ -38,10 +38,12 @@
     "url": "https://github.com/NeoAren/comet/issues"
   },
   "homepage": "https://github.com/NeoAren/comet#readme",
+  "dependencies": {
+    "@danifoldi/spartan-schema": "^2.0.0"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "^3.7.1",
     "@danifoldi/eslint-plugin-eslint-presets": "^1.5.1",
-    "@danifoldi/spartan-schema": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
     "esbuild": "^0.14.38",

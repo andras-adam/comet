@@ -45,9 +45,11 @@ useRoute({
       console.log('[local mw] inline')
       return event.next()
     })
-  ]
+  ],
+  schema: { id: 'string(0,10)' }
 }, event => {
   // event.env.MY_KV
+  // event.body
   console.log('[handler]', event.logged, event.user)
   return event.reply.ok()
 })
