@@ -2,6 +2,7 @@ name = 'comet'
 type = 'javascript'
 workers_dev = false
 account_id = ''
+compatibility_date = '2022-08-23'
 
 [miniflare]
 build_watch_dirs = [ 'src', 'example/src' ]
