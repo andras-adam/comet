@@ -1,4 +1,3 @@
-import { matchesSchema } from '@danifoldi/spartan-schema'
 import { Configuration } from './types'
 import { Event } from './event'
 import { Routes } from './routes'
@@ -6,6 +5,7 @@ import { getPathnameParameters } from './utils'
 import { cometLogger, setLogger } from './logger'
 import { Middlewares } from './middlewares'
 import { cors } from './middleware/cors'
+import { schemaValidation } from './middleware/schemaValidation'
 
 
 export interface CometOptions extends Omit<Partial<Configuration>, 'server'> {
@@ -55,13 +55,13 @@ export function comet(options: CometOptions) {
           if (!route) {
             event.reply.notFound()
           } else {
-            // Validate body
-            const match = route.schema ? matchesSchema({ schema: route.schema })(event.body) : true
-            if (!match) {
-              event.reply.badRequest({ message: 'Invalid request body' })
-            } else {
-              // Route middleware and handler
-              event.params = getPathnameParameters(event.pathname, route.pathname, config.prefix)
+            // Set the route and path parameters on the event
+            event.route = route
+            event.params = getPathnameParameters(event.pathname, route.pathname, config.prefix)
+            // Schema validation
+            if (!event.reply.sent) schemaValidation(event)
+            // Route middleware and handler
+            if (!event.reply.sent) {
               for (const mw of route.before) {
                 await mw(event)
                 if (event.reply.sent) break

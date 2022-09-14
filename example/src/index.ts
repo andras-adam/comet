@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { comet, Method, middleware, mw, useAfter, useBefore, useCors, useRoute } from '../../src'
 
 
@@ -45,8 +46,7 @@ useRoute({
       console.log('[local mw] inline')
       return event.next()
     })
-  ],
-  schema: { id: 'string(0,10)' }
+  ]
 }, event => {
   console.log('[handler]', event.logged, event.user, event.body)
   return event.reply.ok()
@@ -54,12 +54,15 @@ useRoute({
 
 useRoute({
   method: Method.POST,
-  pathname: '/test',
-  schema: {
-    firstname: 'string',
-    lastname: 'string(1,5)'
-  }
+  pathname: '/test/:id',
+  body: z.object({
+    firstname: z.string(),
+    lastname: z.string(),
+    image: z.instanceof(File)
+  }),
+  params: z.object({ id: z.string().min(3) })
 }, event => {
+  console.log(event.body, event.params)
   return event.reply.ok(event.body)
 })
 

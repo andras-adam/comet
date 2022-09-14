@@ -1,8 +1,8 @@
+import { z, TypeOf, ZodType } from 'zod'
 import { Routes } from '../routes'
 import { EventHandler } from '../event'
 import { Method } from '../types'
 import { cometLogger } from '../logger'
-import type { MatchesSchemaType, SchemaType } from '@danifoldi/spartan-schema'
 
 
 type ExtensionFrom<Handler> = Handler extends (event: infer Arg) => unknown ? Exclude<Arg, keyof Event> : never
@@ -10,32 +10,32 @@ type ExtensionsFrom<Handlers, Extensions = unknown> = Handlers extends [infer Cu
   ? ExtensionsFrom<Rest, Extensions & ExtensionFrom<Current>>
   : Extensions
 
-type BodyFrom<Schema extends SchemaType> = { body: MatchesSchemaType<Schema, Record<never, never>> }
+const defaultBodySchema = z.unknown()
+const defaultQuerySchema = z.record(z.string(), z.string())
+const defaultParamsSchema = z.record(z.string(), z.string())
 
-export interface UseRouteOptions<After extends EventHandler<never>[], Before extends EventHandler<never>[], Schema extends SchemaType> {
-  after?: [...After]
-  before?: [...Before]
-  compatibilityDate?: string
-  method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
-  name?: string
-  pathname?: string
-  schema?: Schema
-  server?: string
-}
-
-export function useRoute(handler: EventHandler): void
-export function useRoute<After extends EventHandler<never>[], Before extends EventHandler<never>[], Schema extends SchemaType>(
-  options: UseRouteOptions<After, Before, Schema>,
-  handler: EventHandler<ExtensionsFrom<Before> & BodyFrom<Schema>>
-): void
-export function useRoute<After extends EventHandler<never>[], Before extends EventHandler<never>[], Schema extends SchemaType>(
-  handlerOrOptions: EventHandler | UseRouteOptions<After, Before, Schema>,
-  handlerOrUndefined?: EventHandler<ExtensionsFrom<Before> & BodyFrom<Schema>>
+export function useRoute<
+  After extends EventHandler<never>[],
+  Before extends EventHandler<never>[],
+  Body extends ZodType = typeof defaultBodySchema,
+  Query extends ZodType = typeof defaultQuerySchema,
+  Params extends ZodType = typeof defaultParamsSchema
+>(
+  options: {
+    after?: [...After]
+    before?: [...Before]
+    body?: Body
+    compatibilityDate?: string
+    method?: Method | keyof typeof Method | Lowercase<keyof typeof Method>
+    name?: string
+    params?: Params
+    pathname?: string
+    query?: Query
+    server?: string
+  },
+  handler: EventHandler<ExtensionsFrom<Before> & { body: TypeOf<Body>; query: TypeOf<Query>; params: TypeOf<Params> }>
 ) {
   try {
-    const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : handlerOrUndefined
-    const options = typeof handlerOrOptions === 'object' ? handlerOrOptions : {}
-    if (!handler) return
     const server = options.server ?? 'main'
     const pathname = options.pathname ?? '*'
     const method = options.method ? options.method.toUpperCase() as Method : Method.ALL
@@ -47,7 +47,11 @@ export function useRoute<After extends EventHandler<never>[], Before extends Eve
       method,
       name: options.name ?? `${method} ${pathname}`,
       pathname,
-      schema: options.schema
+      schemas: {
+        body: options.body ?? defaultBodySchema,
+        query: options.query ?? defaultQuerySchema,
+        params: options.params ?? defaultParamsSchema
+      }
     })
   } catch (error) {
     cometLogger.error('[Comet] Failed to register a route.', error)

@@ -1,8 +1,8 @@
+import { ZodType } from 'zod'
 import { EventHandler } from './event'
 import { Method } from './types'
 import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
 import { cometLogger } from './logger'
-import type { SchemaType } from '@danifoldi/spartan-schema'
 
 
 export interface Route {
@@ -13,7 +13,11 @@ export interface Route {
   method: Method
   name: string
   pathname: string
-  schema?: SchemaType
+  schemas: {
+    body: ZodType
+    query: ZodType
+    params: ZodType
+  }
 }
 
 export class Routes {

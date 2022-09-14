@@ -2,10 +2,10 @@ import { Method } from '../types'
 import { CORS, defaultCorsOptions } from '../cors'
 import { parseListValue } from '../utils'
 import { Routes } from '../routes'
-import { Event } from '../event'
+import { defineEventHandler as middleware } from '../event'
 
 
-export function cors(event: Event) {
+export const cors = middleware(event => {
   // Prepare CORS options
   const foundOptions = CORS.find(event.config.server, event.pathname)
   const options = { ...defaultCorsOptions, ...event.config.cors, ...foundOptions }
@@ -36,4 +36,4 @@ export function cors(event: Event) {
   event.reply.headers.set('access-control-max-age', maxAge.toString())
   event.reply.headers.set('content-length', '0')
   return event.reply.noContent()
-}
+})

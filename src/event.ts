@@ -1,6 +1,7 @@
 import { Configuration, Method } from './types'
 import { Reply } from './reply'
 import { Cookies } from './cookies'
+import { Route } from './routes'
 
 
 export type EventHandler<Extension = unknown> = (event: Event & Extension) => Promise<Event | Reply> | Event | Reply
@@ -17,8 +18,8 @@ export class Event {
   public readonly pathname: string
   public headers: Headers
   public cookies: Cookies
-  public query: Record<string, string>
-  public params: Record<string, string>
+  public query: unknown
+  public params: unknown
   public body: unknown
   public readonly request: Request
   public readonly env: Environment
@@ -26,6 +27,7 @@ export class Event {
   public readonly state?: DurableObjectState
   public readonly reply: Reply
   public readonly config: Configuration
+  public route?: Route
 
   private constructor(init: EventInit) {
     this.method = init.method
@@ -56,7 +58,7 @@ export class Event {
   ): Promise<Event> {
     const url = new URL(request.url)
     const event = new Event({
-      body: {},
+      body: undefined,
       config,
       cookies: await Cookies.parse(request.headers, config),
       ctx,
@@ -67,6 +69,7 @@ export class Event {
       pathname: url.pathname,
       query: Object.fromEntries(url.searchParams.entries()),
       request,
+      route: undefined,
       state
     })
     if (event.method !== Method.GET && event.method !== Method.HEAD) {
