@@ -11,8 +11,8 @@ type ExtensionsFrom<Handlers, Extensions = unknown> = Handlers extends [infer Cu
   : Extensions
 
 const defaultBodySchema = z.unknown()
-const defaultQuerySchema = z.record(z.string(), z.string())
-const defaultParamsSchema = z.record(z.string(), z.string())
+const defaultQuerySchema = z.record(z.string(), z.string().optional())
+const defaultParamsSchema = z.record(z.string(), z.string().optional())
 
 export function useRoute<
   After extends EventHandler<never>[],
