@@ -12,15 +12,15 @@ export interface CometOptions extends Omit<Partial<Configuration>, 'server'> {
   name?: string
 }
 
-export function comet(options: CometOptions) {
+export function comet(options?: CometOptions) {
   // Construct the server's configuration
   const config: Configuration = {
-    cookies: options.cookies,
-    cors: options.cors,
-    logger: options.logger ?? console,
-    loglevel: options.loglevel ?? 'debug',
-    prefix: options.prefix,
-    server: options.name ?? 'main'
+    cookies: options?.cookies,
+    cors: options?.cors,
+    logger: options?.logger ?? console,
+    loglevel: options?.loglevel ?? 'debug',
+    prefix: options?.prefix,
+    server: options?.name ?? 'main'
   }
   // Initialize routes
   Routes.init(config.server)
