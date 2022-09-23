@@ -8,23 +8,37 @@ import type { z } from 'zod'
 
 
 type X = {
-  '200': z.ZodNumber
-  '500': z.ZodString
+  '200': zod.ZodNumber
+  '500': zod.ZodString
 }
 
-type Replies = {
-  [P in keyof X as `${string & typeof statuses[P]}`]: (body: z.infer<X[P]>) => Reply
+type FunctionFromStatus<Status> = Status extends keyof typeof statuses ? typeof statuses[Status] : never
+
+type TypeFromSchema<Schema> = Schema extends z.ZodType ? z.infer<Schema> : never
+
+type Replies<T> = {
+  [P in keyof T as FunctionFromStatus<P>]: (body: TypeFromSchema<T[P]>) => Reply
 }
 
-declare const x: Replies
-x.ok('123')
+// the number key is causing the issue
+const responses = {
+  200: zod.number(),
+  500: zod.string()
+}
+
+type Y = typeof responses
+type Z = { [key in keyof Y as `${Lowercase<string & key>}`]: Y[key] }
+
+declare const reply: Replies<Y>
+reply.ok()
+reply.ok(123)
 // x.internalServerError
 
-type Z = '200' | '500'
-
-type Test = {
-  [P in Z as `${string & typeof statuses[P]}`]: unknown
-}
+// type Z = '200' | '500'
+//
+// type Test = {
+//   [P in Z as `${string & typeof statuses[P]}`]: unknown
+// }
 
 
 // ---
