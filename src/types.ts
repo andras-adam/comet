@@ -1,6 +1,7 @@
 import { CorsOptions } from './cors'
 import { CookiesOptions } from './cookies'
 import { LoggerMethods, LogLevel } from './logger'
+import { OpenApiOptions } from './openapi'
 
 
 export enum Method {
@@ -32,6 +33,7 @@ export interface Configuration {
   cors?: CorsOptions
   logger?: LoggerMethods
   loglevel?: keyof typeof LogLevel
+  openapi?: OpenApiOptions
   prefix?: string
   server: string
 }
