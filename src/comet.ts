@@ -3,7 +3,7 @@ import { Event } from './event'
 import { Routes } from './routes'
 import { getPathnameParameters } from './utils'
 import { cometLogger, setLogger } from './logger'
-import { Middlewares } from './middlewares'
+import { GlobalMiddlewares } from './globalMiddlewares'
 import { cors } from './middleware/cors'
 import { schemaValidation } from './middleware/schemaValidation'
 
@@ -37,7 +37,7 @@ export function comet(options?: CometOptions) {
       // Construct event from request
       const event = await Event.fromRequest(config, request, env, ctx, state)
       // Run global before middlewares
-      for (const mw of Middlewares.getBefore(config.server)) {
+      for (const mw of GlobalMiddlewares.getBefore(config.server)) {
         await mw.handler(event)
         if (event.reply.sent) break
       }
@@ -75,7 +75,7 @@ export function comet(options?: CometOptions) {
         }
       }
       // Run global after middlewares
-      for (const mw of Middlewares.getAfter(config.server)) {
+      for (const mw of GlobalMiddlewares.getAfter(config.server)) {
         await mw.handler(event)
       }
       // Construct response from event

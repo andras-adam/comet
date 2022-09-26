@@ -1,9 +1,9 @@
-import { Middleware, Middlewares, MiddlewareType } from '../middlewares'
+import { GlobalMiddleware, GlobalMiddlewares, GlobalMiddlewareType } from '../globalMiddlewares'
 import { EventHandler } from '../event'
 import { cometLogger } from '../logger'
 
 
-export interface UseBeforeOptions extends Omit<Middleware, 'handler' | 'type'> {
+export interface UseBeforeOptions extends Omit<GlobalMiddleware, 'handler' | 'type'> {
   server?: string
 }
 
@@ -15,10 +15,10 @@ export function useBefore(handlerOrOptions: EventHandler | UseBeforeOptions, han
     const options = typeof handlerOrOptions === 'object' ? handlerOrOptions : {}
     if (!handler) return
     const server = options.server ?? 'main'
-    Middlewares.register(server, {
+    GlobalMiddlewares.register(server, {
       handler,
       name: options.name ?? 'Unnamed Global Before',
-      type: MiddlewareType.Before
+      type: GlobalMiddlewareType.Before
     })
   } catch (error) {
     cometLogger.error('[Comet] Failed to register a global \'before\' middleware.', error)
