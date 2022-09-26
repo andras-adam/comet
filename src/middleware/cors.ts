@@ -1,11 +1,19 @@
+import { z } from 'zod'
 import { Method } from '../types'
 import { CORS, defaultCorsOptions } from '../cors'
 import { parseListValue } from '../utils'
 import { Routes } from '../routes'
-import { defineEventHandler as middleware } from '../event'
+import { middleware } from '../middleware'
+import { Status } from '../reply'
 
 
-export const cors = middleware(event => {
+export const cors = middleware({
+  name: 'CORS',
+  replies: {
+    [Status.NoContent]: z.object({ success: z.boolean() }),
+    [Status.NotFound]: z.object({ success: z.boolean() })
+  }
+}, event => {
   // Prepare CORS options
   const foundOptions = CORS.find(event.config.server, event.pathname)
   const options = { ...defaultCorsOptions, ...event.config.cors, ...foundOptions }
@@ -29,11 +37,11 @@ export const cors = middleware(event => {
   // Verify that the preflighted route exists
   const requestMethod = event.headers.get('access-control-request-method') ?? undefined
   const route = Routes.find(event.config.server, event.pathname, requestMethod, undefined, event.config.prefix, true)
-  if (!route) return event.reply.notFound()
+  if (!route) return event.reply.notFound({ success: false })
   // Set the remaining CORS headers on the preflight response
   if (allowedHeaders.length > 0) event.reply.headers.set('access-control-allow-headers', allowedHeaders.join(','))
   if (allowedMethods.length > 0) event.reply.headers.set('access-control-allow-methods', allowedMethods.join(','))
   event.reply.headers.set('access-control-max-age', maxAge.toString())
   event.reply.headers.set('content-length', '0')
-  return event.reply.noContent()
+  return event.reply.noContent({ success: false })
 })

@@ -1,79 +1,43 @@
-import { z as zod } from 'zod'
 import { Event } from './event'
-import { Reply, SentReply, statuses } from './reply'
+import { Reply, ReplyData } from './reply'
+import { PromiseOrNot, Replace } from './utils'
 import type { z } from 'zod'
 
 
-// ---
-
-
-type X = {
-  '200': zod.ZodNumber
-  '500': zod.ZodString
-}
-
-type FunctionFromStatus<Status> = Status extends keyof typeof statuses ? typeof statuses[Status] : never
-
 type TypeFromSchema<Schema> = Schema extends z.ZodType ? z.infer<Schema> : never
 
-type Replies<T> = {
-  [P in keyof T as FunctionFromStatus<P>]: (body: TypeFromSchema<T[P]>) => Reply
+type ReplyFnFromBody<Body> = Body extends undefined ? () => Reply : (body: Body) => Reply
+
+type ReplyFrom<Schemas> = Schemas extends Record<never, never>
+  ? { [Key in keyof Schemas]: ReplyFnFromBody<TypeFromSchema<Schemas[Key]>> } & ReplyData
+  : Reply
+
+type ExtensionFrom<T> = T extends Record<never, never> ? TypeFromSchema<T> : unknown
+
+export interface Middleware<EventMutation = unknown> {
+  extension?: z.ZodType
+  handler: (event: Event & EventMutation) => PromiseOrNot<Reply | Event>
+  name?: string
+  replies?: Record<number, z.ZodType>
 }
 
-// the number key is causing the issue
-const responses = {
-  200: zod.number(),
-  500: zod.string()
+export interface MiddlewareOptions<Extension, Replies> {
+  extension?: Extension
+  name?: string
+  replies?: Replies
 }
 
-type Y = typeof responses
-type Z = { [key in keyof Y as `${Lowercase<string & key>}`]: Y[key] }
-
-declare const reply: Replies<Y>
-reply.ok()
-reply.ok(123)
-// x.internalServerError
-
-// type Z = '200' | '500'
-//
-// type Test = {
-//   [P in Z as `${string & typeof statuses[P]}`]: unknown
-// }
-
-
-// ---
-
-
-type ReplyFrom<T> = T extends Record<never, never>
-  ? { [K in keyof T]: SentReply<K extends number ? K : never, T[K] extends z.ZodType ? z.infer<T[K]> : never> }[keyof T]
-  : T
-
-type PromiseOrNot<T> = Promise<T> | T
-
-
-declare function middleware<Responses = undefined>(
-  options: {
-    name?: string
-    // responses?: Responses
-  },
-  handler: (event: Event) => PromiseOrNot<SentReply<number, unknown> | Event>
-): Responses
-declare function middleware<Responses = undefined>(
-  options: {
-    name?: string
-    responses: Responses
-  },
-  handler: (event: Event) => PromiseOrNot<ReplyFrom<typeof options.responses> | Event>
-): Responses
-
-middleware({
-  // responses: {
-  //   200: zod.object({ id: zod.number() }),
-  //   500: zod.object({ message: zod.string() })
-  // }
-}, async event => {
-  // return event.next()
-  // return event.reply.internalServerError({ message: 'fuck you' })
-  // return event.reply.ok({ id: 123 })
-  return event.reply.ok()
-})
+export function middleware(handler: (event: Event) => PromiseOrNot<Reply | Event>): Middleware
+export function middleware<Extension, Replies>(
+  options: MiddlewareOptions<Extension, Replies>,
+  handler: (event: Replace<Event, 'reply', ReplyFrom<Replies>> & ExtensionFrom<Extension>) => PromiseOrNot<Reply | Event>
+): Middleware<ExtensionFrom<Extension>>
+export function middleware<Extension, Replies>(
+  handlerOrOptions: ((event: Event) => PromiseOrNot<Reply | Event>) | MiddlewareOptions<Extension, Replies>,
+  handlerOrUndefined?: (event: Replace<Event, 'reply', ReplyFrom<Replies>> & ExtensionFrom<Extension>) => PromiseOrNot<Reply | Event>
+) {
+  const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : handlerOrUndefined
+  const options = typeof handlerOrOptions === 'object' ? handlerOrOptions : {}
+  if (!handler) return
+  return { ...options, handler }
+}

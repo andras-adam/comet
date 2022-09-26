@@ -1,21 +1,25 @@
 import { z } from 'zod'
-import { comet, Method, middleware, mw, useAfter, useBefore, useCors, useRoute } from '../../src'
+import { comet, Method, useAfter, useBefore, useRoute, middleware, Status } from '../../src'
 
 
-const test = middleware(event => {
-  console.log('[local mw] test')
-  return event.reply.badRequest({ message: 'test mw sending error and breaking the middleware chain' })
-})
-
-const logger = middleware<{ logged: boolean }>(event => {
+const logger = middleware(event => {
   console.log('[local mw] logger')
-  event.logged = true
   return event.next()
 })
 
-const auth = middleware<{ user: { userId: string } }>(event => {
+const auth = middleware({
+  name: 'auth',
+  extension: z.object({ user: z.object({ id: z.number() }) }),
+  replies: {
+    [Status.Unauthorized]: z.object({ success: z.boolean(), message: z.string() })
+  }
+}, event => {
   console.log('[local mw] auth')
-  event.user = { userId: 'NeoAren' }
+  const couldAuthenticate = true
+  if (!couldAuthenticate) {
+    return event.reply.unauthorized({ success: false, message: 'haha no' })
+  }
+  event.user = { id: 123 }
   return event.next()
 })
 
@@ -29,41 +33,14 @@ useAfter(event => {
   return event.next()
 })
 
-useCors({
-  pathname: '/api',
-  origins: [ 'http://localhost:3000', 'http://localhost:4000' ]
-})
-
 useRoute({
   method: Method.ALL,
-  pathname: '/books/:bookId',
+  pathname: '/test/mw',
   compatibilityDate: '2022-06-30',
-  before: [
-    logger,
-    // test,
-    auth,
-    mw(event => {
-      console.log('[local mw] inline')
-      return event.next()
-    })
-  ]
+  before: [ logger, auth ]
 }, event => {
-  console.log('[handler]', event.logged, event.user, event.body)
+  console.log('[handler]', event.user, event.body)
   return event.reply.ok()
-})
-
-useRoute({
-  method: Method.POST,
-  pathname: '/test/:id',
-  body: z.object({
-    firstname: z.string(),
-    lastname: z.string(),
-    image: z.instanceof(File)
-  }),
-  params: z.object({ id: z.string().min(3) })
-}, event => {
-  console.log(event.body, event.params)
-  return event.reply.ok(event.body)
 })
 
 export default {

@@ -1,6 +1,14 @@
 import { Method } from './types'
 
 
+// Returns a possibly promisified `T`
+export type PromiseOrNot<T> = Promise<T> | T
+
+// Replaces `Key` on `Source` with `Value`
+export type Replace<Source, Key extends keyof Source, Value> = {
+  [Property in keyof Source]: Property extends Key ? Value : Source[Property]
+}
+
 // Base URL for URLPattern pathname testing, the actual value is irrelevant
 export const BASE_URL = 'https://comet'
 

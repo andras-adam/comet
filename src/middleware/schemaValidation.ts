@@ -1,7 +1,14 @@
-import { defineEventHandler as middleware } from '../event'
+import { z } from 'zod'
+import { middleware } from '../middleware'
+import { Status } from '../reply'
 
 
-export const schemaValidation = middleware(event => {
+export const schemaValidation = middleware({
+  name: 'Schema validation',
+  replies: {
+    [Status.BadRequest]: z.object({ success: z.boolean(), errors: z.unknown() })
+  }
+}, event => {
   if (!event.route) return event.next()
   // Get the schemas from the route config
   const { body: bodySchema, params: paramsSchema, query: querySchema } = event.route.schemas
@@ -15,7 +22,7 @@ export const schemaValidation = middleware(event => {
   if (!queryResult.success) errors.query = queryResult.error.issues
   if (!bodyResult.success) errors.body = bodyResult.error.issues
   if (!paramsResult.success || !queryResult.success || !bodyResult.success) {
-    return event.reply.badRequest({ errors })
+    return event.reply.badRequest({ success: false, errors })
   }
   // Set the parsed params, query and body on the event and continue to the next handler
   event.params = paramsResult.data

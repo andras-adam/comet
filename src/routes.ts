@@ -3,11 +3,12 @@ import { EventHandler } from './event'
 import { Method } from './types'
 import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
 import { cometLogger } from './logger'
+import { Middleware } from './middleware'
 
 
 export interface Route {
-  after: EventHandler[]
-  before: EventHandler[]
+  after: Middleware[]
+  before: Middleware[]
   compatibilityDate?: string
   handler: EventHandler
   method: Method

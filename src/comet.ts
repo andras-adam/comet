@@ -42,7 +42,7 @@ export function comet(options?: CometOptions) {
         if (event.reply.sent) break
       }
       // Run special global middleware
-      if (!event.reply.sent) cors(event)
+      if (!event.reply.sent) cors.handler(event)
       // Main logic
       if (!event.reply.sent) {
         // Get and validate the compatibility date
@@ -59,16 +59,16 @@ export function comet(options?: CometOptions) {
             event.route = route
             event.params = getPathnameParameters(event.pathname, route.pathname, config.prefix)
             // Schema validation
-            if (!event.reply.sent) schemaValidation(event)
+            if (!event.reply.sent) schemaValidation.handler(event)
             // Route middleware and handler
             if (!event.reply.sent) {
               for (const mw of route.before) {
-                await mw(event)
+                await mw.handler(event)
                 if (event.reply.sent) break
               }
               if (!event.reply.sent) await route.handler(event)
               for (const mw of route.after) {
-                await mw(event)
+                await mw.handler(event)
               }
             }
           }

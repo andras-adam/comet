@@ -6,10 +6,6 @@ import { Route } from './routes'
 
 export type EventHandler<Extension = unknown> = (event: Event & Extension) => Promise<Event | Reply> | Event | Reply
 
-export function defineEventHandler<Extension = unknown>(handler: EventHandler<Extension>) {
-  return handler
-}
-
 export type EventInit = { [Property in Exclude<keyof Event, 'reply' | 'next'>]: Event[Property] }
 
 export class Event {

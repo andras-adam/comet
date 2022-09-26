@@ -3,10 +3,11 @@ import { Routes } from '../routes'
 import { EventHandler } from '../event'
 import { Method } from '../types'
 import { cometLogger } from '../logger'
+import { Middleware } from '../middleware'
 
 
-type ExtensionFrom<Handler> = Handler extends (event: infer Arg) => unknown ? Exclude<Arg, keyof Event> : never
-type ExtensionsFrom<Handlers, Extensions = unknown> = Handlers extends [infer Current, ...infer Rest]
+type ExtensionFrom<MW> = MW extends Middleware<infer Extension> ? Extension : never
+type ExtensionsFrom<MWs, Extensions = unknown> = MWs extends [infer Current, ...infer Rest]
   ? ExtensionsFrom<Rest, Extensions & ExtensionFrom<Current>>
   : Extensions
 
@@ -15,8 +16,8 @@ const defaultQuerySchema = z.record(z.string(), z.string().optional())
 const defaultParamsSchema = z.record(z.string(), z.string().optional())
 
 export function useRoute<
-  After extends EventHandler<never>[],
-  Before extends EventHandler<never>[],
+  After extends Middleware<never>[],
+  Before extends Middleware<never>[],
   Body extends ZodType = typeof defaultBodySchema,
   Query extends ZodType = typeof defaultQuerySchema,
   Params extends ZodType = typeof defaultParamsSchema
@@ -40,8 +41,8 @@ export function useRoute<
     const pathname = options.pathname ?? '*'
     const method = options.method ? options.method.toUpperCase() as Method : Method.ALL
     Routes.register(server, {
-      after: options.after ? options.after as unknown as EventHandler[] : [],
-      before: options.before ? options.before as unknown as EventHandler[] : [],
+      after: options.after ? options.after as unknown as Middleware[] : [],
+      before: options.before ? options.before as unknown as Middleware[] : [],
       compatibilityDate: options.compatibilityDate,
       handler: handler as unknown as EventHandler,
       method,
