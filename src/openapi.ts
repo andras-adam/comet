@@ -225,4 +225,4 @@ export interface OpenApi {
   externalDocs?: ExternalDocumentation
 }
 
-export type OpenApoOptions = Omit<OpenApi, 'openapi' | 'paths' | 'webhooks' | 'components' | 'security'>
+export type OpenApiOptions = Omit<OpenApi, 'openapi' | 'paths' | 'webhooks' | 'components' | 'security'>
