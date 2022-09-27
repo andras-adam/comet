@@ -3,7 +3,7 @@ import { EventHandler } from './event'
 import { Method } from './types'
 import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from './utils'
 import { cometLogger } from './logger'
-import { Middleware } from './middleware'
+import { Middleware, ReplySchemas } from './middleware'
 
 
 export interface Route {
@@ -14,6 +14,7 @@ export interface Route {
   method: Method
   name: string
   pathname: string
+  replies?: ReplySchemas
   schemas: {
     body: ZodType
     query: ZodType

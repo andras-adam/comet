@@ -17,7 +17,7 @@ const auth = middleware({
   console.log('[local mw] auth')
   const couldAuthenticate = true
   if (!couldAuthenticate) {
-    return event.reply.unauthorized({ success: false, message: 'haha no' })
+    return event.reply.unauthorized({ success: false, message: 'unauthorized' })
   }
   event.user = { id: 123 }
   return event.next()
@@ -37,9 +37,14 @@ useRoute({
   method: Method.ALL,
   pathname: '/test/mw',
   compatibilityDate: '2022-06-30',
-  before: [ logger, auth ]
+  before: [ logger, auth ],
+  replies: {
+    [Status.Ok]: z.undefined(),
+    [Status.BadRequest]: z.object({ message: z.string() })
+  }
 }, event => {
   console.log('[handler]', event.user, event.body)
+  event.reply.badRequest({ message: 'bad request' })
   return event.reply.ok()
 })
 
