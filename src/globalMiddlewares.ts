@@ -1,4 +1,5 @@
 import { EventHandler } from './event'
+import { ReplySchemas } from './middleware'
 
 
 export enum GlobalMiddlewareType {
@@ -9,6 +10,7 @@ export enum GlobalMiddlewareType {
 export interface GlobalMiddleware {
   handler: EventHandler
   name?: string
+  replies?: ReplySchemas
   type: GlobalMiddlewareType
 }
 

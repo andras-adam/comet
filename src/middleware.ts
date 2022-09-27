@@ -4,21 +4,23 @@ import { PromiseOrNot, Replace } from './utils'
 import type { z } from 'zod'
 
 
-type TypeFromSchema<Schema> = Schema extends z.ZodType ? z.infer<Schema> : never
+export type TypeFromSchema<Schema> = Schema extends z.ZodType ? z.infer<Schema> : never
 
-type ReplyFnFromBody<Body> = Body extends undefined ? () => Reply : (body: Body) => Reply
+export type ReplyFnFromBody<Body> = Body extends undefined ? () => Reply : (body: Body) => Reply
 
-type ReplyFrom<Schemas> = Schemas extends Record<never, never>
+export type ReplyFrom<Schemas> = Schemas extends Record<never, never>
   ? { [Key in keyof Schemas]: ReplyFnFromBody<TypeFromSchema<Schemas[Key]>> } & ReplyData
   : Reply
 
-type ExtensionFrom<T> = T extends Record<never, never> ? TypeFromSchema<T> : unknown
+export type ExtensionFrom<T> = T extends Record<never, never> ? TypeFromSchema<T> : unknown
+
+export type ReplySchemas = Record<number, z.ZodType>
 
 export interface Middleware<EventMutation = unknown> {
   extension?: z.ZodType
   handler: (event: Event & EventMutation) => PromiseOrNot<Reply | Event>
   name?: string
-  replies?: Record<number, z.ZodType>
+  replies?: ReplySchemas
 }
 
 export interface MiddlewareOptions<Extension, Replies> {

@@ -2,9 +2,10 @@ import { Configuration, Method } from './types'
 import { Reply } from './reply'
 import { Cookies } from './cookies'
 import { Route } from './routes'
+import { PromiseOrNot } from './utils'
 
 
-export type EventHandler<Extension = unknown> = (event: Event & Extension) => Promise<Event | Reply> | Event | Reply
+export type EventHandler<Extension = unknown> = (event: Event & Extension) => PromiseOrNot<Event | Reply>
 
 export type EventInit = { [Property in Exclude<keyof Event, 'reply' | 'next'>]: Event[Property] }
 
