@@ -9,7 +9,7 @@ export type TypeFromSchema<Schema> = Schema extends z.ZodType ? z.infer<Schema> 
 export type ReplyFnFromBody<Body> = Body extends undefined ? () => Reply : (body: Body) => Reply
 
 export type ReplyFrom<Schemas> = Schemas extends Record<never, never>
-  ? { [Key in keyof Schemas]: ReplyFnFromBody<TypeFromSchema<Schemas[Key]>> } & ReplyData
+  ? { [Key in keyof Schemas as `${string & Key}`]: ReplyFnFromBody<TypeFromSchema<Schemas[Key]>> } & ReplyData
   : Reply
 
 export type ExtensionFrom<T> = T extends Record<never, never> ? TypeFromSchema<T> : unknown
