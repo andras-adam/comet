@@ -96,6 +96,11 @@ export class Event {
       console.error('[Comet] No reply was sent for this event.')
       return new Response(null, { status: 500 })
     }
+    // Handle sending a raw response
+    if (event.reply.rawResponse !== undefined) {
+      return event.reply.rawResponse
+    }
+    // Get status, headers and serialize cookies
     const status = event.reply.status
     const headers = event.reply.headers
     await Cookies.serialize(event.reply.cookies, event.reply.headers, config)

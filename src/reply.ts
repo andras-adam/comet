@@ -75,6 +75,7 @@ export class Reply implements ReplyData {
   public body?: unknown
   public headers = new Headers()
   public cookies = new Cookies()
+  public rawResponse?: Response
 
   // Send the response
   private send(status: number, body?: unknown): Reply {
@@ -85,6 +86,12 @@ export class Reply implements ReplyData {
     this.sent = new Date()
     this.status = status
     this.body = body
+    return this
+  }
+
+  // Send a raw Response object
+  public raw(response: Response) {
+    this.rawResponse = response
     return this
   }
 
