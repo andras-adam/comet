@@ -91,6 +91,11 @@ export class Reply implements ReplyData {
 
   // Send a raw Response object
   public raw(response: Response) {
+    if (this.sent) {
+      cometLogger.warn('[Comet] Cannot send a reply after one has already been sent.')
+      return this
+    }
+    this.sent = new Date()
     this.rawResponse = response
     return this
   }
