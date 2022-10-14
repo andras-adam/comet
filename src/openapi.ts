@@ -178,7 +178,7 @@ type Operation = {
 
 export interface OpenApi {
   openapi: '3.1.0'
-  info?: {
+  info: {
     title: string
     summary?: string
     description?: string
