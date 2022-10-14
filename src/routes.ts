@@ -22,10 +22,11 @@ export interface Route {
   }
 }
 
-export class Routes {
 
-  // Registry mapping routes to a server
-  private static registry: Record<string, Route[]> = {}
+// Registry mapping routes to a server
+export const registry: Record<string, Route[]> = {}
+
+export class Routes {
 
   // Register a new route to a server
   public static register(server: string, route: Route): void {
@@ -44,8 +45,8 @@ export class Routes {
       cometLogger.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
       return
     }
-    if (!this.registry[server]) this.registry[server] = []
-    this.registry[server].push(route)
+    if (!registry[server]) registry[server] = []
+    registry[server].push(route)
   }
 
   // Find a route on a server by pathname, method and compatibility date
@@ -57,7 +58,7 @@ export class Routes {
     prefix?: string,
     ignoreCompatibilityDate?: boolean
   ): Route | undefined {
-    for (const route of this.registry[server]) {
+    for (const route of registry[server]) {
       const doPathnamesMatch = comparePathnames(pathname, `${prefix ?? ''}${route.pathname}`)
       if (!doPathnamesMatch) continue
       const doMethodsMatch = compareMethods(method, route.method)
@@ -71,7 +72,7 @@ export class Routes {
   // Initialize routes for a server by sorting them by compatibility date in
   // descending order to ensure the correct functioning of the find algorithm
   public static init(server: string): void {
-    this.registry[server]?.sort((a, b) => {
+    registry[server]?.sort((a, b) => {
       if (a.pathname !== b.pathname || a.method !== b.method) return 0
       return compareCompatibilityDates(a.compatibilityDate, b.compatibilityDate) ? -1 : 1
     })
