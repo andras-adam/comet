@@ -1,22 +1,33 @@
 import { z } from 'zod'
+import zodToJsonSchema from 'zod-to-json-schema'
 import { GET, Method } from '../types'
 import { OpenApi, OpenApiOptions } from '../openapi'
 import { registry, Route, Routes } from '../routes'
 import { useRoute } from './useRoute'
 
 
+function objectSchemaToParameters(schema: z.AnyZodObject): Record<string, Record<any, any>> {
+  return Object.fromEntries(Object.keys(schema.keyof().enum).map(key => [ key, zodToJsonSchema(schema.shape[key]) ]))
+}
+
 function routeToOperation(route?: Route): OpenApi['paths']['/']['get'] | undefined {
   if (!route) {
     return
   }
 
-  const pathParams = route.schemas.params.map().map(el => ({ in: 'path', required: true, ...el }))
-  const queryParams = route.schemas.query.map().map(el => ({ in: 'query', ...el }))
-  const body = route.schemas.body.map()
-  const responses = route.replies ? Object.fromEntries(Object.entries(route.replies).map()) : undefined
+  const path = objectSchemaToParameters((route.schemas.params as z.AnyZodObject))
+  const query = objectSchemaToParameters((route.schemas.query as z.AnyZodObject))
+
+  const pathParams = Object.entries(path).map(el => ({ in: 'path' as const, name: el[0], required: true, schema: el[1] }))
+  const queryParams = Object.entries(query).map(el => ({ in: 'query' as const, name: el[0], required: true, schema: el[1] }))
+  const body = zodToJsonSchema(route.schemas.body)
+  const responses = route.replies
+    ? Object.fromEntries(Object.entries(route.replies).map(reply =>
+      [ Number.parseInt(reply[0]), zodToJsonSchema(reply[1]) ]))
+    : undefined
 
   return {
-    parameters: pathParams.concat(queryParams),
+    parameters: [ ...pathParams, ...queryParams ],
     requestBody: body,
     responses
   }
