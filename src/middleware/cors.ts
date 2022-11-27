@@ -10,7 +10,7 @@ import { Status } from '../reply'
 export const cors = middleware({
   name: 'CORS',
   replies: {
-    [Status.NoContent]: z.object({ success: z.boolean() }),
+    [Status.NoContent]: z.undefined(),
     [Status.NotFound]: z.object({ success: z.boolean() })
   }
 }, event => {
@@ -43,5 +43,5 @@ export const cors = middleware({
   if (allowedMethods.length > 0) event.reply.headers.set('access-control-allow-methods', allowedMethods.join(','))
   event.reply.headers.set('access-control-max-age', maxAge.toString())
   event.reply.headers.set('content-length', '0')
-  return event.reply.noContent({ success: false })
+  return event.reply.noContent()
 })
