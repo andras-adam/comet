@@ -1,7 +1,8 @@
 {
-  "extends": ["plugin:@danifoldi/eslint-presets/comet"],
+  "extends": [ "@lint-my-life/comet" ],
   "rules": {
+    "no-else-return": "off",
     "unicorn/no-array-method-this-argument": "off",
-    "no-else-return": "off"
+    "unicorn/no-negated-condition": "off"
   }
 }
