@@ -74,10 +74,9 @@ export class Event {
     })
     if (event.method !== Method.GET && event.method !== Method.HEAD) {
       switch (event.headers.get('content-type')?.split(';')[0]) {
-        case 'application/json': {
+        case 'application/json':
           event.body = await request.json()
           break
-        }
         case 'multipart/form-data': {
           const formData = await request.formData()
           event.body = Object.fromEntries(formData.entries())
