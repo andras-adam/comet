@@ -13,6 +13,7 @@ export class Event {
 
   public readonly method: Method
   public readonly pathname: string
+  public readonly hostname: string
   public headers: Headers
   public cookies: Cookies
   public query: unknown
@@ -29,6 +30,7 @@ export class Event {
   private constructor(init: EventInit) {
     this.method = init.method
     this.pathname = init.pathname
+    this.hostname = init.hostname
     this.headers = init.headers
     this.cookies = init.cookies
     this.query = init.query
@@ -61,6 +63,7 @@ export class Event {
       ctx,
       env,
       headers: request.headers,
+      hostname: url.hostname.toLowerCase(),
       method: request.method as Method,
       params: {},
       pathname: url.pathname,
