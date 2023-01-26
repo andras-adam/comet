@@ -3,7 +3,7 @@
     "target": "esnext",
     "module": "esnext",
     "lib": ["esnext"],
-    "types": ["@cloudflare/workers-types"],
+    "types": ["@cloudflare/workers-types/experimental"],
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
