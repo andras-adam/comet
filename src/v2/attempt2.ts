@@ -1,7 +1,10 @@
-import { BASE_URL, compareCompatibilityDates, compareMethods, comparePathnames } from '../utils'
+import { compareCompatibilityDates, compareMethods, comparePathnames } from '../utils'
 import { Reply } from './reply'
 import { Cookies, CookiesOptions } from '../cookies'
 import { isValidCompatibilityDate, isValidMethod, isValidPathname } from './utils'
+
+
+// ---------- DATA ----------
 
 
 class Data {
@@ -60,11 +63,8 @@ type MaybePromise<T> = Promise<T> | T
 
 interface Middleware<T> {
   name: string
-  handler: (event: any) => MaybePromise<T>
-  // TODO replies
+  handler: (event: any) => MaybePromise<T | Reply>
 }
-
-// TODO request, env, etc. on mw event
 
 type MiddlewareList = readonly [...readonly Middleware<any>[]]
 
@@ -73,26 +73,30 @@ type ExtensionsFrom<MWs, Accumulator = unknown> = MWs extends readonly [infer Cu
   ? ExtensionsFrom<Rest, Accumulator & ExtensionFrom<Current>>
   : Accumulator
 
-declare function middleware<
-  const Requires extends MiddlewareList
->(options: {
-  name?: string
-  requires?: Requires
-}, handler: (event: Data & ExtensionsFrom<Requires>) => MaybePromise<void | undefined>
-): Middleware<unknown>
+type MiddlewareContext = { env: Environment; request: Request } & (
+  { isDurableObject: true; state: DurableObjectState }
+  |
+  { isDurableObject: false; ctx: ExecutionContext }
+)
+
+type Next = <const T extends Record<string, unknown> | undefined = undefined>(extension?: T) => T
 
 declare function middleware<
   const Requires extends MiddlewareList,
-  const Extension extends Record<string, unknown>
+  const Extension extends Record<string, unknown> | undefined
 >(options: {
   name?: string
   requires?: Requires
-}, handler: (event: Data & ExtensionsFrom<Requires>) => MaybePromise<Extension>
-): Middleware<Extension>
+}, handler: (event: Data & { reply: Reply; next: Next } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<Extension | Reply>
+): Middleware<Extension extends Record<any, any> ? Extension : unknown>
 
 
 // ---------- ROUTER ----------
 
+
+type RouteContext<IsDo extends boolean> = IsDo extends true
+  ? { request: Request; env: Environment; isDurableObject: true; state: DurableObjectState }
+  : { request: Request; env: Environment; isDurableObject: false; ctx: ExecutionContext }
 
 interface Route {
   name: string
@@ -134,7 +138,7 @@ class Router<
       before?: RBefore
       after?: RAfter
     },
-    handler: (event: Data & Context<IsDo> & { reply: Reply } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
+    handler: (event: Data & RouteContext<IsDo> & { reply: Reply } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
   ): void {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
     const method = options.method ?? 'ALL'
@@ -183,10 +187,6 @@ class Router<
 
 // ---------- SERVER ----------
 
-// TODO does not work
-type Context<IsDo extends boolean> = IsDo extends true
-  ? { request: Request; env: Environment; state: DurableObjectState }
-  : { request: Request; env: Environment; ctx: ExecutionContext }
 
 interface ServerOptions<
   Before extends MiddlewareList,
@@ -244,34 +244,56 @@ class Server<
 // ---------- TESTING ----------
 
 
+const x = middleware({
+  name: 'test'
+}, event => {
+  // nothing
+  // return event.next({ foo: 'bar' })
+  return event.next()
+})
+
 const logger = middleware({
   name: 'logger'
 }, event => {
+  if (false) {
+    return event.reply.ok({ success: true })
+  }
+  // event.next()
   console.log('logged content')
+  // return event.reply.ok({ success: true })
+  return event.next()
 })
 
 const token = middleware({
   name: 'token'
 }, event => {
-  return { token: 'dagsdkaszdg' }
+  return event.next({ token: 'asdg263f36dfu63fd' })
 })
 
 const auth = middleware({
   name: 'auth',
   requires: [ token ]
 }, async event => {
-  //
-  // return event.
-  //
-  return { user: [ 123, 456 ] }
+  try {
+    //
+    // return event.
+    // event.next()
+    //
+    return event.next({ user: [ 123, 456 ] })
+  } catch {
+    return event.reply.internalServerError()
+  }
 })
 
 const perm = middleware({
   name: 'perm',
   requires: [ logger, auth, token ]
 }, async event => {
+  if (false) {
+    return event.reply.forbidden()
+  }
   // do checks
-  return { can: true }
+  return event.next({ can: true })
 })
 
 // Worker usage
