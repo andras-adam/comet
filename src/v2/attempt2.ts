@@ -62,7 +62,8 @@ class Data {
 type MaybePromise<T> = Promise<T> | T
 
 interface Middleware<T> {
-  name: string
+  name?: string
+  requires?: MiddlewareList
   handler: (event: any) => MaybePromise<T | Reply>
 }
 
@@ -81,14 +82,16 @@ type MiddlewareContext = { env: Environment; request: Request } & (
 
 type Next = <const T extends Record<string, unknown> | undefined = undefined>(extension?: T) => T
 
-declare function middleware<
+function middleware<
   const Requires extends MiddlewareList,
   const Extension extends Record<string, unknown> | undefined
 >(options: {
   name?: string
   requires?: Requires
 }, handler: (event: Data & { reply: Reply; next: Next } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<Extension | Reply>
-): Middleware<Extension extends Record<any, any> ? Extension : unknown>
+): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
+  return { ...options, handler: handler as any }
+}
 
 
 // ---------- ROUTER ----------
