@@ -1,4 +1,4 @@
-import { Method } from '../index'
+import { Method } from './types'
 
 // Base URL for URLPattern pathname testing, the actual value is irrelevant
 export const BASE_URL = 'https://comet'
