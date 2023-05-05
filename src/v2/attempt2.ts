@@ -18,15 +18,15 @@ class Data {
     public readonly hostname: string,
     public readonly headers: Headers,
     public readonly cookies: Cookies,
-    public query: unknown,
-    public params: unknown,
+    public query: Record<string, string | undefined>,
+    public params: Record<string, string | undefined>,
     public body: unknown
   ) {}
 
   public static async fromRequest(request: Request, options: Options): Promise<Data> {
     const url = new URL(request.url)
     return new Data(
-      request.method.toLowerCase(),
+      request.method.toUpperCase(),
       url.pathname,
       url.hostname.toLowerCase(),
       request.headers,
@@ -91,6 +91,12 @@ type NextFn = <const T extends Record<string, unknown> = Record<never, never>>(d
 const next: NextFn = (extension?: any) => new NextData(extension)
 
 export function middleware<
+  const Extension extends Record<string, unknown> = Record<never, never>
+>(
+  handler: (event: Data & { reply: Reply; next: NextFn } & MiddlewareContext) => MaybePromise<NextData<Extension> | Reply>
+): Middleware<Extension extends Record<any, any> ? Extension : unknown>
+
+export function middleware<
   const Requires extends MiddlewareList,
   const Extension extends Record<string, unknown> = Record<never, never>
 >(
@@ -99,11 +105,25 @@ export function middleware<
     requires?: Requires
   },
   handler: (event: Data & { reply: Reply; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
+): Middleware<Extension extends Record<any, any> ? Extension : unknown>
+
+export function middleware<
+  const Requires extends MiddlewareList,
+  const Extension extends Record<string, unknown> = Record<never, never>
+>(
+  options: {
+    name?: string
+    requires?: Requires
+  } | ((event: Data & { reply: Reply; next: NextFn } & MiddlewareContext) => MaybePromise<NextData<Extension> | Reply>),
+  handler?: (event: Data & { reply: Reply; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
+  const _options = typeof options === 'object' ? options : {}
+  const _handler = typeof options === 'function' ? options : handler
+  if (!_handler) throw new Error('[Comet] A middleware received no handler argument.')
   return {
-    ...options,
+    ..._options,
     handler: async event => {
-      const nextData = await handler(Object.assign({}, event, { next }))
+      const nextData = await _handler(Object.assign({}, event, { next }))
       if (nextData instanceof NextData) Object.assign(event, nextData.data)
     }
   }
@@ -225,15 +245,15 @@ class Server<
 > {
 
   private readonly router
-  public route
+  public route: Router<SBefore, SAfter, IsDo>['register']
 
-  constructor(private options: ServerOptions<SBefore, SAfter, IsDo>) {
+  constructor(private options: ServerOptions<SBefore, SAfter, IsDo> = {}) {
     this.router = new Router<SBefore, SAfter, IsDo>(options)
     this.route = this.router.register
   }
 
   //
-  public handle = async (request: Request, env: Environment, ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext) => {
+  public handler = async (request: Request, env: Environment, ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext) => {
     try {
       // Initialize router
       this.router.init()
@@ -313,110 +333,6 @@ export function server<
   const SBefore extends MiddlewareList,
   const SAfter extends MiddlewareList,
   const IsDo extends boolean = false
->(options: ServerOptions<SBefore, SAfter, IsDo>) {
+>(options?: ServerOptions<SBefore, SAfter, IsDo>) {
   return new Server(options)
-}
-
-
-// ---------- TESTING ----------
-
-
-const x = middleware({
-  name: 'test'
-}, event => {
-  // nothing
-  // return event.next({ foo: 'bar' })
-  return event.next()
-})
-
-const logger = middleware({
-  name: 'logger'
-}, async event => {
-  if (false) {
-    return event.reply.ok({ success: true })
-  }
-  // event.next()
-  console.log('logged content')
-  return event.next()
-})
-
-const token = middleware({
-  name: 'token'
-}, event => {
-  return event.next({ token: 'asdg263f36dfu63fd' })
-})
-
-const auth = middleware({
-  name: 'auth',
-  requires: [ token ]
-}, async event => {
-  try {
-    //
-    // return event.
-    // event.next()
-    //
-    return event.next({ user: [ 123, 456 ] })
-  } catch {
-    return event.reply.internalServerError()
-  }
-})
-
-const perm = middleware({
-  name: 'perm',
-  requires: [ logger, auth, token ]
-}, async event => {
-  if (false) {
-    return event.reply.forbidden()
-  }
-  // do checks
-  return event.next({ can: true })
-})
-
-// Worker usage
-const myWorkerComet = server({
-  durableObject: false,
-  before: [ logger, token ],
-  after: [ logger ]
-})
-
-myWorkerComet.route({
-  method: 'post',
-  pathname: '/api/test',
-  before: [ auth, perm ]
-}, async event => {
-  try {
-    //
-    event.ctx
-    //
-    return event.reply.ok()
-  } catch (error) {
-    console.error(error)
-    return event.reply.internalServerError()
-  }
-})
-
-export default <ExportedHandler>{
-  fetch: myWorkerComet.handle
-}
-
-// DO usage
-const myDoComet = server({
-  durableObject: true
-})
-
-myDoComet.route({
-  method: 'post',
-  pathname: ''
-}, async event => {
-  //
-  event.state
-  //
-  return event.reply.ok()
-})
-
-class TestDo implements DurableObject {
-  constructor(private state: DurableObjectState, private env: Environment) {}
-  fetch(request: Request): Promise<Response> {
-    return myDoComet.handle(request, this.env, this.state)
-  }
 }

@@ -1,63 +1,113 @@
-import { middleware, server } from '../../../src/v2'
+import { GET, middleware, POST, server } from '../../../src/v2'
 
 
-const logger = (tag: string) => middleware({}, async event => {
-  console.log(`Logger middleware in '${tag}'`)
+// MIDDLEWARES
+
+
+const logger = (message: string) => middleware(event => {
+  console.log(message)
   return event.next()
 })
 
-const auth = middleware({}, async event => {
-  console.log('Auth middleware')
-  const header = event.headers.get('authorization')
-  if (!header) {
-    return event.reply.unauthorized({ success: false, message: 'Authorization header missing.' })
-  }
-  const token = header.startsWith('Bearer ') ? header.split(' ')[1] : header
-  if (!token) {
-    return event.reply.unauthorized({ success: false, message: 'Authorization token invalid' })
-  }
-  const userId: string = '2374627846872374'
-  return event.next({ userId })
+const token = middleware({
+  name: 'find-token'
+}, event => {
+  const token = 'gf2ugfsdej6fg6u3fgejzf'
+  return event.next({ token })
+})
+
+const auth = middleware({
+  name: 'auth',
+  requires: [ token ]
+}, event => {
+  // event.foo = 'bar'
+  console.log('finding user for token', event.token)
+  return event.next({ userId: '674253674253' })
 })
 
 const perm = middleware({
+  name: 'perm',
   requires: [ auth ]
 }, async event => {
-  console.log(`Checking permission for user ${event.userId}`)
-  const can = true
-  if (!can) {
-    return event.reply.forbidden({ success: false, message: 'Permission denied.' })
-  }
+  await new Promise(resolve => setTimeout(resolve, 500))
+  console.log(event.userId)
   return event.next()
 })
 
-const main = server({
+const never = middleware(event => event.reply.internalServerError())
+
+
+// WORKER
+
+
+const workerComet = server({
+  before: [ logger('global before'), token ],
+  after: [ logger('global after') ],
   prefix: '/api',
-  before: [ logger('before server') ],
-  after: [ logger('after server') ],
-  cookies: {
-    limit: 10
-  }
+  cookies: {},
+  durableObject: false
 })
 
-main.route({
+workerComet.route({
   pathname: '/test',
-  method: 'post',
-  before: [ logger('before route'), auth, perm ],
-  after: [ logger('after route') ]
-}, async event => {
-  try {
-    console.log('Route handler')
-    //
-    console.log(`Authenticated user for route is ${event.userId}`)
-    //
-    return event.reply.ok({ success: true })
-  } catch (error) {
-    console.error(error)
-    return event.reply.internalServerError({ success: error, message: 'An unexpected error has occured.' })
-  }
+  method: GET
+}, event => {
+  return event.reply.ok(123)
 })
 
-export default {
-  fetch: main.handle
+workerComet.route({
+  pathname: '/test/:id',
+  method: GET,
+  before: [ logger('local before'), auth, perm ],
+  after: [ logger('local after') ]
+}, async event => {
+  const { id } = event.params
+  // console.log(event)
+  console.log(event.userId)
+  // await new Promise(resolve => setTimeout(resolve, 2000))
+  return event.reply.ok({ found: true })
+})
+
+workerComet.route({
+  pathname: '/test',
+  method: POST
+}, async event => {
+  //
+  event.env.MY_KV // exist
+  console.log(event.ctx.waitUntil) // exists
+  //
+  return event.reply.ok('foo')
+})
+
+workerComet.route({
+  pathname: '/never',
+  before: [ never ]
+}, event => event.reply.ok())
+
+export default <ExportedHandler>{
+  fetch: workerComet.handler
+}
+
+
+// DURABLE OBJECTS
+
+
+const doComet = server({
+  before: [ logger('global before'), token ],
+  after: [ logger('global after') ],
+  durableObject: true
+})
+
+doComet.route({
+  pathname: '/test'
+}, async event => {
+  console.log(event.state.id)
+  return event.reply.ok()
+})
+
+class TestDo implements DurableObject {
+  constructor(private state: DurableObjectState, private env: Environment) {}
+  fetch(request: Request): Promise<Response> {
+    return doComet.handler(request, this.env, this.state)
+  }
 }
