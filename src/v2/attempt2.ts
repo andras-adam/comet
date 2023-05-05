@@ -5,6 +5,8 @@ import { isValidCompatibilityDate, isValidMethod, isValidPathname } from './util
 import { Options } from './types'
 
 
+type MaybePromise<T> = Promise<T> | T
+
 // ---------- DATA ----------
 
 
@@ -59,8 +61,6 @@ class Data {
 
 // ---------- MIDDLEWARE ----------
 
-
-type MaybePromise<T> = Promise<T> | T
 
 interface Middleware<T> {
   name?: string
