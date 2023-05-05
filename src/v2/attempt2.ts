@@ -65,7 +65,7 @@ type MaybePromise<T> = Promise<T> | T
 interface Middleware<T> {
   name?: string
   requires?: MiddlewareList
-  handler: (event: any) => MaybePromise<T | Reply>
+  handler: (event: any) => MaybePromise<void>
 }
 
 type MiddlewareList = readonly [...readonly Middleware<any>[]]
@@ -100,7 +100,13 @@ export function middleware<
   },
   handler: (event: Data & { reply: Reply; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
-  return { ...options, handler: (event: any) => handler(Object.assign(event, { next })) as any }
+  return {
+    ...options,
+    handler: async event => {
+      const nextData = await handler(Object.assign({}, event, { next }))
+      if (nextData instanceof NextData) Object.assign(event, nextData.data)
+    }
+  }
 }
 
 
@@ -226,82 +232,79 @@ class Server<
     this.route = this.router.register
   }
 
-  // public route: Router<SBefore, SAfter, IsDo>['register'] = (...args) => {
-  //   return this.router.register(...args)
-  // }
-
   //
   public handle = async (request: Request, env: Environment, ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext) => {
-    //
-    // console.log(this)
-    this.router.init()
-    //
-    const data = await Data.fromRequest(request, this.options)
-    const reply = new Reply()
-    const isDurableObject = 'id' in ctxOrState
-    const event = Object.assign(data, { reply, request, env, isDurableObject }, isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
-    let custom: Record<string, unknown> = {}
-    //
+    try {
+      // Initialize router
+      this.router.init()
 
-    // Run global before middleware
-    if (this.options.before) {
-      for (const mw of this.options.before) {
-        const extension = await mw.handler(Object.assign(event, custom))
-        if (extension instanceof NextData) custom = { ...custom, ...extension.data }
-        if (event.reply.sent) break
-      }
-    }
+      // Construct event from request data, reply, and context / state
+      const data = await Data.fromRequest(request, this.options)
+      const reply = new Reply()
+      const isDurableObject = 'id' in ctxOrState
+      const event = { ...data, reply, request, env, isDurableObject, ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState }) }
 
-    // Main logic
-    if (!event.reply.sent) {
-
-      // Get and validate the compatibility date
-      const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
-      if (compatibilityDate && new Date(compatibilityDate) > new Date()) {
-        event.reply.badRequest({ message: 'Invalid compatibility date' })
-      } else {
-
-        // Find the route
-        const route = this.router.find(event.pathname, event.method, compatibilityDate)
-        if (!route) {
-          event.reply.notFound()
-        } else {
-          event.params = getPathnameParameters(event.pathname, route.pathname, this.options.prefix)
-
-          // Run local before middleware
-          if (route.before) {
-            for (const mw of route.before) {
-              const extension = await mw.handler(Object.assign(event, custom))
-              if (extension instanceof NextData) custom = { ...custom, ...extension.data }
-              if (event.reply.sent) break
-            }
-          }
-
-          //
-          if (!event.reply.sent) await route.handler(Object.assign(event, custom))
-
-          // Run local after middleware
-          if (route.after) {
-            for (const mw of route.after) {
-              const extension = await mw.handler(Object.assign(event, custom))
-              if (extension instanceof NextData) custom = { ...custom, ...extension.data }
-            }
-          }
-
+      // Run global before middleware
+      if (this.options.before) {
+        for (const mw of this.options.before) {
+          await mw.handler(event)
+          if (event.reply.sent) break
         }
       }
-    }
 
-    // Run local after middleware
-    if (this.options.after) {
-      for (const mw of this.options.after) {
-        const extension = await mw.handler(Object.assign(event, custom))
-        if (extension instanceof NextData) custom = { ...custom, ...extension.data }
+      // Main logic
+      if (!event.reply.sent) {
+
+        // Get and validate the compatibility date
+        const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
+        if (compatibilityDate && new Date(compatibilityDate) > new Date()) {
+          event.reply.badRequest({ message: 'Invalid compatibility date' })
+        } else {
+
+          // Find the route
+          const route = this.router.find(event.pathname, event.method, compatibilityDate)
+          if (!route) {
+            event.reply.notFound()
+          } else {
+
+            // Set path params on event
+            event.params = getPathnameParameters(event.pathname, route.pathname, this.options.prefix)
+
+            // Run local before middleware
+            if (route.before) {
+              for (const mw of route.before) {
+                await mw.handler(event)
+                if (event.reply.sent) break
+              }
+            }
+
+            // Run route handler
+            if (!event.reply.sent) await route.handler(event)
+
+            // Run local after middleware
+            if (route.after) {
+              for (const mw of route.after) {
+                await mw.handler(event)
+              }
+            }
+
+          }
+        }
       }
-    }
 
-    //
-    return await Reply.toResponse(event.reply, this.options)
+      // Run local after middleware
+      if (this.options.after) {
+        for (const mw of this.options.after) {
+          await mw.handler(event)
+        }
+      }
+
+      // Construct response from reply
+      return await Reply.toResponse(event.reply, this.options)
+    } catch (error) {
+      console.error('[Comet] Failed to handle request.', error instanceof Error ? error.message : error)
+      return new Response(null, { status: 500 })
+    }
   }
 
 }
