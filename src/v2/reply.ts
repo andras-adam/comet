@@ -1,4 +1,5 @@
-import { Cookies } from '../cookies'
+import { Options } from './types'
+import { Cookies } from './cookies'
 
 
 export class Reply {
@@ -18,7 +19,7 @@ export class Reply {
   constructor() {}
 
   // Convert a reply to a standard response
-  static async toResponse(reply: Reply): Promise<Response> {
+  static async toResponse(reply: Reply, options: Options): Promise<Response> {
     // Return error response if no reply was sent
     if (!reply.sent) {
       console.error('[Comet] No reply was sent for this event.')
@@ -31,7 +32,7 @@ export class Reply {
     // Get status, headers and serialize cookies
     const status = reply.status
     const headers = reply.headers
-    await Cookies.serialize(reply.cookies, reply.headers, { server: '' }) // TODO config
+    await Cookies.serialize(reply.cookies, reply.headers, options.cookies)
     // Handle websocket response
     if (reply.body instanceof WebSocket) {
       return new Response(null, { status, headers, webSocket: reply.body })

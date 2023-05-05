@@ -1,7 +1,8 @@
-import { compareCompatibilityDates, compareMethods, comparePathnames } from '../utils'
+import { compareCompatibilityDates, compareMethods, comparePathnames, getPathnameParameters } from './utils'
 import { Reply } from './reply'
-import { Cookies, CookiesOptions } from '../cookies'
+import { Cookies, CookiesOptions } from './cookies'
 import { isValidCompatibilityDate, isValidMethod, isValidPathname } from './utils'
+import { Options } from './types'
 
 
 // ---------- DATA ----------
@@ -20,14 +21,14 @@ class Data {
     public body: unknown
   ) {}
 
-  public static async fromRequest(request: Request): Promise<Data> {
+  public static async fromRequest(request: Request, options: Options): Promise<Data> {
     const url = new URL(request.url)
     return new Data(
       request.method.toLowerCase(),
       url.pathname,
       url.hostname.toLowerCase(),
       request.headers,
-      await Cookies.parse(request.headers, { server: '' }), // TODO config
+      await Cookies.parse(request.headers, options.cookies),
       Object.fromEntries(url.searchParams.entries()),
       {},
       await this.parseRequestBody(request)
@@ -56,7 +57,7 @@ class Data {
 }
 
 
-// ---------- MIDDLEWARES ----------
+// ---------- MIDDLEWARE ----------
 
 
 type MaybePromise<T> = Promise<T> | T
@@ -80,17 +81,26 @@ type MiddlewareContext = { env: Environment; request: Request } & (
   { isDurableObject: false; ctx: ExecutionContext }
 )
 
-type Next = <const T extends Record<string, unknown> | undefined = undefined>(extension?: T) => T
+class NextData<const T extends Record<string, unknown> = Record<never, never>> {
+  // @ts-ignore
+  constructor(public data: T = {}) {}
+}
 
-function middleware<
+type NextFn = <const T extends Record<string, unknown> = Record<never, never>>(data?: T) => NextData<T>
+
+const next: NextFn = (extension?: any) => new NextData(extension)
+
+export function middleware<
   const Requires extends MiddlewareList,
-  const Extension extends Record<string, unknown> | undefined
->(options: {
-  name?: string
-  requires?: Requires
-}, handler: (event: Data & { reply: Reply; next: Next } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<Extension | Reply>
+  const Extension extends Record<string, unknown> = Record<never, never>
+>(
+  options: {
+    name?: string
+    requires?: Requires
+  },
+  handler: (event: Data & { reply: Reply; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
-  return { ...options, handler: handler as any }
+  return { ...options, handler: (event: any) => handler(Object.assign(event, { next })) as any }
 }
 
 
@@ -129,7 +139,7 @@ class Router<
   constructor(private options: RouterOptions) {}
 
   // Register a new route
-  public register<
+  public register = <
     const RBefore extends MiddlewareList,
     const RAfter extends MiddlewareList
   >(
@@ -142,7 +152,7 @@ class Router<
       after?: RAfter
     },
     handler: (event: Data & RouteContext<IsDo> & { reply: Reply } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
-  ): void {
+  ): void => {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
     const method = options.method ?? 'ALL'
     const compatibilityDate = options.compatibilityDate
@@ -164,7 +174,7 @@ class Router<
   }
 
   // Find a route on a server by pathname, method and compatibility date
-  public find(pathname: string, method: string, compatibilityDate?: string): Route | undefined {
+  public find = (pathname: string, method: string, compatibilityDate?: string): Route | undefined => {
     for (const route of this.routes) {
       const doPathnamesMatch = comparePathnames(pathname, route.pathname)
       if (!doPathnamesMatch) continue
@@ -176,7 +186,7 @@ class Router<
   }
 
   // Initialize router by sorting the routes by compatibility date in descending order to ensure the correct functioning of the find algorithm
-  public init(): void {
+  public init = (): void => {
     if (this.ready) return
     this.routes.sort((a, b) => {
       if (a.pathname !== b.pathname || a.method !== b.method) return 0
@@ -208,39 +218,100 @@ class Server<
   const IsDo extends boolean = false
 > {
 
-  public router
+  private readonly router
   public route
 
-  constructor(public options: ServerOptions<SBefore, SAfter, IsDo>) {
+  constructor(private options: ServerOptions<SBefore, SAfter, IsDo>) {
     this.router = new Router<SBefore, SAfter, IsDo>(options)
     this.route = this.router.register
   }
 
+  // public route: Router<SBefore, SAfter, IsDo>['register'] = (...args) => {
+  //   return this.router.register(...args)
+  // }
+
   //
-  public async handle(request: Request, env: Environment, ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext) {
+  public handle = async (request: Request, env: Environment, ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext) => {
     //
+    // console.log(this)
     this.router.init()
     //
-    const data = await Data.fromRequest(request)
+    const data = await Data.fromRequest(request, this.options)
     const reply = new Reply()
-    const x = Object.assign(data, { reply, request, env }, 'id' in ctxOrState ? { state: ctxOrState } : { ctx: ctxOrState })
+    const isDurableObject = 'id' in ctxOrState
+    const event = Object.assign(data, { reply, request, env, isDurableObject }, isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
+    let custom: Record<string, unknown> = {}
     //
 
-    // const nextFunction = (...args: unknown[]) => args
-    //
-    // if (this.options.before) {
-    //   for (const mw of this.options.before) {
-    //     mw.handler()
-    //   }
-    // }
+    // Run global before middleware
+    if (this.options.before) {
+      for (const mw of this.options.before) {
+        const extension = await mw.handler(Object.assign(event, custom))
+        if (extension instanceof NextData) custom = { ...custom, ...extension.data }
+        if (event.reply.sent) break
+      }
+    }
 
-    const route = this.router.find(x.pathname, x.method, x.headers.get('x-compatibility-date') ?? undefined)
+    // Main logic
+    if (!event.reply.sent) {
+
+      // Get and validate the compatibility date
+      const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
+      if (compatibilityDate && new Date(compatibilityDate) > new Date()) {
+        event.reply.badRequest({ message: 'Invalid compatibility date' })
+      } else {
+
+        // Find the route
+        const route = this.router.find(event.pathname, event.method, compatibilityDate)
+        if (!route) {
+          event.reply.notFound()
+        } else {
+          event.params = getPathnameParameters(event.pathname, route.pathname, this.options.prefix)
+
+          // Run local before middleware
+          if (route.before) {
+            for (const mw of route.before) {
+              const extension = await mw.handler(Object.assign(event, custom))
+              if (extension instanceof NextData) custom = { ...custom, ...extension.data }
+              if (event.reply.sent) break
+            }
+          }
+
+          //
+          if (!event.reply.sent) await route.handler(Object.assign(event, custom))
+
+          // Run local after middleware
+          if (route.after) {
+            for (const mw of route.after) {
+              const extension = await mw.handler(Object.assign(event, custom))
+              if (extension instanceof NextData) custom = { ...custom, ...extension.data }
+            }
+          }
+
+        }
+      }
+    }
+
+    // Run local after middleware
+    if (this.options.after) {
+      for (const mw of this.options.after) {
+        const extension = await mw.handler(Object.assign(event, custom))
+        if (extension instanceof NextData) custom = { ...custom, ...extension.data }
+      }
+    }
 
     //
-    //
-    return new Response()
+    return await Reply.toResponse(event.reply, this.options)
   }
 
+}
+
+export function server<
+  const SBefore extends MiddlewareList,
+  const SAfter extends MiddlewareList,
+  const IsDo extends boolean = false
+>(options: ServerOptions<SBefore, SAfter, IsDo>) {
+  return new Server(options)
 }
 
 
@@ -257,13 +328,12 @@ const x = middleware({
 
 const logger = middleware({
   name: 'logger'
-}, event => {
+}, async event => {
   if (false) {
     return event.reply.ok({ success: true })
   }
   // event.next()
   console.log('logged content')
-  // return event.reply.ok({ success: true })
   return event.next()
 })
 
@@ -300,7 +370,7 @@ const perm = middleware({
 })
 
 // Worker usage
-const myWorkerComet = new Server({
+const myWorkerComet = server({
   durableObject: false,
   before: [ logger, token ],
   after: [ logger ]
@@ -327,7 +397,7 @@ export default <ExportedHandler>{
 }
 
 // DO usage
-const myDoComet =  new Server({
+const myDoComet = server({
   durableObject: true
 })
 
