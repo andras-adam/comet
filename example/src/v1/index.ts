@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { comet, Method, useAfter, useBefore, useRoute, middleware, Status } from '../../src'
+import { comet, Method, useAfter, useBefore, useRoute, middleware, Status } from '../../../src/v1'
 
 
 const logger = middleware(event => {

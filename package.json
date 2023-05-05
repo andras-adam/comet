@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "miniflare example/dist/v2/index.mjs --live-reload --debug",
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:tsc",
-    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/comet.mjs --format=esm --target=es2020",
-    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/comet.cjs --format=cjs --target=es2020",
+    "build:esm": "esbuild src/v1/index.ts --bundle --outfile=dist/comet.mjs --format=esm --target=es2020",
+    "build:cjs": "esbuild src/v1/index.ts --bundle --outfile=dist/comet.cjs --format=cjs --target=es2020",
     "build:example": "esbuild example/src/v2/index.ts --bundle --outfile=example/dist/v2/index.mjs --format=esm --target=esnext",
     "build:tsc": "tsc -p tsconfig.build.json",
     "lint": "eslint . --ext ts",
