@@ -9,8 +9,8 @@ export class Data {
     public readonly hostname: string,
     public readonly headers: Headers,
     public readonly cookies: Cookies,
-    public query: Record<string, string | undefined>,
-    public params: Record<string, string | undefined>,
+    public query: unknown,
+    public params: unknown,
     public body: unknown
   ) {}
 

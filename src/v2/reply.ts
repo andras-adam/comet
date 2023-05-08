@@ -1,8 +1,79 @@
 import { Options } from './types'
 import { Cookies } from './cookies'
+import type { TypeOf, ZodType } from 'zod'
 
 
-export class Reply {
+export enum Status {
+  Continue = 'continue',
+  SwitchingProtocols = 'switchingProtocols',
+  Processing = 'processing',
+  Ok = 'ok',
+  Created = 'created',
+  Accepted = 'accepted',
+  NonAuthoritativeInformation = 'nonAuthoritativeInformation',
+  NoContent = 'noContent',
+  ResetContent = 'resetContent',
+  PartialContent = 'partialContent',
+  MultiStatus = 'multiStatus',
+  MultipleChoices = 'multipleChoices',
+  MovedPermanently = 'movedPermanently',
+  MovedTemporarily = 'movedTemporarily',
+  SeeOther = 'seeOther',
+  NotModified = 'notModified',
+  UseProxy = 'useProxy',
+  TemporaryRedirect = 'temporaryRedirect',
+  PermanentRedirect = 'permanentRedirect',
+  BadRequest = 'badRequest',
+  Unauthorized = 'unauthorized',
+  PaymentRequired = 'paymentRequired',
+  Forbidden = 'forbidden',
+  NotFound = 'notFound',
+  MethodNotAllowed = 'methodNotAllowed',
+  NotAcceptable = 'notAcceptable',
+  ProxyAuthenticationRequired = 'proxyAuthenticationRequired',
+  RequestTimeout = 'requestTimeout',
+  Conflict = 'conflict',
+  Gone = 'gone',
+  LengthRequired = 'lengthRequired',
+  PreconditionFailed = 'preconditionFailed',
+  RequestTooLong = 'requestTooLong',
+  RequestUriTooLong = 'requestUriTooLong',
+  UnsupportedMediaType = 'unsupportedMediaType',
+  RequestedRangeNotSatisfiable = 'requestedRangeNotSatisfiable',
+  ExpectationFailed = 'expectationFailed',
+  ImATeapot = 'imATeapot',
+  InsufficientSpaceOnResource = 'insufficientSpaceOnResource',
+  MethodFailure = 'methodFailure',
+  MisdirectedRequest = 'misdirectedRequest',
+  UnprocessableEntity = 'unprocessableEntity',
+  FailedDependency = 'failedDependency',
+  PreconditionRequired = 'preconditionRequired',
+  TooManyRequests = 'tooManyRequests',
+  RequestHeaderFieldsTooLarge = 'requestHeaderFieldsTooLarge',
+  UnavailableForLegalReasons = 'unavailableForLegalReasons',
+  InternalServerError = 'internalServerError',
+  NotImplemented = 'notImplemented',
+  BadGateway = 'badGateway',
+  ServiceUnavailable = 'serviceUnavailable',
+  GatewayTimeout = 'gatewayTimeout',
+  HttpVersionNotSupported = 'httpVersionNotSupported',
+  InsufficientStorage = 'insufficientStorage',
+  NetworkAuthenticationRequired = 'networkAuthenticationRequired'
+}
+
+export interface ReplyData {
+  headers: Headers
+  cookies: Cookies
+  sent?: Date
+}
+
+type TypeOfSafe<Schema> = Schema extends ZodType ? TypeOf<Schema> : never
+type ReplyFnFrom<Body> = Body extends undefined ? () => Reply : (body: TypeOfSafe<Body>) => Reply
+export type ReplyFrom<Schemas extends Partial<Record<Status, ZodType>> | undefined> = Schemas extends undefined
+  ? Reply
+  : ReplyData & { [Key in keyof Schemas as `${string & Key}`]: ReplyFnFrom<Schemas[Key]> }
+
+export class Reply implements ReplyData {
 
   // Reply data for regular replies
   private status?: number
@@ -15,8 +86,6 @@ export class Reply {
 
   // The date the reply was sent
   public sent?: Date
-
-  constructor() {}
 
   // Convert a reply to a standard response
   static async toResponse(reply: Reply, options: Options): Promise<Response> {

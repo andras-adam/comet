@@ -1,4 +1,5 @@
-import { GET, middleware, POST, server } from '../../../src/v2'
+import { z } from 'zod'
+import { GET, middleware, POST, server, Status } from '../../../src/v2'
 
 
 // MIDDLEWARES
@@ -27,10 +28,17 @@ const auth = middleware({
 
 const perm = middleware({
   name: 'perm',
-  requires: [ auth ]
+  requires: [ auth ],
+  replies: {
+    [Status.Forbidden]: z.string()
+  }
 }, async event => {
   await new Promise(resolve => setTimeout(resolve, 500))
   console.log(event.userId)
+  const can = false
+  if (can) {
+    return event.reply.forbidden('forbidden')
+  }
   return event.next()
 })
 
@@ -52,6 +60,9 @@ workerComet.route({
   pathname: '/test',
   method: GET
 }, event => {
+  //
+  event.reply
+  //
   return event.reply.ok(123)
 })
 
@@ -83,6 +94,40 @@ workerComet.route({
   pathname: '/never',
   before: [ never ]
 }, event => event.reply.ok())
+
+workerComet.route({
+  pathname: '/test/stuff/:id',
+  method: POST,
+  body: z.strictObject({
+    foo: z.string()
+  }),
+  params: z.strictObject({
+    id: z.string()
+  }),
+  query: z.strictObject({
+    test: z.string().optional()
+  }),
+  replies: {
+    [Status.Ok]: z.strictObject({ foo: z.string() }),
+    [Status.InternalServerError]: z.strictObject({ message: z.string() })
+  }
+}, async event => {
+  try {
+    //
+    console.log(event.body)
+    //
+    event.body
+    event.params
+    event.query.test
+    //
+    event.reply
+    //
+    return event.reply.ok({ foo: 'bar' })
+  } catch (error) {
+    console.error(error)
+    return event.reply.internalServerError({ message: 'asd' })
+  }
+})
 
 export default <ExportedHandler>{
   fetch: workerComet.handler

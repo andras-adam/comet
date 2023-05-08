@@ -4,6 +4,7 @@ import { CookiesOptions } from './cookies'
 import { Data } from './data'
 import { Reply } from './reply'
 import { getPathnameParameters } from './utils'
+import { schemaValidation } from './middleware/schemaValidation'
 
 
 export interface ServerOptions<
@@ -67,7 +68,10 @@ export class Server<
           } else {
 
             // Set path params on event
-            event.params = getPathnameParameters(event.pathname, route.pathname, this.options.prefix)
+            event.params = getPathnameParameters(event.pathname, route.pathname)
+
+            // Schema validation
+            if (!event.reply.sent) schemaValidation(route).handler(event)
 
             // Run local before middleware
             if (route.before) {

@@ -1,12 +1,14 @@
 import { MaybePromise } from './types'
 import { Data } from './data'
-import { Reply } from './reply'
+import { Reply, ReplyFrom, Status } from './reply'
+import type { ZodType } from 'zod'
 
 
 export interface Middleware<T> {
   name?: string
   requires?: MiddlewareList
   handler: (event: any) => MaybePromise<void>
+  replies?: Partial<Record<Status, ZodType>>
 }
 
 export type MiddlewareList = readonly [...readonly Middleware<any>[]]
@@ -39,24 +41,28 @@ export function middleware<
 
 export function middleware<
   const Requires extends MiddlewareList,
+  const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
   const Extension extends Record<string, unknown> = Record<never, never>
 >(
   options: {
     name?: string
     requires?: Requires
+    replies?: Replies
   },
-  handler: (event: Data & { reply: Reply; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
+  handler: (event: Data & { reply: ReplyFrom<Replies>; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown>
 
 export function middleware<
   const Requires extends MiddlewareList,
+  const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
   const Extension extends Record<string, unknown> = Record<never, never>
 >(
   options: {
     name?: string
     requires?: Requires
+    replies?: Replies
   } | ((event: Data & { reply: Reply; next: NextFn } & MiddlewareContext) => MaybePromise<NextData<Extension> | Reply>),
-  handler?: (event: Data & { reply: Reply; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
+  handler?: (event: Data & { reply: ReplyFrom<Replies>; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
   const _options = typeof options === 'object' ? options : {}
   const _handler = typeof options === 'function' ? options : handler
@@ -64,7 +70,7 @@ export function middleware<
   return {
     ..._options,
     handler: async event => {
-      const nextData = await _handler(Object.assign({}, event, { next }))
+      const nextData = await _handler(Object.assign(event, { next }))
       if (nextData instanceof NextData) Object.assign(event, nextData.data)
     }
   }

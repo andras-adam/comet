@@ -1,6 +1,6 @@
 import { ExtensionsFrom, MiddlewareList } from './middleware'
 import { MaybePromise } from './types'
-import { Reply } from './reply'
+import { Reply, ReplyFrom, Status } from './reply'
 import { Data } from './data'
 import {
   compareCompatibilityDates,
@@ -10,11 +10,17 @@ import {
   isValidMethod,
   isValidPathname
 } from './utils'
+import type { TypeOf, ZodType } from 'zod'
 
 
 type RouteContext<IsDo extends boolean> = IsDo extends true
   ? { request: Request; env: Environment; isDurableObject: true; state: DurableObjectState }
   : { request: Request; env: Environment; isDurableObject: false; ctx: ExecutionContext }
+
+type BodyFromSchema<T> = { body: T extends ZodType ? TypeOf<T> : unknown }
+type ParamsFromSchema<T> = { params: T extends ZodType ? TypeOf<T> : Partial<Record<string, string>> }
+type QueryFromSchema<T> = { query: T extends ZodType ? TypeOf<T> : Partial<Record<string, string>> }
+type Stuff<Body, Params, Query> = BodyFromSchema<Body> & ParamsFromSchema<Params> & QueryFromSchema<Query> // TODO rename
 
 export interface Route {
   name: string
@@ -24,6 +30,12 @@ export interface Route {
   before?: MiddlewareList
   after?: MiddlewareList
   handler: (event: any) => MaybePromise<Reply>
+  replies?: Partial<Record<Status, ZodType>>
+  schemas: {
+    body?: ZodType
+    params?: ZodType
+    query?: ZodType
+  }
 }
 
 export interface RouterOptions {
@@ -46,7 +58,11 @@ export class Router<
   // Register a new route
   public register = <
     const RBefore extends MiddlewareList,
-    const RAfter extends MiddlewareList
+    const RAfter extends MiddlewareList,
+    const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
+    const Body extends ZodType | undefined = undefined,
+    const Params extends ZodType | undefined = undefined,
+    const Query extends ZodType | undefined = undefined
   >(
     options: {
       name?: string
@@ -55,8 +71,12 @@ export class Router<
       compatibilityDate?: string
       before?: RBefore
       after?: RAfter
+      replies?: Replies
+      body?: Body
+      params?: Params
+      query?: Query
     },
-    handler: (event: Data & RouteContext<IsDo> & { reply: Reply } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
+    handler: (event: Data & RouteContext<IsDo> & Stuff<Body, Params, Query> & { reply: ReplyFrom<Replies> } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
   ): void => {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
     const method = options.method ?? 'ALL'
@@ -74,7 +94,8 @@ export class Router<
       console.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
       return
     }
-    this.routes.push({ ...options, pathname, method, name, handler })
+    const schemas = { body: options.body, params: options.params, query: options.query }
+    this.routes.push({ ...options, pathname, method, name, handler, schemas })
     this.ready = false
   }
 
