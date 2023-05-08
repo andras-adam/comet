@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { GET, middleware, POST, server, Status } from '../../../src/v2'
+import { GET, middleware, POST, server, Status } from '../../src'
 
 
 // MIDDLEWARES
