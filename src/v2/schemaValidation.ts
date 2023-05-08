@@ -1,6 +1,7 @@
 import { middleware } from './middleware'
 import { Route } from './router'
 
+
 export const schemaValidation = (route: Route) => middleware({
   name: 'Schema validation'
 }, async event => {

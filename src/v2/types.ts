@@ -1,5 +1,6 @@
 import { CookiesOptions } from './cookies'
 
+
 export enum Method {
   ALL = 'ALL',
   GET = 'GET',
@@ -28,5 +29,4 @@ export interface Options {
   cookies?: CookiesOptions
 }
 
-//
 export type MaybePromise<T> = Promise<T> | T

@@ -26,7 +26,7 @@ type MiddlewareContext = { env: Environment; request: Request } & (
   )
 
 class NextData<const T extends Record<string, unknown> = Record<never, never>> {
-  // @ts-ignore
+  // @ts-expect-error data could use better typing
   constructor(public data: T = {}) {}
 }
 

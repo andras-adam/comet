@@ -112,8 +112,8 @@ export class Cookies {
       const serialized: string[] = []
       try {
         // Encode cookie name and value if an encoder function is provided
-        const name = allOptions.encode !== null ? await allOptions.encode(cookie.name) : cookie.name
-        const value = allOptions.encode !== null ? await allOptions.encode(cookie.value) : cookie.value
+        const name = allOptions.encode === null ? cookie.name : await allOptions.encode(cookie.name)
+        const value = allOptions.encode === null ? cookie.value : await allOptions.encode(cookie.value)
         // Set the cookie
         serialized.push(`${name}=${value}`)
       } catch (error) {
