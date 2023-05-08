@@ -1,5 +1,4 @@
-import { Configuration } from './types'
-import { cometLogger } from './logger'
+import { Logger } from './logger'
 
 
 export interface CookiesOptions {
@@ -80,45 +79,45 @@ export class Cookies {
   }
 
   // Parse cookies from headers
-  public static async parse(headers: Headers, config: Configuration): Promise<Cookies> {
-    const options = this.getOptions(config.cookies)
+  public static async parse(headers: Headers, logger: Logger, options?: CookiesOptions): Promise<Cookies> {
+    const allOptions = this.getAllOptions(options)
     const cookies = new Cookies()
-    const pairs = headers.get('Cookie')?.split(';', options.limit) ?? []
+    const pairs = headers.get('Cookie')?.split(';', allOptions.limit) ?? []
     for (const pair of pairs) {
       // Parse cookie name and value
       let [ name, value ] = pair.split('=', 2).map(component => component.trim())
       if (!name || !value) {
-        cometLogger.error(`[Comet] Failed to parse malformatted cookie "${pair}".`)
+        logger.error(`[Comet] Failed to parse malformatted cookie "${pair}".`)
         continue
       }
       // Unwrap cookie value if it is wrapped in quotes
       if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1)
       try {
         // Decode cookie name and value if a decoder function is provided
-        if (options.decode !== null) name = await options.decode(name)
-        if (options.decode !== null) value = await options.decode(value)
+        if (allOptions.decode !== null) name = await allOptions.decode(name)
+        if (allOptions.decode !== null) value = await allOptions.decode(value)
         // Set the cookie
         cookies.set(name, value)
       } catch (error) {
-        cometLogger.error(`[Comet] Failed to decode cookie "${pair}".`, error)
+        logger.error(`[Comet] Failed to decode cookie "${pair}".`, error)
       }
     }
     return cookies
   }
 
   // Serialize cookies to headers
-  public static async serialize(cookies: Cookies, headers: Headers, config: Configuration): Promise<void> {
-    const options = this.getOptions(config.cookies)
+  public static async serialize(cookies: Cookies, headers: Headers, logger: Logger, options?: CookiesOptions): Promise<void> {
+    const allOptions = this.getAllOptions(options)
     for (const cookie of cookies.data.values()) {
       const serialized: string[] = []
       try {
         // Encode cookie name and value if an encoder function is provided
-        const name = options.encode !== null ? await options.encode(cookie.name) : cookie.name
-        const value = options.encode !== null ? await options.encode(cookie.value) : cookie.value
+        const name = allOptions.encode === null ? cookie.name : await allOptions.encode(cookie.name)
+        const value = allOptions.encode === null ? cookie.value : await allOptions.encode(cookie.value)
         // Set the cookie
         serialized.push(`${name}=${value}`)
       } catch (error) {
-        cometLogger.error(`[Comet] Failed to encode cookie "${cookie.name}".`, error)
+        logger.error(`[Comet] Failed to encode cookie "${cookie.name}".`, error)
         continue
       }
       // Set cookie meta data
@@ -135,7 +134,7 @@ export class Cookies {
   }
 
   // Get all options with fallback to default options
-  public static getOptions(options?: CookiesOptions): Required<CookiesOptions> {
+  public static getAllOptions(options?: CookiesOptions): Required<CookiesOptions> {
     return { ...defaultCookiesOptions, ...options }
   }
 

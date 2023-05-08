@@ -1,58 +1,56 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-let _logger: LoggerMethods
-const log: LogMessage[] = []
-let _logLevel: keyof typeof LogLevel = 'debug'
-
-interface LogMessage {
-  message: any[]
-  severity: Severity
+export enum LogLevel {
+  All = -1,
+  Debug = 0,
+  Log = 1,
+  Info = 1,
+  Warn = 2,
+  Error = 3,
+  None = 99
 }
 
-function logLine(severity: Severity, message: any[]) {
-  if (_logger) {
-    _logger[severity](...message)
-  } else {
-    log.push({ message, severity })
+enum Severity {
+  Debug = 'debug',
+  Log = 'log',
+  Info = 'info',
+  Warn = 'warn',
+  Error = 'error'
+}
+
+function severityToLogLevel(severity: Severity): LogLevel {
+  switch (severity) {
+    case Severity.Debug: return LogLevel.Debug
+    case Severity.Log: return LogLevel.Log
+    case Severity.Info: return LogLevel.Info
+    case Severity.Warn: return LogLevel.Warn
+    case Severity.Error: return LogLevel.Error
   }
 }
 
-export const LogLevel = {
-  all: -1,
-  debug: 0,
-  error: 3,
-  info: 1,
-  log: 1,
-  none: 99,
-  warn: 2
+type LoggerType = Record<Severity, (...args: unknown[]) => unknown>
+
+export interface LoggerOptions {
+  logger?: LoggerType
+  logLevel?: LogLevel
 }
 
-export type Severity = Exclude<keyof typeof LogLevel, 'all' | 'none'>
+export class Logger {
 
-export type LoggerMethods = {
-  [fun in Severity]: (...message: any[]) => void
-}
+  private readonly logger: LoggerType
+  private readonly logLevel: LogLevel
 
-export function setLogger(logger?: LoggerMethods, logLevel: keyof typeof LogLevel = 'debug') {
-  if (!logger) {
-    console.error('[Comet] Tried to set cometLogger to undefined')
-    return
+  constructor(options?: LoggerOptions) {
+    this.logger = options?.logger ?? console
+    this.logLevel = options?.logLevel ?? LogLevel.All
   }
-  _logLevel = logLevel
-  _logger = logger
 
-  let line
-  while (line = log.shift(), line !== undefined) {
-    if (LogLevel[line.severity] >= LogLevel[_logLevel]) {
-      _logger[line.severity](...line.message)
-    }
+  private _log(severity: Severity, args: unknown[]) {
+    if (severityToLogLevel(severity) >= this.logLevel) this.logger[severity](...args)
   }
-}
 
-export const cometLogger: LoggerMethods = {
-  debug: (...message: any[]) => logLine('debug', message),
-  error: (...message: any[]) => logLine('error', message),
-  info: (...message: any[]) => logLine('info',  message),
-  log: (...message: any[]) => logLine('log',   message),
-  warn: (...message: any[]) => logLine('warn',  message)
+  public debug = (...args: unknown[]) => this._log(Severity.Debug, args)
+  public log = (...args: unknown[]) => this._log(Severity.Log, args)
+  public info = (...args: unknown[]) => this._log(Severity.Info, args)
+  public warn = (...args: unknown[]) => this._log(Severity.Warn, args)
+  public error = (...args: unknown[]) => this._log(Severity.Error, args)
+
 }

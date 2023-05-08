@@ -1,8 +1,0 @@
-{
-  "extends": [ "@lint-my-life/comet" ],
-  "rules": {
-    "no-else-return": "off",
-    "unicorn/no-array-method-this-argument": "off",
-    "unicorn/no-negated-condition": "off"
-  }
-}

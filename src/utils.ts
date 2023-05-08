@@ -1,20 +1,21 @@
 import { Method } from './types'
 
 
-// Returns a possibly promisified `T`
-export type PromiseOrNot<T> = Promise<T> | T
-
-// Replaces `Key` on `Source` with `Value`
-export type Replace<Source, Key extends keyof Source, Value> = {
-  [Property in keyof Source]: Property extends Key ? Value : Source[Property]
-}
-
 // Base URL for URLPattern pathname testing, the actual value is irrelevant
 export const BASE_URL = 'https://comet'
 
-// Parse an array or CSV to an array
-export function parseListValue(value: string | string[]) {
-  return Array.isArray(value) ? value : value.split(',').map(s => s.trim())
+export function isValidPathname(value?: unknown): boolean {
+  if (typeof value !== 'string') return false
+  try {
+    new URLPattern(value, BASE_URL)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function isValidCompatibilityDate(value?: unknown): boolean {
+  return typeof value === 'string' && !Number.isNaN(new Date(value).valueOf())
 }
 
 // Checks a pathname against another one, returns whether they match or not
@@ -37,7 +38,8 @@ export function compareCompatibilityDates(check?: string, against?: string): boo
 }
 
 // Get the pathname parameters from a pathname based on a template pathname
-export function getPathnameParameters(pathname: string, template: string, prefix?: string): Record<string, string> {
-  const result = new URLPattern(`${prefix ?? ''}${template}`, BASE_URL).exec(pathname, BASE_URL)
+export function getPathnameParameters(pathname: string, template: string): Record<string, string> {
+  const result = new URLPattern(template, BASE_URL).exec(pathname, BASE_URL)
   return result?.pathname?.groups ?? {}
 }
+
