@@ -21,11 +21,11 @@ export default <ExportedHandler>{
 }
 ```
 
-## Work in progress
-This library is currently **in development**. The syntax in this documentation is subject to change, and some features still need further testing to eliminate potential issues. A stable 1.0.0 release is expected very soon, until then use it at your own discretion.
+## Work in progress (beta)
+This library is currently in **beta** and is being tested in various projects to ensure good usability and smooth functioning. A stable 1.0.0 version will be released in the near future, alongside some up-to-date documentation. Until then, please use it at your own discretion.
 
 ## Documentation
-Read the documentation at our GitHub Wiki [here][documentation-url]!
+The up-to-date documentation will be provided alongside the 1.0.0 release.
 
 ## Contribution guide
 Use commit names with the following prefixes to indicate their purpose
