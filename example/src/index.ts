@@ -1,5 +1,5 @@
+import { GET, middleware, POST, server, Status } from '@neoaren/comet'
 import { z } from 'zod'
-import { GET, middleware, POST, server, Status } from '../../src'
 
 
 // MIDDLEWARES
@@ -90,7 +90,7 @@ workerComet.route({
   method: POST
 }, async event => {
   //
-  event.env.MY_KV // exist
+  // event.env.MY_KV // exist
   console.log(event.ctx.waitUntil) // exists
   //
   event.logger.warn('weeeeee')

@@ -3,12 +3,10 @@
   "version": "0.3.7",
   "description": "A convenient declarative routing library for Cloudflare Workers.",
   "scripts": {
-    "dev": "miniflare example/dist/index.mjs --live-reload --debug",
-    "build": "rimraf dist && npm-run-all build:esm build:cjs build:tsc",
+    "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
     "build:esm": "esbuild src/index.ts --bundle --outfile=dist/comet.mjs --format=esm --target=es2020",
     "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/comet.cjs --format=cjs --target=es2020",
-    "build:example": "esbuild example/src/index.ts --bundle --outfile=example/dist/index.mjs --format=esm --target=esnext",
-    "build:tsc": "tsc -p tsconfig.build.json",
+    "build:dts": "tsc",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
   },
@@ -45,7 +43,6 @@
     "@cloudflare/workers-types": "^4.20230419.0",
     "@lint-my-life/eslint-config-comet": "^0.2.2",
     "esbuild": "^0.17.18",
-    "miniflare": "^2.14.0",
     "npm-run-all": "^4.1.5",
     "rimraf": "^4.4.1",
     "typescript": "^5.0.4"
