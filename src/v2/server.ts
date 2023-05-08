@@ -5,6 +5,8 @@ import { Data } from './data'
 import { Reply } from './reply'
 import { getPathnameParameters } from './utils'
 import { schemaValidation } from './middleware/schemaValidation'
+import { Method } from './types'
+import { cors, CorsOptions, preflightHandler } from './middleware/cors'
 
 
 export interface ServerOptions<
@@ -16,6 +18,7 @@ export interface ServerOptions<
   before?: Before
   after?: After
   cookies?: CookiesOptions
+  cors?: CorsOptions
 }
 
 export class Server<
@@ -32,7 +35,6 @@ export class Server<
     this.route = this.router.register
   }
 
-  //
   public handler = async (request: Request, env: Environment, ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext) => {
     try {
       // Initialize router
@@ -52,6 +54,9 @@ export class Server<
         }
       }
 
+      // Run CORS middleware
+      if (!event.reply.sent) await cors(this.options.cors).handler(event)
+
       // Main logic
       if (!event.reply.sent) {
 
@@ -64,7 +69,14 @@ export class Server<
           // Find the route
           const route = this.router.find(event.pathname, event.method, compatibilityDate)
           if (!route) {
-            event.reply.notFound()
+
+            // Use built-in preflight handler for preflight requests, return 404 otherwise
+            if (event.method === Method.OPTIONS) {
+              await preflightHandler(this.router, this.options.cors).handler(event)
+            } else {
+              event.reply.notFound()
+            }
+
           } else {
 
             // Set path params on event

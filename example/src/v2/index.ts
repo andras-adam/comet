@@ -53,7 +53,12 @@ const workerComet = server({
   after: [ logger('global after') ],
   prefix: '/api',
   cookies: {},
-  durableObject: false
+  durableObject: false,
+  cors: {
+    origins: 'http://localhost:3000',
+    methods: '*',
+    headers: '*'
+  }
 })
 
 workerComet.route({

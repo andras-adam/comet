@@ -100,12 +100,18 @@ export class Router<
   }
 
   // Find a route on a server by pathname, method and compatibility date
-  public find = (pathname: string, method: string, compatibilityDate?: string): Route | undefined => {
+  public find = (
+    pathname?: string,
+    method?: string,
+    compatibilityDate?: string,
+    ignoreCompatibilityDate?: boolean
+  ): Route | undefined => {
     for (const route of this.routes) {
       const doPathnamesMatch = comparePathnames(pathname, route.pathname)
       if (!doPathnamesMatch) continue
       const doMethodsMatch = compareMethods(method, route.method)
       if (!doMethodsMatch) continue
+      if (ignoreCompatibilityDate) return route
       const doCompatibilityDatesMatch = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
       if (doCompatibilityDatesMatch) return route
     }
