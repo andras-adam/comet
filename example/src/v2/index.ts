@@ -49,6 +49,7 @@ const never = middleware(event => event.reply.internalServerError())
 
 
 const workerComet = server({
+  name: 'Worker',
   before: [ logger('global before'), token ],
   after: [ logger('global after') ],
   prefix: '/api',
@@ -103,6 +104,7 @@ workerComet.route({
 }, event => event.reply.ok())
 
 workerComet.route({
+  name: 'Schema testing',
   pathname: '/test/stuff/:id',
   method: POST,
   body: z.strictObject({

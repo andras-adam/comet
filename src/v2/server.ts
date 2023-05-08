@@ -15,6 +15,7 @@ export interface ServerOptions<
   After extends MiddlewareList,
   IsDo extends boolean
 > extends RouterOptions {
+  name?: string
   durableObject?: IsDo
   before?: Before
   after?: After
