@@ -1,7 +1,7 @@
 {
   "name": "@neoaren/comet",
   "version": "0.3.7",
-  "description": "A convenient declarative routing library for Cloudflare Workers.",
+  "description": "A powerful DX-first routing library for Cloudflare Workers.",
   "scripts": {
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
     "build:esm": "esbuild src/index.ts --bundle --outfile=dist/comet.mjs --format=esm --target=es2020",
@@ -27,8 +27,8 @@
     "cloudflare",
     "workers",
     "routing",
-    "declarative",
-    "comet"
+    "comet",
+    "router"
   ],
   "author": "NeoAren",
   "license": "MIT",
