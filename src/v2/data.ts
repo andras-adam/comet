@@ -1,11 +1,12 @@
-import { Options } from './types'
+import { Method, Options } from './types'
 import { Cookies } from './cookies'
 import { Logger } from './logger'
+
 
 export class Data {
 
   private constructor(
-    public readonly method: string,
+    public readonly method: Method,
     public readonly pathname: string,
     public readonly hostname: string,
     public readonly headers: Headers,
@@ -18,7 +19,7 @@ export class Data {
   public static async fromRequest(request: Request, options: Options, logger: Logger): Promise<Data> {
     const url = new URL(request.url)
     return new Data(
-      request.method.toUpperCase(),
+      request.method.toUpperCase() as Method,
       url.pathname,
       url.hostname.toLowerCase(),
       request.headers,

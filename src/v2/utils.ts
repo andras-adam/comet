@@ -1,5 +1,6 @@
 import { Method } from './types'
 
+
 // Base URL for URLPattern pathname testing, the actual value is irrelevant
 export const BASE_URL = 'https://comet'
 
@@ -11,10 +12,6 @@ export function isValidPathname(value?: unknown): boolean {
   } catch (error) {
     return false
   }
-}
-
-export function isValidMethod(value?: unknown): boolean {
-  return typeof value === 'string' // TODO check more
 }
 
 export function isValidCompatibilityDate(value?: unknown): boolean {

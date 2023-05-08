@@ -1,5 +1,5 @@
 import { ExtensionsFrom, MiddlewareList } from './middleware'
-import { MaybePromise } from './types'
+import { MaybePromise, Method } from './types'
 import { Reply, ReplyFrom, Status } from './reply'
 import { Data } from './data'
 import {
@@ -7,7 +7,6 @@ import {
   compareMethods,
   comparePathnames,
   isValidCompatibilityDate,
-  isValidMethod,
   isValidPathname
 } from './utils'
 import { Logger } from './logger'
@@ -25,7 +24,7 @@ type Stuff<Body, Params, Query> = BodyFromSchema<Body> & ParamsFromSchema<Params
 
 export interface Route {
   name: string
-  method: string
+  method: Method
   pathname: string
   compatibilityDate?: string
   before?: MiddlewareList
@@ -67,7 +66,7 @@ export class Router<
   >(
     options: {
       name?: string
-      method?: string
+      method?: Method | keyof typeof Method
       pathname?: string
       compatibilityDate?: string
       before?: RBefore
@@ -80,15 +79,11 @@ export class Router<
     handler: (event: Data & RouteContext<IsDo> & Stuff<Body, Params, Query> & { reply: ReplyFrom<Replies>; logger: Logger } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
   ): void => {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
-    const method = options.method ?? 'ALL'
+    const method = (options.method ?? Method.ALL) as Method
     const compatibilityDate = options.compatibilityDate
     const name = options.name ?? `${method} ${pathname}${compatibilityDate ? ` (${compatibilityDate})` : ''}`
     if (!isValidPathname(pathname)) {
       this.logger.error(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
-      return
-    }
-    if (!isValidMethod(method)) {
-      this.logger.error(`[Comet] Failed to set up route '${name}' due to an invalid method.`)
       return
     }
     if (options.compatibilityDate !== undefined && !isValidCompatibilityDate(options.compatibilityDate)) {
