@@ -1,5 +1,6 @@
 import { Options } from './types'
 import { Cookies } from './cookies'
+import { Logger } from './logger'
 
 export class Data {
 
@@ -14,14 +15,14 @@ export class Data {
     public body: unknown
   ) {}
 
-  public static async fromRequest(request: Request, options: Options): Promise<Data> {
+  public static async fromRequest(request: Request, options: Options, logger: Logger): Promise<Data> {
     const url = new URL(request.url)
     return new Data(
       request.method.toUpperCase(),
       url.pathname,
       url.hostname.toLowerCase(),
       request.headers,
-      await Cookies.parse(request.headers, options.cookies),
+      await Cookies.parse(request.headers, logger, options.cookies),
       Object.fromEntries(url.searchParams.entries()),
       {},
       await this.parseRequestBody(request)

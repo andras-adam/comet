@@ -10,6 +10,7 @@ import {
   isValidMethod,
   isValidPathname
 } from './utils'
+import { Logger } from './logger'
 import type { TypeOf, ZodType } from 'zod'
 
 
@@ -53,7 +54,7 @@ export class Router<
   private ready = true
 
   // Take router options
-  constructor(private options: RouterOptions) {}
+  constructor(private options: RouterOptions, private logger: Logger) {}
 
   // Register a new route
   public register = <
@@ -76,22 +77,22 @@ export class Router<
       params?: Params
       query?: Query
     },
-    handler: (event: Data & RouteContext<IsDo> & Stuff<Body, Params, Query> & { reply: ReplyFrom<Replies> } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
+    handler: (event: Data & RouteContext<IsDo> & Stuff<Body, Params, Query> & { reply: ReplyFrom<Replies>; logger: Logger } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
   ): void => {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
     const method = options.method ?? 'ALL'
     const compatibilityDate = options.compatibilityDate
     const name = options.name ?? `${method} ${pathname}${compatibilityDate ? ` (${compatibilityDate})` : ''}`
     if (!isValidPathname(pathname)) {
-      console.error(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
+      this.logger.error(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
       return
     }
     if (!isValidMethod(method)) {
-      console.error(`[Comet] Failed to set up route '${name}' due to an invalid method.`)
+      this.logger.error(`[Comet] Failed to set up route '${name}' due to an invalid method.`)
       return
     }
     if (options.compatibilityDate !== undefined && !isValidCompatibilityDate(options.compatibilityDate)) {
-      console.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
+      this.logger.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
       return
     }
     const schemas = { body: options.body, params: options.params, query: options.query }

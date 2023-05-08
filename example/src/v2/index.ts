@@ -92,6 +92,8 @@ workerComet.route({
   event.env.MY_KV // exist
   console.log(event.ctx.waitUntil) // exists
   //
+  event.logger.warn('weeeeee')
+  //
   return event.reply.ok('foo')
 })
 

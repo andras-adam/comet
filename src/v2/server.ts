@@ -7,6 +7,7 @@ import { getPathnameParameters } from './utils'
 import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
 import { cors, CorsOptions, preflightHandler } from './cors'
+import { Logger, LoggerOptions } from './logger'
 
 
 export interface ServerOptions<
@@ -19,6 +20,7 @@ export interface ServerOptions<
   after?: After
   cookies?: CookiesOptions
   cors?: CorsOptions
+  logger?: LoggerOptions
 }
 
 export class Server<
@@ -27,11 +29,13 @@ export class Server<
   const IsDo extends boolean = false
 > {
 
+  private readonly logger
   private readonly router
   public route: Router<SBefore, SAfter, IsDo>['register']
 
   constructor(private options: ServerOptions<SBefore, SAfter, IsDo> = {}) {
-    this.router = new Router<SBefore, SAfter, IsDo>(options)
+    this.logger = new Logger(options.logger)
+    this.router = new Router<SBefore, SAfter, IsDo>(options, this.logger)
     this.route = this.router.register
   }
 
@@ -41,10 +45,10 @@ export class Server<
       this.router.init()
 
       // Construct event from request data, reply, and context / state
-      const data = await Data.fromRequest(request, this.options)
-      const reply = new Reply()
+      const data = await Data.fromRequest(request, this.options, this.logger)
+      const reply = new Reply(this.logger)
       const isDurableObject = 'id' in ctxOrState
-      const event = { ...data, reply, request, env, isDurableObject, ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState }) }
+      const event = { ...data, reply, request, env, isDurableObject, ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState }), logger: this.logger }
 
       // Run global before middleware
       if (this.options.before) {
@@ -115,9 +119,9 @@ export class Server<
       }
 
       // Construct response from reply
-      return await Reply.toResponse(event.reply, this.options)
+      return await Reply.toResponse(event.reply, this.options, this.logger)
     } catch (error) {
-      console.error('[Comet] Failed to handle request.', error instanceof Error ? error.message : error)
+      this.logger.error('[Comet] Failed to handle request.', error instanceof Error ? error.message : error)
       return new Response(null, { status: 500 })
     }
   }

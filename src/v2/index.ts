@@ -1,6 +1,7 @@
 export * from './cookies'
 export * from './cors'
 export * from './data'
+export * from './logger'
 export * from './middleware'
 export * from './reply'
 export * from './router'
