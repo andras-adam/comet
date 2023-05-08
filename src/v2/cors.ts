@@ -1,6 +1,6 @@
-import { middleware } from '../middleware'
-import { Method } from '../types'
-import { Router } from '../router'
+import { middleware } from './middleware'
+import { Method } from './types'
+import { Router } from './router'
 
 
 export interface CorsOptions {

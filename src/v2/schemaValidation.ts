@@ -1,5 +1,5 @@
-import { middleware } from '../middleware'
-import { Route } from '../router'
+import { middleware } from './middleware'
+import { Route } from './router'
 
 export const schemaValidation = (route: Route) => middleware({
   name: 'Schema validation'
