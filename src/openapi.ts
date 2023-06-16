@@ -1,3 +1,7 @@
+import { z } from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
+import { Route } from './router'
+
 /* eslint-disable no-warning-comments */
 /* eslint-disable @typescript-eslint/member-ordering */
 
@@ -226,3 +230,32 @@ export interface OpenApi {
 }
 
 export type OpenApiOptions = Omit<OpenApi, 'openapi' | 'paths' | 'webhooks' | 'components' | 'security'>
+
+
+function objectSchemaToParameters(schema?: z.SomeZodObject): Record<string, Record<string, unknown>> | undefined {
+  if (!schema) return undefined
+  return Object.fromEntries(Object.keys(schema.keyof().enum).map(key => [ key, zodToJsonSchema(schema.shape[key]) ]))
+}
+
+export function routeToOpenApiOperation(route?: Route): OpenApi['paths']['/']['get'] | undefined {
+  if (!route) {
+    return
+  }
+
+  const path = objectSchemaToParameters(route.schemas.params)
+  const query = objectSchemaToParameters(route.schemas.query)
+
+  const pathParams = path ? Object.entries(path).map(el => ({ in: 'path' as const, name: el[0], required: true, schema: el[1] })) : []
+  const queryParams = query ? Object.entries(query).map(el => ({ in: 'query' as const, name: el[0], required: true, schema: el[1] })) : []
+  const body = route.schemas.body ? zodToJsonSchema(route.schemas.body) : undefined
+  const responses = route.replies
+    ? Object.fromEntries(Object.entries(route.replies).map(reply =>
+      [ Number.parseInt(reply[0]), zodToJsonSchema(reply[1]) ]))
+    : undefined
+
+  return {
+    parameters: [ ...pathParams, ...queryParams ],
+    requestBody: body,
+    responses
+  }
+}
