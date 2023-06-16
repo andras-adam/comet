@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import { Route } from './router'
+import { Status } from './reply'
 
 
 // Based on https://spec.openapis.org/oas/latest.html#version-3-1-0
@@ -232,7 +233,69 @@ export type OpenApiOptions = Omit<OpenApi, 'openapi' | 'paths' | 'webhooks' | 'c
 
 function objectSchemaToParameters(schema?: z.SomeZodObject): Record<string, Record<string, unknown>> | undefined {
   if (!schema) return undefined
-  return Object.fromEntries(Object.keys(schema.keyof().enum).map(key => [ key, zodToJsonSchema(schema.shape[key]) ]))
+  try {
+    const objectSchema = schema as z.SomeZodObject
+    return Object.keys(objectSchema.keyof().enum)
+      .map(key => [ key, zodToJsonSchema(objectSchema.shape[key].isOptional() ? (objectSchema.shape[key] as z.ZodOptional<z.ZodAny>).unwrap() : objectSchema.shape[key], { target: 'openApi3' }), objectSchema.shape[key].isOptional() ])
+  } catch {
+    return undefined
+  }
+}
+
+const replies: Record<Status, number> = {
+  [Status.Continue]: 100,
+  [Status.SwitchingProtocols]: 101,
+  [Status.Processing]: 102,
+  [Status.Ok]: 200,
+  [Status.Created]: 201,
+  [Status.Accepted]: 202,
+  [Status.NonAuthoritativeInformation]: 203,
+  [Status.NoContent]: 204,
+  [Status.ResetContent]: 205,
+  [Status.PartialContent]: 206,
+  [Status.MultiStatus]: 207,
+  [Status.MultipleChoices]: 300,
+  [Status.MovedPermanently]: 301,
+  [Status.MovedTemporarily]: 302,
+  [Status.SeeOther]: 303,
+  [Status.NotModified]: 304,
+  [Status.UseProxy]: 305,
+  [Status.TemporaryRedirect]: 307,
+  [Status.PermanentRedirect]: 308,
+  [Status.BadRequest]: 400,
+  [Status.Unauthorized]: 401,
+  [Status.PaymentRequired]: 402,
+  [Status.Forbidden]: 403,
+  [Status.NotFound]: 404,
+  [Status.MethodNotAllowed]: 405,
+  [Status.NotAcceptable]: 406,
+  [Status.ProxyAuthenticationRequired]: 407,
+  [Status.RequestTimeout]: 408,
+  [Status.Conflict]: 409,
+  [Status.Gone]: 410,
+  [Status.LengthRequired]: 411,
+  [Status.PreconditionFailed]: 412,
+  [Status.RequestTooLong]: 413,
+  [Status.RequestUriTooLong]: 414,
+  [Status.UnsupportedMediaType]: 415,
+  [Status.RequestedRangeNotSatisfiable]: 416,
+  [Status.ExpectationFailed]: 417,
+  [Status.ImATeapot]: 418,
+  [Status.MisdirectedRequest]: 421,
+  [Status.UnprocessableEntity]: 422,
+  [Status.FailedDependency]: 424,
+  [Status.PreconditionRequired]: 428,
+  [Status.TooManyRequests]: 429,
+  [Status.RequestHeaderFieldsTooLarge]: 431,
+  [Status.UnavailableForLegalReasons]: 451,
+  [Status.InternalServerError]: 500,
+  [Status.NotImplemented]: 501,
+  [Status.BadGateway]: 502,
+  [Status.ServiceUnavailable]: 503,
+  [Status.GatewayTimeout]: 504,
+  [Status.HttpVersionNotSupported]: 505,
+  [Status.InsufficientStorage]: 507,
+  [Status.NetworkAuthenticationRequired]: 511
 }
 
 export function routeToOpenApiOperation(route?: Route): OpenApi['paths']['/']['get'] | undefined {
@@ -248,7 +311,7 @@ export function routeToOpenApiOperation(route?: Route): OpenApi['paths']['/']['g
   const body = route.schemas.body ? zodToJsonSchema(route.schemas.body) : undefined
   const responses = route.replies
     ? Object.fromEntries(Object.entries(route.replies).map(reply =>
-      [ Number.parseInt(reply[0]), zodToJsonSchema(reply[1]) ]))
+      [ replies[reply[0] as Status], zodToJsonSchema(reply[1], { target: 'openApi3' }) ]))
     : undefined
 
   return {
