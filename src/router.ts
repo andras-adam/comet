@@ -123,4 +123,6 @@ export class Router<
     this.ready = true
   }
 
+  public getRoutes = (): Route[] => this.routes
+
 }
