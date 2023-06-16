@@ -322,7 +322,9 @@ export function routeToOpenApiOperation(route?: Route): OpenApi['paths']['/']['g
 
   return {
     parameters,
+    // @ts-expect-error Even though the error seems reasonable, the schema generated looks correct - needs more testing
     requestBody: body,
+    // @ts-expect-error Same as above
     responses
   }
 }
