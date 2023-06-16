@@ -1,7 +1,0 @@
-{
-  "extends": ["plugin:@danifoldi/eslint-presets/comet"],
-  "rules": {
-    "unicorn/no-array-method-this-argument": "off",
-    "no-else-return": "off"
-  }
-}

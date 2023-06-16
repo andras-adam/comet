@@ -1,6 +1,4 @@
-import { CorsOptions } from './cors'
 import { CookiesOptions } from './cookies'
-import { LoggerMethods, LogLevel } from './logger'
 import { OpenApiOptions } from './openapi'
 
 
@@ -28,12 +26,9 @@ export const OPTIONS = Method.OPTIONS
 export const TRACE = Method.TRACE
 export const PATCH = Method.PATCH
 
-export interface Configuration {
+export interface Options {
   cookies?: CookiesOptions
-  cors?: CorsOptions
-  logger?: LoggerMethods
-  loglevel?: keyof typeof LogLevel
   openapi?: OpenApiOptions
-  prefix?: string
-  server: string
 }
+
+export type MaybePromise<T> = Promise<T> | T

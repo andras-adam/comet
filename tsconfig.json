@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "lib": ["esnext"],
-    "types": ["@cloudflare/workers-types"],
+    "lib": [ "esnext" ],
+    "types": [ "@cloudflare/workers-types/experimental" ],
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
@@ -12,5 +12,6 @@
     "declaration": true,
     "emitDeclarationOnly": true
   },
-  "include": ["src/**/*", "example/**/*"]
+  "include": [ "src/**/*" ],
+  "exclude": [ "example/**/*" ]
 }

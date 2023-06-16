@@ -1,26 +1,31 @@
 # Comet
 
-☄️ A convenient declarative routing library for [Cloudflare Workers][cloudflare-workers-url].
+☄️ A powerful DX-first routing library for [Cloudflare Workers][cloudflare-workers-url].
 
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Install Size][npm-install-size-image]][npm-install-size-url]
 [![NPM Downloads][npm-downloads-image]][npm-downloads-url]
 
 ```ts
-import { comet, useRoute } from '@neoaren/comet'
+import { GET, server } from '@neoaren/comet'
 
-useRoute({ pathname: '/api', method: 'GET' }, event => {  
-  return event.reply.ok({ message: 'Hello world!' })  
+const comet = server()
+
+comet.route({ pathname: '/api/test/:id', method: GET }, async event => {
+  // Business logic
+  return event.reply.ok({ id: event.params.id })
 })
 
-export default { fetch: comet() }
+export default <ExportedHandler>{
+  fetch: comet.handler
+}
 ```
 
-## Work in progress
-This library is currently **in development**. The syntax in this documentation is subject to change, and some features still need further testing to eliminate potential issues. A stable 1.0.0 release is expected by the end of 2022, until then use it at your own discretion.
+## Work in progress (beta)
+This library is currently in **beta** and is being tested in various projects to ensure good usability and smooth functioning. A stable 1.0.0 version will be released in the near future, alongside some up-to-date documentation. Until then, please use it at your own discretion.
 
 ## Documentation
-Read the documentation at our GitHub Wiki [here][documentation-url]!
+The up-to-date documentation will be provided alongside the 1.0.0 release.
 
 ## Contribution guide
 Use commit names with the following prefixes to indicate their purpose

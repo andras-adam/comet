@@ -1,26 +1,26 @@
 {
   "name": "@neoaren/comet",
-  "version": "0.3.6",
-  "description": "A convenient declarative routing library for Cloudflare Workers.",
+  "version": "1.0.0-beta",
+  "description": "A powerful DX-first routing library for Cloudflare Workers.",
   "scripts": {
-    "dev": "miniflare example/dist/index.mjs --live-reload --debug",
-    "build": "rimraf dist && npm-run-all build:esm build:cjs build:tsc",
-    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/comet.mjs --format=esm --target=es2020",
-    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/comet.cjs --format=cjs --target=es2020",
-    "build:example": "esbuild example/src/index.ts --bundle --outfile=example/dist/index.mjs --format=esm --target=esnext",
-    "build:tsc": "tsc -p tsconfig.build.json",
+    "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
+    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2020",
+    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --target=es2020",
+    "build:dts": "tsc",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
   },
   "files": [
     "dist"
   ],
-  "main": "./dist/comet.cjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/comet.mjs",
-      "require": "./dist/comet.cjs"
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
     }
   },
   "repository": "github:neoaren/comet",
@@ -29,8 +29,8 @@
     "cloudflare",
     "workers",
     "routing",
-    "declarative",
-    "comet"
+    "comet",
+    "router"
   ],
   "author": "NeoAren",
   "license": "MIT",
@@ -39,21 +39,15 @@
   },
   "homepage": "https://github.com/NeoAren/comet#readme",
   "dependencies": {
-    "zod": "^3.19.1",
+    "zod": "^3.21.4",
     "zod-to-json-schema": "^3.18.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^3.7.1",
-    "@danifoldi/eslint-plugin-eslint-presets": "^1.5.1",
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "@typescript-eslint/parser": "^5.21.0",
-    "esbuild": "^0.14.38",
-    "eslint": "^8.14.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-unicorn": "^42.0.0",
-    "miniflare": "^2.9.0",
+    "@cloudflare/workers-types": "^4.20230419.0",
+    "@lint-my-life/eslint-config-comet": "^0.2.2",
+    "esbuild": "^0.17.18",
     "npm-run-all": "^4.1.5",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.6.3"
+    "rimraf": "^4.4.1",
+    "typescript": "^5.0.4"
   }
 }

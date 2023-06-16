@@ -1,45 +1,78 @@
-import { Event } from './event'
-import { Reply, ReplyData } from './reply'
-import { PromiseOrNot, Replace } from './utils'
-import type { z } from 'zod'
+import { MaybePromise } from './types'
+import { Data } from './data'
+import { Reply, ReplyFrom, Status } from './reply'
+import { Logger } from './logger'
+import type { ZodType } from 'zod'
 
 
-export type TypeFromSchema<Schema> = Schema extends z.ZodType ? z.infer<Schema> : never
-
-export type ReplyFnFromBody<Body> = Body extends undefined ? () => Reply : (body: Body) => Reply
-
-export type ReplyFrom<Schemas> = Schemas extends Record<never, never>
-  ? { [Key in keyof Schemas as `${string & Key}`]: ReplyFnFromBody<TypeFromSchema<Schemas[Key]>> } & ReplyData
-  : Reply
-
-export type ExtensionFrom<T> = T extends Record<never, never> ? TypeFromSchema<T> : unknown
-
-export type ReplySchemas = Record<number, z.ZodType>
-
-export interface Middleware<EventMutation = unknown> {
-  extension?: z.ZodType
-  handler: (event: Event & EventMutation) => PromiseOrNot<Reply | Event>
+export interface Middleware<T> {
   name?: string
-  replies?: ReplySchemas
+  requires?: MiddlewareList
+  handler: (event: any) => MaybePromise<void>
+  replies?: Partial<Record<Status, ZodType>>
 }
 
-export interface MiddlewareOptions<Extension, Replies> {
-  extension?: Extension
-  name?: string
-  replies?: Replies
+export type MiddlewareList = readonly [...readonly Middleware<any>[]]
+
+export type ExtensionFrom<MW> = MW extends Middleware<infer Extension> ? Extension : never
+export type ExtensionsFrom<MWs, Accumulator = unknown> = MWs extends readonly [infer Current, ...infer Rest]
+  ? ExtensionsFrom<Rest, Accumulator & ExtensionFrom<Current>>
+  : Accumulator
+
+type MiddlewareContext = { env: Environment; request: Request } & (
+  { isDurableObject: true; state: DurableObjectState }
+  |
+  { isDurableObject: false; ctx: ExecutionContext }
+  )
+
+class NextData<const T extends Record<string, unknown> = Record<never, never>> {
+  // @ts-expect-error data could use better typing
+  constructor(public data: T = {}) {}
 }
 
-export function middleware(handler: (event: Event) => PromiseOrNot<Reply | Event>): Middleware
-export function middleware<Extension, Replies>(
-  options: MiddlewareOptions<Extension, Replies>,
-  handler: (event: Replace<Event, 'reply', ReplyFrom<Replies>> & ExtensionFrom<Extension>) => PromiseOrNot<Reply | Event>
-): Middleware<ExtensionFrom<Extension>>
-export function middleware<Extension, Replies>(
-  handlerOrOptions: ((event: Event) => PromiseOrNot<Reply | Event>) | MiddlewareOptions<Extension, Replies>,
-  handlerOrUndefined?: (event: Replace<Event, 'reply', ReplyFrom<Replies>> & ExtensionFrom<Extension>) => PromiseOrNot<Reply | Event>
-) {
-  const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : handlerOrUndefined
-  const options = typeof handlerOrOptions === 'object' ? handlerOrOptions : {}
-  if (!handler) return
-  return { ...options, handler }
+type NextFn = <const T extends Record<string, unknown> = Record<never, never>>(data?: T) => NextData<T>
+
+const next: NextFn = (extension?: any) => new NextData(extension)
+
+export function middleware<
+  const Extension extends Record<string, unknown> = Record<never, never>
+>(
+  handler: (event: Data & { reply: Reply; next: NextFn; logger: Logger } & MiddlewareContext) => MaybePromise<NextData<Extension> | Reply>
+): Middleware<Extension extends Record<any, any> ? Extension : unknown>
+
+export function middleware<
+  const Requires extends MiddlewareList,
+  const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
+  const Extension extends Record<string, unknown> = Record<never, never>
+>(
+  options: {
+    name?: string
+    requires?: Requires
+    replies?: Replies
+  },
+  handler: (event: Data & { reply: ReplyFrom<Replies>; next: NextFn; logger: Logger } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
+): Middleware<Extension extends Record<any, any> ? Extension : unknown>
+
+export function middleware<
+  const Requires extends MiddlewareList,
+  const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
+  const Extension extends Record<string, unknown> = Record<never, never>
+>(
+  options: {
+    name?: string
+    requires?: Requires
+    replies?: Replies
+  } | ((event: Data & { reply: Reply; next: NextFn; logger: Logger } & MiddlewareContext) => MaybePromise<NextData<Extension> | Reply>),
+  handler?: (event: Data & { reply: ReplyFrom<Replies>; next: NextFn; logger: Logger } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
+): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
+  const _options = typeof options === 'object' ? options : {}
+  const _handler = typeof options === 'function' ? options : handler
+  if (!_handler) throw new Error('[Comet] A middleware received no handler argument.')
+  return {
+    ..._options,
+    handler: async event => {
+      const nextData = await _handler(Object.assign(event, { next }))
+      if (nextData instanceof NextData) Object.assign(event, nextData.data)
+    }
+  }
 }

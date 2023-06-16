@@ -1,5 +1,7 @@
+import { Options } from './types'
 import { Cookies } from './cookies'
-import { cometLogger } from './logger'
+import { Logger } from './logger'
+import type { TypeOf, ZodType } from 'zod'
 
 
 export enum Status {
@@ -61,42 +63,85 @@ export enum Status {
 }
 
 export interface ReplyData {
-  body?: unknown
-  cookies: Cookies
   headers: Headers
+  cookies: Cookies
   sent?: Date
-  status: number
 }
+
+type TypeOfSafe<Schema> = Schema extends ZodType ? TypeOf<Schema> : never
+type ReplyFnFrom<Body> = Body extends undefined ? () => Reply : (body: TypeOfSafe<Body>) => Reply
+export type ReplyFrom<Schemas extends Partial<Record<Status, ZodType>> | undefined> = Schemas extends undefined
+  ? Reply
+  : ReplyData & { [Key in keyof Schemas as `${string & Key}`]: ReplyFnFrom<Schemas[Key]> }
 
 export class Reply implements ReplyData {
 
-  public sent?: Date
-  public status = 200
-  public body?: unknown
+  // Reply data for regular replies
+  private status?: number
+  private body?: unknown
   public headers = new Headers()
   public cookies = new Cookies()
-  public rawResponse?: Response
 
-  // Send the response
+  // Reply data for raw replies
+  private _raw?: Response
+
+  // The date the reply was sent
+  public sent?: Date
+
+  constructor(private logger: Logger) {}
+
+  // Convert a reply to a standard response
+  static async toResponse(reply: Reply, options: Options, logger: Logger): Promise<Response> {
+    // Return error response if no reply was sent
+    if (!reply.sent) {
+      logger.error('[Comet] No reply was sent for this event.')
+      return new Response(null, { status: 500 })
+    }
+    // Handle sending a raw response
+    if (reply._raw !== undefined) {
+      return reply._raw
+    }
+    // Get status, headers and serialize cookies
+    const status = reply.status
+    const headers = reply.headers
+    await Cookies.serialize(reply.cookies, reply.headers, logger, options.cookies)
+    // Handle websocket response
+    if (reply.body instanceof WebSocket) {
+      return new Response(null, { status, headers, webSocket: reply.body })
+    }
+    // Handle stream response
+    if (reply.body instanceof ReadableStream) {
+      return new Response(reply.body, { status, headers })
+    }
+    // Handle json response
+    let body: string | null = null
+    if (reply.body) {
+      headers.set('content-type', 'application/json')
+      body = JSON.stringify(reply.body)
+    }
+    return new Response(body, { status, headers })
+  }
+
+  // Send a regular reply
   private send(status: number, body?: unknown): Reply {
     if (this.sent) {
-      cometLogger.warn('[Comet] Cannot send a reply after one has already been sent.')
+      this.logger.warn('[Comet] Cannot send a reply after one has already been sent.')
       return this
     }
-    this.sent = new Date()
     this.status = status
     this.body = body
+    this.sent = new Date()
     return this
   }
 
-  // Send a raw Response object
-  public raw(response: Response) {
+  // Send a raw reply
+  public raw(response: Response): Reply {
     if (this.sent) {
-      cometLogger.warn('[Comet] Cannot send a reply after one has already been sent.')
+      this.logger.warn('[Comet] Cannot send a reply after one has already been sent.')
       return this
     }
+    this._raw = response
     this.sent = new Date()
-    this.rawResponse = response
     return this
   }
 
