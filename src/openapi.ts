@@ -281,6 +281,8 @@ const replies: Record<Status, number> = {
   [Status.RequestedRangeNotSatisfiable]: 416,
   [Status.ExpectationFailed]: 417,
   [Status.ImATeapot]: 418,
+  [Status.InsufficientSpaceOnResource]: 419,
+  [Status.MethodFailure]: 420,
   [Status.MisdirectedRequest]: 421,
   [Status.UnprocessableEntity]: 422,
   [Status.FailedDependency]: 424,
