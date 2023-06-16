@@ -2,8 +2,6 @@ import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import { Route } from './router'
 
-/* eslint-disable no-warning-comments */
-/* eslint-disable @typescript-eslint/member-ordering */
 
 // Based on https://spec.openapis.org/oas/latest.html#version-3-1-0
 
