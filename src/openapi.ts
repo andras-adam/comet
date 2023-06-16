@@ -231,7 +231,7 @@ export interface OpenApi {
 export type OpenApiOptions = Omit<OpenApi, 'openapi' | 'paths' | 'webhooks' | 'components' | 'security'>
 
 
-function objectSchemaToParameters(schema?: z.SomeZodObject): Record<string, Record<string, unknown>> | undefined {
+function objectSchemaToParameters(schema?: z.ZodType): Array<[string, Record<string, unknown>, boolean]> | undefined {
   if (!schema) return undefined
   try {
     const objectSchema = schema as z.SomeZodObject
@@ -306,16 +306,20 @@ export function routeToOpenApiOperation(route?: Route): OpenApi['paths']['/']['g
   const path = objectSchemaToParameters(route.schemas.params)
   const query = objectSchemaToParameters(route.schemas.query)
 
-  const pathParams = path ? Object.entries(path).map(el => ({ in: 'path' as const, name: el[0], required: true, schema: el[1] })) : []
-  const queryParams = query ? Object.entries(query).map(el => ({ in: 'query' as const, name: el[0], required: true, schema: el[1] })) : []
-  const body = route.schemas.body ? zodToJsonSchema(route.schemas.body) : undefined
+  const pathParams = path ? path
+    .map(el => ({ in: 'path' as const, name: el[0], required: true, schema: el[1] })) satisfies Array<{ required: true }> : []
+  const queryParams = query ? query
+    .map(el => ({ in: 'query' as const, name: el[0], required: !el[2], schema: el[1] })) : []
+  const parameters = [ ...pathParams, ...queryParams ].length > 0 ? [ ...pathParams, ...queryParams ] : undefined
+
+  const body = route.schemas.body ? { content: zodToJsonSchema(route.schemas.body, { target: 'openApi3' }) } : undefined
   const responses = route.replies
     ? Object.fromEntries(Object.entries(route.replies).map(reply =>
       [ replies[reply[0] as Status], zodToJsonSchema(reply[1], { target: 'openApi3' }) ]))
     : undefined
 
   return {
-    parameters: [ ...pathParams, ...queryParams ],
+    parameters,
     requestBody: body,
     responses
   }
