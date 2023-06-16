@@ -63,6 +63,19 @@ const workerComet = server({
 })
 
 workerComet.route({
+  pathname: '/openapi',
+  method: GET
+}, async event => {
+  const api = await workerComet.openapi({
+    info: {
+      title: 'Test',
+      version: '1.0.0'
+    }
+  })
+  return event.reply.ok(api)
+})
+
+workerComet.route({
   pathname: '/test',
   method: GET
 }, event => {
