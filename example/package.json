@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npx wrangler dev --local"
+    "dev": "npx wrangler dev"
   },
   "dependencies": {
     "@neoaren/comet": "file:..",
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20230419.0",
-    "wrangler": "^2.19.0"
+    "@cloudflare/workers-types": "^4.20230518.0",
+    "wrangler": "^3.0.1"
   }
 }
