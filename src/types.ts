@@ -1,5 +1,4 @@
 import { CookiesOptions } from './cookies'
-import { OpenApiOptions } from './openapi'
 
 
 export enum Method {
@@ -28,7 +27,6 @@ export const PATCH = Method.PATCH
 
 export interface Options {
   cookies?: CookiesOptions
-  openapi?: OpenApiOptions
 }
 
 export type MaybePromise<T> = Promise<T> | T
