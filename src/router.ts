@@ -87,7 +87,10 @@ export class Router<
       params?: Params
       query?: Query
     },
-    handler: (event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query> & { reply: ReplyFrom<Replies>; logger: Logger } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
+    handler: (
+      event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query>
+      & { reply: ReplyFrom<Replies>; logger: Logger } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
+    ) => MaybePromise<Reply>
   ): void => {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
     const method = (options.method ?? Method.ALL) as Method

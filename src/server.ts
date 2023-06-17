@@ -40,7 +40,11 @@ export class Server<
     this.route = this.router.register
   }
 
-  public handler = async (request: Request, env: Environment, ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext) => {
+  public handler = async (
+    request: Request,
+    env: Environment,
+    ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext
+  ) => {
     try {
       // Initialize router
       this.router.init()
@@ -49,7 +53,8 @@ export class Server<
       const data = await Data.fromRequest(request, this.options, this.logger)
       const reply = new Reply(this.logger)
       const isDurableObject = 'id' in ctxOrState
-      const event = { ...data, reply, request, env, isDurableObject, ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState }), logger: this.logger }
+      const event = { ...data, reply, request, env, isDurableObject,
+        ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState }), logger: this.logger }
 
       // Run global before middleware
       if (this.options.before) {
@@ -73,6 +78,7 @@ export class Server<
 
           // Find the route
           const route = this.router.find(event.pathname, event.method, compatibilityDate)
+          // eslint-disable-next-line unicorn/no-negated-condition
           if (!route) {
 
             // Use built-in preflight handler for preflight requests, return 404 otherwise

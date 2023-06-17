@@ -106,7 +106,12 @@ export class Cookies {
   }
 
   // Serialize cookies to headers
-  public static async serialize(cookies: Cookies, headers: Headers, logger: Logger, options?: CookiesOptions): Promise<void> {
+  public static async serialize(
+    cookies: Cookies,
+    headers: Headers,
+    logger: Logger,
+    options?: CookiesOptions
+  ): Promise<void> {
     const allOptions = this.getAllOptions(options)
     for (const cookie of cookies.data.values()) {
       const serialized: string[] = []

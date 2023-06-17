@@ -37,7 +37,9 @@ const next: NextFn = (extension?: any) => new NextData(extension)
 export function middleware<
   const Extension extends Record<string, unknown> = Record<never, never>
 >(
-  handler: (event: Data & { reply: Reply; next: NextFn; logger: Logger } & MiddlewareContext) => MaybePromise<NextData<Extension> | Reply>
+  handler: (
+    event: Data & { reply: Reply; next: NextFn; logger: Logger } & MiddlewareContext
+  ) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown>
 
 export function middleware<
@@ -50,7 +52,10 @@ export function middleware<
     requires?: Requires
     replies?: Replies
   },
-  handler: (event: Data & { reply: ReplyFrom<Replies>; next: NextFn; logger: Logger } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
+  handler: (
+    event: Data & { reply: ReplyFrom<Replies>; next: NextFn; logger: Logger }
+      & MiddlewareContext & ExtensionsFrom<Requires>
+  ) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown>
 
 export function middleware<
@@ -62,8 +67,13 @@ export function middleware<
     name?: string
     requires?: Requires
     replies?: Replies
-  } | ((event: Data & { reply: Reply; next: NextFn; logger: Logger } & MiddlewareContext) => MaybePromise<NextData<Extension> | Reply>),
-  handler?: (event: Data & { reply: ReplyFrom<Replies>; next: NextFn; logger: Logger } & MiddlewareContext & ExtensionsFrom<Requires>) => MaybePromise<NextData<Extension> | Reply>
+  } | ((
+    event: Data & { reply: Reply; next: NextFn; logger: Logger } & MiddlewareContext
+      ) => MaybePromise<NextData<Extension> | Reply>),
+  handler?: (
+    event: Data & { reply: ReplyFrom<Replies>; next: NextFn; logger: Logger }
+      & MiddlewareContext & ExtensionsFrom<Requires>
+    ) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
   const _options = typeof options === 'object' ? options : {}
   const _handler = typeof options === 'function' ? options : handler
