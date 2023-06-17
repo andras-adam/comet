@@ -1,6 +1,6 @@
-import { Options } from './types'
 import { Cookies } from './cookies'
-import { Logger } from './logger'
+import type { Options } from './types'
+import type { Logger } from './logger'
 import type { TypeOf, ZodType } from 'zod'
 
 

@@ -1,6 +1,4 @@
-import { MiddlewareList } from './middleware'
 import { Router, RouterOptions } from './router'
-import { CookiesOptions } from './cookies'
 import { Data } from './data'
 import { Reply } from './reply'
 import { getPathnameParameters } from './utils'
@@ -8,6 +6,8 @@ import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
 import { cors, CorsOptions, preflightHandler } from './cors'
 import { Logger, LoggerOptions } from './logger'
+import type { MiddlewareList } from './middleware'
+import type { CookiesOptions } from './cookies'
 
 
 export interface ServerOptions<

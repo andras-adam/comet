@@ -1,7 +1,7 @@
-import { MaybePromise } from './types'
-import { Data } from './data'
-import { Reply, ReplyFrom, Status } from './reply'
-import { Logger } from './logger'
+import type { MaybePromise } from './types'
+import type { Data } from './data'
+import type { Reply, ReplyFrom, Status } from './reply'
+import type { Logger } from './logger'
 import type { ZodType } from 'zod'
 
 

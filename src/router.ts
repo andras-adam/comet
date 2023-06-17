@@ -1,7 +1,4 @@
-import { ExtensionsFrom, MiddlewareList } from './middleware'
 import { MaybePromise, Method } from './types'
-import { Reply, ReplyFrom, Status } from './reply'
-import { Data } from './data'
 import {
   compareCompatibilityDates,
   compareMethods,
@@ -9,7 +6,10 @@ import {
   isValidCompatibilityDate,
   isValidPathname
 } from './utils'
-import { Logger } from './logger'
+import type { Reply, ReplyFrom, Status } from './reply'
+import type { Data } from './data'
+import type { Logger } from './logger'
+import type { ExtensionsFrom, MiddlewareList } from './middleware'
 import type { TypeOf, ZodObject, ZodType } from 'zod'
 import type { Pipe, Strings, Tuples } from 'hotscript'
 

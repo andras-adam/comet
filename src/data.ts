@@ -1,6 +1,6 @@
-import { Method, Options } from './types'
 import { Cookies } from './cookies'
-import { Logger } from './logger'
+import type { Method, Options } from './types'
+import type { Logger } from './logger'
 
 
 export class Data {
