@@ -4,8 +4,8 @@
   "description": "A powerful DX-first routing library for Cloudflare Workers.",
   "scripts": {
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
-    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2020",
-    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --target=es2020",
+    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2022",
+    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --target=es2022",
     "build:dts": "tsc",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
