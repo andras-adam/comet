@@ -39,6 +39,7 @@
   },
   "homepage": "https://github.com/NeoAren/comet#readme",
   "dependencies": {
+    "hotscript": "^1.0.12",
     "zod": "^3.21.4"
   },
   "devDependencies": {
