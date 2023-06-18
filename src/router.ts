@@ -1,7 +1,4 @@
-import { ExtensionsFrom, MiddlewareList } from './middleware'
 import { MaybePromise, Method } from './types'
-import { Reply, ReplyFrom, Status } from './reply'
-import { Data } from './data'
 import {
   compareCompatibilityDates,
   compareMethods,
@@ -9,8 +6,12 @@ import {
   isValidCompatibilityDate,
   isValidPathname
 } from './utils'
-import { Logger } from './logger'
-import type { TypeOf, ZodType } from 'zod'
+import type { Reply, ReplyFrom, Status } from './reply'
+import type { Data } from './data'
+import type { Logger } from './logger'
+import type { ExtensionsFrom, MiddlewareList } from './middleware'
+import type { TypeOf, ZodObject, ZodType } from 'zod'
+import type { Pipe, Strings, Tuples } from 'hotscript'
 
 
 type RouteContext<IsDo extends boolean> = IsDo extends true
@@ -20,7 +21,13 @@ type RouteContext<IsDo extends boolean> = IsDo extends true
 type BodyFromSchema<T> = { body: T extends ZodType ? TypeOf<T> : unknown }
 type ParamsFromSchema<T> = { params: T extends ZodType ? TypeOf<T> : Partial<Record<string, string>> }
 type QueryFromSchema<T> = { query: T extends ZodType ? TypeOf<T> : Partial<Record<string, string>> }
-type Stuff<Body, Params, Query> = BodyFromSchema<Body> & ParamsFromSchema<Params> & QueryFromSchema<Query> // TODO rename
+type RouteParams<Body, Params, Query> = BodyFromSchema<Body> & ParamsFromSchema<Params> & QueryFromSchema<Query>
+type RoutePathParams<T extends string> = ZodObject<{ [key in Pipe<T, [
+  Strings.Split<'/'>,
+  Tuples.Filter<Strings.StartsWith<':'>>,
+  Tuples.Map<Strings.TrimLeft<':'>>,
+  Tuples.ToUnion
+]>]: ZodType }>
 
 export interface Route {
   name: string
@@ -59,15 +66,19 @@ export class Router<
   public register = <
     const RBefore extends MiddlewareList,
     const RAfter extends MiddlewareList,
+    const RoutePath extends string,
     const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
     const Body extends ZodType | undefined = undefined,
-    const Params extends ZodType | undefined = undefined,
+    const Params extends (RoutePathParams<RoutePath> extends undefined
+      ? never
+      : RoutePathParams<RoutePath>
+    ) | undefined = undefined,
     const Query extends ZodType | undefined = undefined
   >(
     options: {
       name?: string
       method?: Method | keyof typeof Method
-      pathname?: string
+      pathname?: RoutePath
       compatibilityDate?: string
       before?: RBefore
       after?: RAfter
@@ -76,7 +87,10 @@ export class Router<
       params?: Params
       query?: Query
     },
-    handler: (event: Data & RouteContext<IsDo> & Stuff<Body, Params, Query> & { reply: ReplyFrom<Replies>; logger: Logger } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>) => MaybePromise<Reply>
+    handler: (
+      event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query>
+      & { reply: ReplyFrom<Replies>; logger: Logger } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
+    ) => MaybePromise<Reply>
   ): void => {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
     const method = (options.method ?? Method.ALL) as Method

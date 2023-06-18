@@ -42,4 +42,3 @@ export function getPathnameParameters(pathname: string, template: string): Recor
   const result = new URLPattern(template, BASE_URL).exec(pathname, BASE_URL)
   return result?.pathname?.groups ?? {}
 }
-

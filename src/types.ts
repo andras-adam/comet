@@ -1,4 +1,4 @@
-import { CookiesOptions } from './cookies'
+import type { CookiesOptions } from './cookies'
 
 
 export enum Method {
