@@ -13,10 +13,11 @@ export class Data {
     public readonly cookies: Cookies,
     public query: unknown,
     public params: unknown,
-    public body: unknown
+    public body: unknown,
+    public readonly server: { name?: string }
   ) {}
 
-  public static async fromRequest(request: Request, options: Options, logger: Logger): Promise<Data> {
+  public static async fromRequest(request: Request, options: Options, logger: Logger, serverName?: string): Promise<Data> {
     const url = new URL(request.url)
     return new Data(
       request.method.toUpperCase() as Method,
@@ -26,7 +27,8 @@ export class Data {
       await Cookies.parse(request.headers, logger, options.cookies),
       Object.fromEntries(url.searchParams.entries()),
       {},
-      await this.parseRequestBody(request)
+      await this.parseRequestBody(request),
+      { name: serverName }
     )
   }
 

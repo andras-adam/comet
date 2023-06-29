@@ -50,7 +50,7 @@ export class Server<
       this.router.init()
 
       // Construct event from request data, reply, and context / state
-      const data = await Data.fromRequest(request, this.options, this.logger)
+      const data = await Data.fromRequest(request, this.options, this.logger, this.options.name)
       const reply = new Reply(this.logger)
       const isDurableObject = 'id' in ctxOrState
       const event = { ...data, reply, request, env, isDurableObject,
