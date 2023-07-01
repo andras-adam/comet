@@ -6,6 +6,7 @@ import type { Logger } from './logger'
 export class Data {
 
   private constructor(
+    public readonly request: Request,
     public readonly method: Method,
     public readonly pathname: string,
     public readonly hostname: string,
@@ -20,6 +21,7 @@ export class Data {
   public static async fromRequest(request: Request, options: Options, logger: Logger, serverName?: string): Promise<Data> {
     const url = new URL(request.url)
     return new Data(
+      request,
       request.method.toUpperCase() as Method,
       url.pathname,
       url.hostname.toLowerCase(),

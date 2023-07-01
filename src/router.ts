@@ -15,8 +15,8 @@ import type { Pipe, Strings, Tuples } from 'hotscript'
 
 
 type RouteContext<IsDo extends boolean> = IsDo extends true
-  ? { request: Request; env: Environment; isDurableObject: true; state: DurableObjectState }
-  : { request: Request; env: Environment; isDurableObject: false; ctx: ExecutionContext }
+  ? { isDurableObject: true; state: DurableObjectState }
+  : { isDurableObject: false; ctx: ExecutionContext }
 
 type BodyFromSchema<T> = { body: T extends ZodType ? TypeOf<T> : unknown }
 type ParamsFromSchema<T> = { params: T extends ZodType ? TypeOf<T> : Partial<Record<string, string>> }
@@ -36,7 +36,7 @@ export interface Route {
   compatibilityDate?: string
   before?: MiddlewareList
   after?: MiddlewareList
-  handler: (event: any) => MaybePromise<Reply>
+  handler: (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<Reply>
   replies?: Partial<Record<Status, ZodType>>
   schemas: {
     body?: ZodType
@@ -87,10 +87,12 @@ export class Router<
       params?: Params
       query?: Query
     },
-    handler: (
-      event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query>
-      & { reply: ReplyFrom<Replies>; logger: Logger } & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
-    ) => MaybePromise<Reply>
+    handler: (input: {
+      event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query> & { reply: ReplyFrom<Replies> }
+        & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
+      env: Environment
+      logger: Logger
+    }) => MaybePromise<Reply>
   ): void => {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
     const method = (options.method ?? Method.ALL) as Method

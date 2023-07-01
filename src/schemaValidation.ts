@@ -4,7 +4,7 @@ import type { Route } from './router'
 
 export const schemaValidation = (route: Route) => middleware({
   name: 'Schema validation'
-}, async event => {
+}, async ({ event }) => {
   // Get the schemas from the route config
   const { body: bodySchema, params: paramsSchema, query: querySchema } = route.schemas
   // Parse and validate request params, query and body

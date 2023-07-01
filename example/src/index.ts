@@ -5,14 +5,14 @@ import { z } from 'zod'
 // MIDDLEWARES
 
 
-const logger = (message: string) => middleware(event => {
+const logger = (message: string) => middleware(({ event }) => {
   console.log(message)
   return event.next()
 })
 
 const token = middleware({
   name: 'find-token'
-}, event => {
+}, ({ event }) => {
   const token = 'gf2ugfsdej6fg6u3fgejzf'
   return event.next({ token })
 })
@@ -20,7 +20,7 @@ const token = middleware({
 const auth = middleware({
   name: 'auth',
   requires: [ token ]
-}, event => {
+}, ({ event }) => {
   // event.foo = 'bar'
   console.log('finding user for token', event.token)
   return event.next({ userId: '674253674253' })
@@ -32,7 +32,7 @@ const perm = middleware({
   replies: {
     [Status.Forbidden]: z.string()
   }
-}, async event => {
+}, async ({ event }) => {
   await new Promise(resolve => setTimeout(resolve, 500))
   console.log(event.userId)
   const can = false
@@ -42,7 +42,7 @@ const perm = middleware({
   return event.next()
 })
 
-const never = middleware(event => event.reply.internalServerError())
+const never = middleware(({ event }) => event.reply.internalServerError())
 
 
 // WORKER
@@ -65,7 +65,7 @@ const workerComet = server({
 workerComet.route({
   pathname: '/test',
   method: GET
-}, event => {
+}, ({ event }) => {
   //
   event.reply
   //
@@ -77,7 +77,7 @@ workerComet.route({
   method: GET,
   before: [ logger('local before'), auth, perm ],
   after: [ logger('local after') ]
-}, async event => {
+}, async ({ event }) => {
   const { id } = event.params
   // console.log(event)
   console.log(event.userId)
@@ -88,12 +88,12 @@ workerComet.route({
 workerComet.route({
   pathname: '/test',
   method: POST
-}, async event => {
+}, async ({ event, env, logger }) => {
   //
-  // event.env.MY_KV // exist
-  console.log(event.ctx.waitUntil) // exists
+  // env.MY_KV // exist
+  // console.log(event.ctx.waitUntil) // exists
   //
-  event.logger.warn('weeeeee')
+  logger.warn('weeeeee')
   //
   return event.reply.ok('foo')
 })
@@ -101,7 +101,7 @@ workerComet.route({
 workerComet.route({
   pathname: '/never',
   before: [ never ]
-}, event => event.reply.ok())
+}, ({ event }) => event.reply.ok())
 
 workerComet.route({
   name: 'Schema testing',
@@ -120,7 +120,7 @@ workerComet.route({
     [Status.Ok]: z.strictObject({ foo: z.string() }),
     [Status.InternalServerError]: z.strictObject({ message: z.string() })
   }
-}, async event => {
+}, async ({ event }) => {
   try {
     //
     console.log(event.body)
@@ -154,7 +154,7 @@ const doComet = server({
 
 doComet.route({
   pathname: '/test'
-}, async event => {
+}, async ({ event }) => {
   console.log(event.state.id)
   return event.reply.ok()
 })

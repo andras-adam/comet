@@ -53,19 +53,23 @@ export class Server<
       const data = await Data.fromRequest(request, this.options, this.logger, this.options.name)
       const reply = new Reply(this.logger)
       const isDurableObject = 'id' in ctxOrState
-      const event = { ...data, reply, request, env, isDurableObject,
-        ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState }), logger: this.logger }
+      const event = {
+        ...data, reply, isDurableObject,
+        ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
+      }
+
+      const input = { event, env, logger: this.logger }
 
       // Run global before middleware
       if (this.options.before) {
         for (const mw of this.options.before) {
-          await mw.handler(event)
+          await mw.handler(input)
           if (event.reply.sent) break
         }
       }
 
       // Run CORS middleware
-      if (!event.reply.sent) await cors(this.options.cors).handler(event)
+      if (!event.reply.sent) await cors(this.options.cors).handler(input)
 
       // Main logic
       if (!event.reply.sent) {
@@ -83,7 +87,7 @@ export class Server<
 
             // Use built-in preflight handler for preflight requests, return 404 otherwise
             if (event.method === Method.OPTIONS) {
-              await preflightHandler(this.router, this.options.cors).handler(event)
+              await preflightHandler(this.router, this.options.cors).handler(input)
             } else {
               event.reply.notFound()
             }
@@ -94,23 +98,23 @@ export class Server<
             event.params = getPathnameParameters(event.pathname, route.pathname)
 
             // Schema validation
-            if (!event.reply.sent) schemaValidation(route).handler(event)
+            if (!event.reply.sent) schemaValidation(route).handler(input)
 
             // Run local before middleware
             if (route.before) {
               for (const mw of route.before) {
-                await mw.handler(event)
+                await mw.handler(input)
                 if (event.reply.sent) break
               }
             }
 
             // Run route handler
-            if (!event.reply.sent) await route.handler(event)
+            if (!event.reply.sent) await route.handler(input)
 
             // Run local after middleware
             if (route.after) {
               for (const mw of route.after) {
-                await mw.handler(event)
+                await mw.handler(input)
               }
             }
 
@@ -121,7 +125,7 @@ export class Server<
       // Run local after middleware
       if (this.options.after) {
         for (const mw of this.options.after) {
-          await mw.handler(event)
+          await mw.handler(input)
         }
       }
 

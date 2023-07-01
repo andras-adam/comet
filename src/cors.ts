@@ -39,7 +39,7 @@ function parseListValue(value: string | string[]) {
 // Run on all requests, apply generic CORS headers
 export const cors = (options?: CorsOptions) => middleware({
   name: 'CORS'
-}, event => {
+}, ({ event }) => {
   // Get all CORS options
   const { allowedOrigins, exposedHeaders, allowCredentials } = getAllOptions(options)
   // Set the origin, credentials and exposed headers CORS headers on all requests' replies
@@ -59,7 +59,7 @@ export const cors = (options?: CorsOptions) => middleware({
 // Handle preflight requests
 export const preflightHandler = (router: Router<any, any, any>, options?: CorsOptions) => middleware({
   name: 'Preflight handler'
-}, event => {
+}, ({ event }) => {
   // Run only on preflight requests
   if (event.method !== Method.OPTIONS) return event.next()
   // Get all CORS options
