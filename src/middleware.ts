@@ -87,9 +87,11 @@ export function middleware<
   if (!_handler) throw new Error('[Comet] A middleware received no handler argument.')
   return {
     ..._options,
-    handler: async event => {
-      const nextData = await _handler(Object.assign(event, { next }))
-      if (nextData instanceof NextData) Object.assign(event, nextData.data)
+    handler: async input => {
+      input.event.next = next
+      const nextData = await _handler(input)
+      delete input.event.next
+      if (nextData instanceof NextData) Object.assign(input.event, nextData.data)
     }
   }
 }
