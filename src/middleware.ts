@@ -30,7 +30,7 @@ class NextData<const T extends Record<string, unknown> = Record<never, never>> {
 
 type NextFn = <const T extends Record<string, unknown> = Record<never, never>>(data?: T) => NextData<T>
 
-const next: NextFn = (extension?: any) => new NextData(extension)
+export const next: NextFn = (extension?: any) => new NextData(extension)
 
 export function middleware<
   const Extension extends Record<string, unknown> = Record<never, never>
@@ -88,9 +88,7 @@ export function middleware<
   return {
     ..._options,
     handler: async input => {
-      input.event.next = next
       const nextData = await _handler(input)
-      delete input.event.next
       if (nextData instanceof NextData) Object.assign(input.event, nextData.data)
     }
   }

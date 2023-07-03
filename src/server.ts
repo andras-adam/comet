@@ -6,6 +6,7 @@ import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
 import { cors, CorsOptions, preflightHandler } from './cors'
 import { Logger, LoggerOptions } from './logger'
+import { next } from './middleware'
 import type { MiddlewareList } from './middleware'
 import type { CookiesOptions } from './cookies'
 
@@ -54,7 +55,7 @@ export class Server<
       const reply = new Reply(this.logger)
       const isDurableObject = 'id' in ctxOrState
       const event = {
-        ...data, reply, isDurableObject,
+        ...data, reply, next, isDurableObject,
         ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
       }
 

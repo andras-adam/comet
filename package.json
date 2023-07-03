@@ -1,6 +1,6 @@
 {
   "name": "@neoaren/comet",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A powerful DX-first routing library for Cloudflare Workers.",
   "scripts": {
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
