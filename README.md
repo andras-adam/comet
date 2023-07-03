@@ -11,7 +11,7 @@ import { GET, server } from '@neoaren/comet'
 
 const comet = server()
 
-comet.route({ pathname: '/api/test/:id', method: GET }, async event => {
+comet.route({ pathname: '/api/test/:id', method: GET }, async ({ event }) => {
   // Business logic
   return event.reply.ok({ id: event.params.id })
 })
@@ -21,11 +21,8 @@ export default <ExportedHandler>{
 }
 ```
 
-## Work in progress (beta)
-This library is currently in **beta** and is being tested in various projects to ensure good usability and smooth functioning. A stable 1.0.0 version will be released in the near future, alongside some up-to-date documentation. Until then, please use it at your own discretion.
-
 ## Documentation
-The up-to-date documentation will be provided alongside the 1.0.0 release.
+A proper documentation for Comet is work in progress.
 
 ## Contribution guide
 Use commit names with the following prefixes to indicate their purpose
