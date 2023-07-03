@@ -1,6 +1,6 @@
-import { Options } from './types'
 import { Cookies } from './cookies'
-import { Logger } from './logger'
+import type { Options } from './types'
+import type { Logger } from './logger'
 import type { TypeOf, ZodType } from 'zod'
 
 
@@ -63,6 +63,7 @@ export enum Status {
 }
 
 export interface ReplyData {
+  status: number
   headers: Headers
   cookies: Cookies
   sent?: Date
@@ -77,8 +78,8 @@ export type ReplyFrom<Schemas extends Partial<Record<Status, ZodType>> | undefin
 export class Reply implements ReplyData {
 
   // Reply data for regular replies
-  private status?: number
   private body?: unknown
+  public status = Number.NaN
   public headers = new Headers()
   public cookies = new Cookies()
 
