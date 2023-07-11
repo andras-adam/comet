@@ -15,11 +15,13 @@ export class Data {
     public query: unknown,
     public params: unknown,
     public body: unknown,
+    public _raw: unknown | undefined,
     public readonly server: { name?: string }
   ) {}
 
   public static async fromRequest(request: Request, options: Options, logger: Logger, serverName?: string): Promise<Data> {
     const url = new URL(request.url)
+    const { raw, body } = await this.parseRequestBody(request)
     return new Data(
       request,
       request.method.toUpperCase() as Method,
@@ -29,27 +31,30 @@ export class Data {
       await Cookies.parse(request.headers, logger, options.cookies),
       Object.fromEntries(url.searchParams.entries()),
       {},
-      await this.parseRequestBody(request),
+      body,
+      raw,
       { name: serverName }
     )
   }
 
-  private static async parseRequestBody(request: Request): Promise<unknown> {
+  private static async parseRequestBody(request: Request): Promise<{ raw?: unknown; body: unknown }> {
     const contentType = request.headers.get('content-type')?.split(';')[0]
     switch (contentType) {
-      case 'application/json':
-        return await request.json()
+      case 'application/json': {
+        const text = await request.text()
+        return { raw: text, body: JSON.parse(text) }
+      }
       case 'multipart/form-data': {
         const formData = await request.formData()
-        return Object.fromEntries(formData.entries())
+        return { body: Object.fromEntries(formData.entries()) }
       }
       case 'application/x-www-form-urlencoded': {
         const text = await request.text()
         const entries = text.split('&').map(x => x.split('=').map(decodeURIComponent))
-        return Object.fromEntries(entries)
+        return { body: Object.fromEntries(entries) }
       }
       default:
-        return
+        return { body: undefined }
     }
   }
 
