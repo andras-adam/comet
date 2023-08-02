@@ -10,7 +10,8 @@
     "baseUrl": "./",
     "outDir": "./dist",
     "declaration": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "resolveJsonModule": true
   },
   "include": [ "src/**/*" ],
   "exclude": [ "example/**/*" ]
