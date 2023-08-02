@@ -40,6 +40,7 @@
   "homepage": "https://github.com/NeoAren/comet#readme",
   "dependencies": {
     "@opentelemetry/api": "^1.4.1",
+    "@opentelemetry/api-logs": "^0.41.1",
     "@opentelemetry/sdk-trace-base": "^1.15.1",
     "hotscript": "^1.0.13",
     "zod": "^3.21.4"
