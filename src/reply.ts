@@ -1,3 +1,4 @@
+import { trace } from '@opentelemetry/api'
 import { Cookies } from './cookies'
 import { recordException } from './logger'
 import type { Options } from './types'
@@ -99,6 +100,7 @@ export class Reply implements ReplyData {
     }
     // Handle sending a raw response
     if (reply._raw !== undefined) {
+      trace.getActiveSpan()?.addEvent('return raw response')
       return reply._raw
     }
     // Get status, headers and serialize cookies
@@ -107,10 +109,12 @@ export class Reply implements ReplyData {
     await Cookies.serialize(reply.cookies, reply.headers, options.cookies)
     // Handle websocket response
     if (reply.body instanceof WebSocket) {
+      trace.getActiveSpan()?.addEvent('return websocket response')
       return new Response(null, { status, headers, webSocket: reply.body })
     }
     // Handle stream response
     if (reply.body instanceof ReadableStream) {
+      trace.getActiveSpan()?.addEvent('return streamed response')
       return new Response(reply.body, { status, headers })
     }
     // Handle json response
@@ -119,6 +123,7 @@ export class Reply implements ReplyData {
       headers.set('content-type', 'application/json')
       body = JSON.stringify(reply.body)
     }
+    trace.getActiveSpan()?.addEvent('convert response')
     return new Response(body, { status, headers })
   }
 
@@ -131,6 +136,10 @@ export class Reply implements ReplyData {
     this.status = status
     this.body = body
     this.sent = new Date()
+    trace.getActiveSpan()?.addEvent('send reply', {
+      status,
+      sent: +this.sent
+    })
     return this
   }
 
@@ -142,6 +151,9 @@ export class Reply implements ReplyData {
     }
     this._raw = response
     this.sent = new Date()
+    trace.getActiveSpan()?.addEvent('raw reply', {
+      sent: +this.sent
+    })
     return this
   }
 

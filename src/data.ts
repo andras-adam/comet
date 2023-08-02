@@ -22,6 +22,15 @@ export class Data {
   public static async fromRequest(request: Request, options: Options, serverName?: string): Promise<Data> {
     const url = new URL(request.url)
     const { raw, body } = await this.parseRequestBody(request)
+
+    trace.getActiveSpan()?.addEvent('convert request to data', {
+      method: request.method,
+      pathname: url.pathname,
+      hostname: url.hostname,
+      protocol: url.protocol,
+      params: url.search
+    })
+
     return new Data(
       request,
       request.method.toUpperCase() as Method,
@@ -39,6 +48,10 @@ export class Data {
 
   private static async parseRequestBody(request: Request): Promise<{ raw?: unknown; body: unknown }> {
     const contentType = request.headers.get('content-type')?.split(';')[0]
+    trace.getActiveSpan()?.addEvent('parse request body', {
+      contentType: request.headers.get('content-type') ?? undefined,
+      parsedContentType: contentType
+    })
     switch (contentType) {
       case 'application/json': {
         const text = await request.text()
