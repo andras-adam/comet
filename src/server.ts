@@ -114,8 +114,12 @@ export class Server<
 
             // Run local after middleware
             if (route.after) {
-              for (const mw of route.after) {
-                await mw.handler(input)
+              if (isDurableObject) {
+                for (const mw of route.after) {
+                  await mw.handler(input)
+                }
+              } else {
+                ctxOrState.waitUntil(Promise.allSettled(route.after.map(mw => mw.handler(input))))
               }
             }
 
@@ -123,10 +127,14 @@ export class Server<
         }
       }
 
-      // Run local after middleware
+      // Run global after middleware
       if (this.options.after) {
-        for (const mw of this.options.after) {
-          await mw.handler(input)
+        if (isDurableObject) {
+          for (const mw of this.options.after) {
+            await mw.handler(input)
+          }
+        } else {
+          ctxOrState.waitUntil(Promise.allSettled(this.options.after.map(mw => mw.handler(input))))
         }
       }
 
