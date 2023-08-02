@@ -1,56 +1,35 @@
-export enum LogLevel {
-  All = -1,
-  Debug = 0,
-  Log = 1,
-  Info = 1,
-  Warn = 2,
-  Error = 3,
-  None = 99
+import { trace } from '@opentelemetry/api'
+import { SeverityNumber, logs } from '@opentelemetry/api-logs'
+import { name, version } from '../package.json'
+
+
+const otelLogger = logs.getLogger(name, version)
+type Severity = 'trace' | 'debug' | 'info' | 'log' | 'warn' | 'error'
+type Log = (...args: unknown[]) => void
+
+export type Logger = Record<Severity, Log>
+
+function convert(...data: unknown[]): string {
+  return data.map(entry => {
+    if (typeof entry === 'string') return entry
+    if (entry === undefined) return 'undefined'
+    return JSON.stringify(entry, null, 2)
+  }).join(', ')
 }
 
-enum Severity {
-  Debug = 'debug',
-  Log = 'log',
-  Info = 'info',
-  Warn = 'warn',
-  Error = 'error'
+export const logger: Logger = {
+  trace: (...body: unknown[]) => otelLogger.emit({ severityNumber: SeverityNumber.TRACE, body: convert(body) }),
+  debug: (...body: unknown[]) => otelLogger.emit({ severityNumber: SeverityNumber.DEBUG, body: convert(body) }),
+  info: (...body: unknown[]) => otelLogger.emit({ severityNumber: SeverityNumber.INFO, body: convert(body) }),
+  log: (...body: unknown[]) => otelLogger.emit({ severityNumber: SeverityNumber.INFO, body: convert(body) }),
+  warn: (...body: unknown[]) => otelLogger.emit({ severityNumber: SeverityNumber.WARN, body: convert(body) }),
+  error: (...body: unknown[]) => otelLogger.emit({ severityNumber: SeverityNumber.ERROR, body: convert(body) })
 }
 
-function severityToLogLevel(severity: Severity): LogLevel {
-  switch (severity) {
-    case Severity.Debug: return LogLevel.Debug
-    case Severity.Log: return LogLevel.Log
-    case Severity.Info: return LogLevel.Info
-    case Severity.Warn: return LogLevel.Warn
-    case Severity.Error: return LogLevel.Error
+export function recordException(exception: unknown) {
+  if (exception instanceof Error || typeof exception === 'string') {
+    trace.getActiveSpan()?.recordException(exception)
+  } else if (typeof exception === 'object' && exception !== null && 'toString' in exception) {
+    trace.getActiveSpan()?.recordException(exception.toString())
   }
-}
-
-type LoggerType = Record<Severity, (...args: unknown[]) => unknown>
-
-export interface LoggerOptions {
-  logger?: LoggerType
-  logLevel?: LogLevel
-}
-
-export class Logger {
-
-  private readonly logger: LoggerType
-  private readonly logLevel: LogLevel
-
-  constructor(options?: LoggerOptions) {
-    this.logger = options?.logger ?? console
-    this.logLevel = options?.logLevel ?? LogLevel.All
-  }
-
-  private _log(severity: Severity, args: unknown[]) {
-    if (severityToLogLevel(severity) >= this.logLevel) this.logger[severity](...args)
-  }
-
-  public debug = (...args: unknown[]) => this._log(Severity.Debug, args)
-  public log = (...args: unknown[]) => this._log(Severity.Log, args)
-  public info = (...args: unknown[]) => this._log(Severity.Info, args)
-  public warn = (...args: unknown[]) => this._log(Severity.Warn, args)
-  public error = (...args: unknown[]) => this._log(Severity.Error, args)
-
 }
