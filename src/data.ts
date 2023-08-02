@@ -1,6 +1,6 @@
+import { trace } from '@opentelemetry/api'
 import { Cookies } from './cookies'
 import type { Method, Options } from './types'
-import type { Logger } from './logger'
 
 
 export class Data {
@@ -19,7 +19,7 @@ export class Data {
     public readonly server: { name?: string }
   ) {}
 
-  public static async fromRequest(request: Request, options: Options, logger: Logger, serverName?: string): Promise<Data> {
+  public static async fromRequest(request: Request, options: Options, serverName?: string): Promise<Data> {
     const url = new URL(request.url)
     const { raw, body } = await this.parseRequestBody(request)
     return new Data(
@@ -28,7 +28,7 @@ export class Data {
       url.pathname,
       url.hostname.toLowerCase(),
       request.headers,
-      await Cookies.parse(request.headers, logger, options.cookies),
+      await Cookies.parse(request.headers, options.cookies),
       Object.fromEntries(url.searchParams.entries()),
       {},
       body,

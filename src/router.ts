@@ -6,9 +6,9 @@ import {
   isValidCompatibilityDate,
   isValidPathname
 } from './utils'
+import { Logger, recordException } from './logger'
 import type { Reply, ReplyFrom, Status } from './reply'
 import type { Data } from './data'
-import type { Logger } from './logger'
 import type { ExtensionsFrom, MiddlewareList } from './middleware'
 import type { TypeOf, ZodObject, ZodType } from 'zod'
 import type { Pipe, Strings, Tuples } from 'hotscript'
@@ -60,7 +60,7 @@ export class Router<
   private ready = true
 
   // Take router options
-  constructor(private options: RouterOptions, private logger: Logger) {}
+  constructor(private options: RouterOptions) {}
 
   // Register a new route
   public register = <
@@ -99,11 +99,11 @@ export class Router<
     const compatibilityDate = options.compatibilityDate
     const name = options.name ?? `${method} ${pathname}${compatibilityDate ? ` (${compatibilityDate})` : ''}`
     if (!isValidPathname(pathname)) {
-      this.logger.error(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
+      recordException(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
       return
     }
     if (options.compatibilityDate !== undefined && !isValidCompatibilityDate(options.compatibilityDate)) {
-      this.logger.error(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
+      recordException(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
       return
     }
     const schemas = { body: options.body, params: options.params, query: options.query }
