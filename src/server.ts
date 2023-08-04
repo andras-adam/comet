@@ -1,3 +1,5 @@
+import { SpanKind, trace } from '@opentelemetry/api'
+import { name, version } from '../package.json'
 import { Router, RouterOptions } from './router'
 import { Data } from './data'
 import { Reply } from './reply'
@@ -5,7 +7,7 @@ import { getPathnameParameters } from './utils'
 import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
 import { cors, CorsOptions, preflightHandler } from './cors'
-import { Logger, LoggerOptions } from './logger'
+import { logger, recordException } from './logger'
 import { next } from './middleware'
 import type { MiddlewareList } from './middleware'
 import type { CookiesOptions } from './cookies'
@@ -22,7 +24,6 @@ export interface ServerOptions<
   after?: After
   cookies?: CookiesOptions
   cors?: CorsOptions
-  logger?: LoggerOptions
 }
 
 export class Server<
@@ -31,13 +32,12 @@ export class Server<
   const IsDo extends boolean = false
 > {
 
-  private readonly logger
   private readonly router
   public route: Router<SBefore, SAfter, IsDo>['register']
+  private readonly tracer = trace.getTracer(name, version)
 
   constructor(private options: ServerOptions<SBefore, SAfter, IsDo> = {}) {
-    this.logger = new Logger(options.logger)
-    this.router = new Router<SBefore, SAfter, IsDo>(options, this.logger)
+    this.router = new Router<SBefore, SAfter, IsDo>(options)
     this.route = this.router.register
   }
 
@@ -46,104 +46,201 @@ export class Server<
     env: Environment,
     ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext
   ) => {
-    try {
-      // Initialize router
-      this.router.init()
-
-      // Construct event from request data, reply, and context / state
-      const data = await Data.fromRequest(request, this.options, this.logger, this.options.name)
-      const reply = new Reply(this.logger)
-      const isDurableObject = 'id' in ctxOrState
-      const event = {
-        ...data, reply, next, isDurableObject,
-        ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
+    return this.tracer.startActiveSpan('comet handler', {
+      kind: SpanKind.SERVER,
+      attributes: {
+        name: this.options.name
       }
+    }, async span => {
 
-      const input = { event, env, logger: this.logger }
+      try {
+        // Initialize router
+        this.router.init()
 
-      // Run global before middleware
-      if (this.options.before) {
-        for (const mw of this.options.before) {
-          await mw.handler(input)
-          if (event.reply.sent) break
+        // Construct event from request data, reply, and context / state
+        const data = await Data.fromRequest(request, this.options, this.options.name)
+
+        const reply = new Reply()
+        const isDurableObject = 'id' in ctxOrState
+        const event = {
+          ...data, reply, next, isDurableObject,
+          ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
         }
-      }
 
-      // Run CORS middleware
-      if (!event.reply.sent) await cors(this.options.cors).handler(input)
+        const input = { event, env, logger }
 
-      // Main logic
-      if (!event.reply.sent) {
+        span.setAttribute('isDurableObject', isDurableObject)
 
-        // Get and validate the compatibility date
-        const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
-        if (compatibilityDate && new Date(compatibilityDate) > new Date()) {
-          event.reply.badRequest({ message: 'Invalid compatibility date' })
-        } else {
-
-          // Find the route
-          const route = this.router.find(event.pathname, event.method, compatibilityDate)
-          // eslint-disable-next-line unicorn/no-negated-condition
-          if (!route) {
-
-            // Use built-in preflight handler for preflight requests, return 404 otherwise
-            if (event.method === Method.OPTIONS) {
-              await preflightHandler(this.router, this.options.cors).handler(input)
-            } else {
-              event.reply.notFound()
-            }
-
-          } else {
-
-            // Set path params on event
-            event.params = getPathnameParameters(event.pathname, route.pathname)
-
-            // Schema validation
-            if (!event.reply.sent) schemaValidation(route).handler(input)
-
-            // Run local before middleware
-            if (route.before) {
-              for (const mw of route.before) {
-                await mw.handler(input)
-                if (event.reply.sent) break
-              }
-            }
-
-            // Run route handler
-            if (!event.reply.sent) await route.handler(input)
-
-            // Run local after middleware
-            if (route.after) {
-              if (isDurableObject) {
-                for (const mw of route.after) {
-                  await mw.handler(input)
+        // Run global before middleware
+        if (this.options.before) {
+          for (const mw of this.options.before) {
+            await this.tracer.startActiveSpan(
+              `comet middleware ${mw.name}`, {
+                attributes: {
+                  type: 'global-before'
                 }
+              },
+              async span => {
+                await mw.handler(input)
+                span.end()
+              }
+            )
+            if (event.reply.sent) break
+          }
+        }
+
+        // Run CORS middleware
+        if (!event.reply.sent) {
+          await this.tracer.startActiveSpan(
+            'comet cors middleware', {
+              attributes: {
+                type: 'global-before'
+              }
+            },
+            async span => {
+              await cors(this.options.cors).handler(input)
+              span.end()
+            }
+          )
+        }
+
+        // Main logic
+        if (!event.reply.sent) {
+
+          await this.tracer.startActiveSpan('comet routing', async span => {
+
+            // Get and validate the compatibility date
+            const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
+            if (compatibilityDate && new Date(compatibilityDate) > new Date()) {
+              event.reply.badRequest({ message: 'Invalid compatibility date' })
+            } else {
+
+              // Find the route
+              const route = this.router.find(event.pathname, event.method, compatibilityDate)
+              // eslint-disable-next-line unicorn/no-negated-condition
+              if (!route) {
+
+                // Use built-in preflight handler for preflight requests, return 404 otherwise
+                if (event.method === Method.OPTIONS) {
+                  await preflightHandler(this.router, this.options.cors).handler(input)
+                } else {
+                  event.reply.notFound()
+                }
+
               } else {
-                ctxOrState.waitUntil(Promise.allSettled(route.after.map(mw => mw.handler(input))))
+
+                // Set path params on event
+                event.params = getPathnameParameters(event.pathname, route.pathname)
+
+                // Schema validation
+                if (!event.reply.sent) schemaValidation(route).handler(input)
+
+                // Run local before middleware
+                if (route.before) {
+                  for (const mw of route.before) {
+                    await this.tracer.startActiveSpan(
+                      `comet middleware ${mw.name}`, {
+                        attributes: {
+                          type: 'local-before'
+                        }
+                      },
+                      async span => {
+                        await mw.handler(input)
+                        span.end()
+                      }
+                    )
+                    if (event.reply.sent) break
+                  }
+                }
+
+                // Run route handler
+                if (!event.reply.sent) {
+                  await this.tracer.startActiveSpan(
+                    'comet main handler', {
+                      attributes: {
+                        name: route.name
+                      }
+                    },
+                    async span => {
+                      await route.handler(input)
+                      span.end()
+                    }
+                  )
+                }
+
+                // Run local after middleware
+                if (route.after) {
+                  if (isDurableObject) {
+                    for (const mw of route.after) {
+                      await this.tracer.startActiveSpan(
+                        `comet middleware ${mw.name}`, {
+                          attributes: {
+                            type: 'local-after'
+                          }
+                        },
+                        async span => {
+                          await mw.handler(input)
+                          span.end()
+                        }
+                      )
+                    }
+                  } else {
+                    ctxOrState.waitUntil(Promise.allSettled(route.after.map(async mw => {
+                      const span = this.tracer.startSpan(`comet middleware ${mw.name}`, {
+                        attributes: {
+                          type: 'local-after'
+                        }
+                      })
+                      await mw.handler(input)
+                      span.end()
+                    })))
+                  }
+                }
               }
             }
+            span.end()
+          })
+        }
 
+        // Run global after middleware
+        if (this.options.after) {
+          if (isDurableObject) {
+            for (const mw of this.options.after) {
+              await this.tracer.startActiveSpan(
+                `comet middleware ${mw.name}`, {
+                  attributes: {
+                    type: 'global-after'
+                  }
+                },
+                async span => {
+                  await mw.handler(input)
+                  span.end()
+                }
+              )
+            }
+          } else {
+            ctxOrState.waitUntil(Promise.allSettled(this.options.after.map(async mw => {
+              const span = this.tracer.startSpan(`comet middleware ${mw.name}`, {
+                attributes: {
+                  type: 'global-after'
+                }
+              })
+              await mw.handler(input)
+              span.end()
+            })))
           }
         }
-      }
 
-      // Run global after middleware
-      if (this.options.after) {
-        if (isDurableObject) {
-          for (const mw of this.options.after) {
-            await mw.handler(input)
-          }
-        } else {
-          ctxOrState.waitUntil(Promise.allSettled(this.options.after.map(mw => mw.handler(input))))
-        }
+        // Construct response from reply
+        span.end()
+        return await Reply.toResponse(event.reply, this.options)
+      } catch (error) {
+        recordException('[Comet] Failed to handle request.')
+        recordException(error)
+        span.end()
+        return new Response(null, { status: 500 })
       }
-
-      // Construct response from reply
-      return await Reply.toResponse(event.reply, this.options, this.logger)
-    } catch (error) {
-      this.logger.error('[Comet] Failed to handle request.', error instanceof Error ? error.message : error)
-      return new Response(null, { status: 500 })
-    }
+    })
   }
 
 }

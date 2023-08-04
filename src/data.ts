@@ -1,6 +1,6 @@
+import { trace } from '@opentelemetry/api'
 import { Cookies } from './cookies'
 import type { Method, Options } from './types'
-import type { Logger } from './logger'
 
 
 export class Data {
@@ -19,16 +19,25 @@ export class Data {
     public readonly server: { name?: string }
   ) {}
 
-  public static async fromRequest(request: Request, options: Options, logger: Logger, serverName?: string): Promise<Data> {
+  public static async fromRequest(request: Request, options: Options, serverName?: string): Promise<Data> {
     const url = new URL(request.url)
     const { raw, body } = await this.parseRequestBody(request)
+
+    trace.getActiveSpan()?.addEvent('convert request to data', {
+      method: request.method,
+      pathname: url.pathname,
+      hostname: url.hostname,
+      protocol: url.protocol,
+      params: url.search
+    })
+
     return new Data(
       request,
       request.method.toUpperCase() as Method,
       url.pathname,
       url.hostname.toLowerCase(),
       request.headers,
-      await Cookies.parse(request.headers, logger, options.cookies),
+      await Cookies.parse(request.headers, options.cookies),
       Object.fromEntries(url.searchParams.entries()),
       {},
       body,
@@ -39,6 +48,10 @@ export class Data {
 
   private static async parseRequestBody(request: Request): Promise<{ raw?: unknown; body: unknown }> {
     const contentType = request.headers.get('content-type')?.split(';')[0]
+    trace.getActiveSpan()?.addEvent('parse request body', {
+      contentType: request.headers.get('content-type') ?? undefined,
+      parsedContentType: contentType
+    })
     switch (contentType) {
       case 'application/json': {
         const text = await request.text()

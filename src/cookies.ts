@@ -1,4 +1,4 @@
-import type { Logger } from './logger'
+import { recordException } from './logger'
 
 
 export interface CookiesOptions {
@@ -79,7 +79,7 @@ export class Cookies {
   }
 
   // Parse cookies from headers
-  public static async parse(headers: Headers, logger: Logger, options?: CookiesOptions): Promise<Cookies> {
+  public static async parse(headers: Headers, options?: CookiesOptions): Promise<Cookies> {
     const allOptions = this.getAllOptions(options)
     const cookies = new Cookies()
     const pairs = headers.get('Cookie')?.split(';', allOptions.limit) ?? []
@@ -87,7 +87,7 @@ export class Cookies {
       // Parse cookie name and value
       let [ name, value ] = pair.split('=', 2).map(component => component.trim())
       if (!name || !value) {
-        logger.error(`[Comet] Failed to parse malformatted cookie "${pair}".`)
+        recordException(`[Comet] Failed to parse malformatted cookie "${pair}".`)
         continue
       }
       // Unwrap cookie value if it is wrapped in quotes
@@ -99,7 +99,8 @@ export class Cookies {
         // Set the cookie
         cookies.set(name, value)
       } catch (error) {
-        logger.error(`[Comet] Failed to decode cookie "${pair}".`, error)
+        recordException(`[Comet] Failed to decode cookie "${pair}".`)
+        recordException(error)
       }
     }
     return cookies
@@ -109,7 +110,6 @@ export class Cookies {
   public static async serialize(
     cookies: Cookies,
     headers: Headers,
-    logger: Logger,
     options?: CookiesOptions
   ): Promise<void> {
     const allOptions = this.getAllOptions(options)
@@ -122,7 +122,8 @@ export class Cookies {
         // Set the cookie
         serialized.push(`${name}=${value}`)
       } catch (error) {
-        logger.error(`[Comet] Failed to encode cookie "${cookie.name}".`, error)
+        recordException(`[Comet] Failed to encode cookie "${cookie.name}".`)
+        recordException(error)
         continue
       }
       // Set cookie meta data

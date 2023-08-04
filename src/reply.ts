@@ -1,6 +1,7 @@
+import { trace } from '@opentelemetry/api'
 import { Cookies } from './cookies'
+import { recordException } from './logger'
 import type { Options } from './types'
-import type { Logger } from './logger'
 import type { TypeOf, ZodType } from 'zod'
 
 
@@ -89,29 +90,31 @@ export class Reply implements ReplyData {
   // The date the reply was sent
   public sent?: Date
 
-  constructor(private logger: Logger) {}
 
   // Convert a reply to a standard response
-  static async toResponse(reply: Reply, options: Options, logger: Logger): Promise<Response> {
+  static async toResponse(reply: Reply, options: Options): Promise<Response> {
     // Return error response if no reply was sent
     if (!reply.sent) {
-      logger.error('[Comet] No reply was sent for this event.')
+      recordException('[Comet] No reply was sent for this event.')
       return new Response(null, { status: 500 })
     }
     // Handle sending a raw response
     if (reply._raw !== undefined) {
+      trace.getActiveSpan()?.addEvent('return raw response')
       return reply._raw
     }
     // Get status, headers and serialize cookies
     const status = reply.status
     const headers = reply.headers
-    await Cookies.serialize(reply.cookies, reply.headers, logger, options.cookies)
+    await Cookies.serialize(reply.cookies, reply.headers, options.cookies)
     // Handle websocket response
     if (reply.body instanceof WebSocket) {
+      trace.getActiveSpan()?.addEvent('return websocket response')
       return new Response(null, { status, headers, webSocket: reply.body })
     }
     // Handle stream response
     if (reply.body instanceof ReadableStream) {
+      trace.getActiveSpan()?.addEvent('return streamed response')
       return new Response(reply.body, { status, headers })
     }
     // Handle json response
@@ -120,29 +123,37 @@ export class Reply implements ReplyData {
       headers.set('content-type', 'application/json')
       body = JSON.stringify(reply.body)
     }
+    trace.getActiveSpan()?.addEvent('convert response')
     return new Response(body, { status, headers })
   }
 
   // Send a regular reply
   private send(status: number, body?: unknown): Reply {
     if (this.sent) {
-      this.logger.warn('[Comet] Cannot send a reply after one has already been sent.')
+      recordException('[Comet] Cannot send a reply after one has already been sent.')
       return this
     }
     this.status = status
     this.body = body
     this.sent = new Date()
+    trace.getActiveSpan()?.addEvent('send reply', {
+      status,
+      sent: +this.sent
+    })
     return this
   }
 
   // Send a raw reply
   public raw(response: Response): Reply {
     if (this.sent) {
-      this.logger.warn('[Comet] Cannot send a reply after one has already been sent.')
+      recordException('[Comet] Cannot send a reply after one has already been sent.')
       return this
     }
     this._raw = response
     this.sent = new Date()
+    trace.getActiveSpan()?.addEvent('raw reply', {
+      sent: +this.sent
+    })
     return this
   }
 
