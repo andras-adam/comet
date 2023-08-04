@@ -46,7 +46,7 @@ export class Server<
     env: Environment,
     ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext
   ) => {
-    this.tracer.startActiveSpan('comet handler', {
+    return this.tracer.startActiveSpan('comet handler', {
       kind: SpanKind.SERVER,
       attributes: {
         name: this.options.name
