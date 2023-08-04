@@ -27,6 +27,7 @@ export const PATCH = Method.PATCH
 
 export interface Options {
   cookies?: CookiesOptions
+  dev?: boolean
 }
 
 export type MaybePromise<T> = Promise<T> | T
