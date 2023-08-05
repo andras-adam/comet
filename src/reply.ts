@@ -121,7 +121,7 @@ export class Reply implements ReplyData {
     let body: string | null = null
     if (reply.body) {
       headers.set('content-type', 'application/json')
-      body = JSON.stringify(reply.body)
+      body = options.dev ? JSON.stringify(reply.body, null, 2) : JSON.stringify(reply.body)
     }
     trace.getActiveSpan()?.addEvent('convert response')
     return new Response(body, { status, headers })

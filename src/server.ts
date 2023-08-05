@@ -24,6 +24,7 @@ export interface ServerOptions<
   after?: After
   cookies?: CookiesOptions
   cors?: CorsOptions
+  dev?: boolean
 }
 
 export class Server<
@@ -111,7 +112,7 @@ export class Server<
 
             // Get and validate the compatibility date
             const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
-            if (compatibilityDate && new Date(compatibilityDate) > new Date()) {
+            if (compatibilityDate && new Date(compatibilityDate) > new Date() && !this.options.dev) {
               event.reply.badRequest({ message: 'Invalid compatibility date' })
             } else {
 
