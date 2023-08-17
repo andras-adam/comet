@@ -46,7 +46,9 @@ export const cors = (options?: CorsOptions) => middleware({
   const origin = event.headers.get('origin')
   if (allowedOrigins.includes('*')) {
     event.reply.headers.set('access-control-allow-origin', '*')
-  } else if (origin && allowedOrigins.includes(origin)) {
+  } else if (origin
+    && (allowedOrigins.includes(origin)
+      || allowedOrigins.some(allowed => allowed.startsWith('*.') && origin.endsWith(allowed.slice(2))))) {
     event.reply.headers.set('access-control-allow-origin', origin)
     event.reply.headers.append('vary', 'origin')
   }
