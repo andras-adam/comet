@@ -36,7 +36,7 @@ export interface Route {
   compatibilityDate?: string
   before?: MiddlewareList
   after?: MiddlewareList
-  handler: (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<Reply>
+  handler: (input: { event: any; env: Environment; logger: Logger; reply: any; body: any; params: any; query: any } & Data ) => MaybePromise<Reply>
   replies?: Partial<Record<Status, ZodType>>
   schemas: {
     body?: ZodType
@@ -87,12 +87,13 @@ export class Router<
       params?: Params
       query?: Query
     },
-    handler: (input: {
+    handler: (input: Data & {
       event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query> & { reply: ReplyFrom<Replies> }
         & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
       env: Environment
       logger: Logger
-    }) => MaybePromise<Reply>
+      reply: ReplyFrom<Replies>
+    } & RouteParams<Body, Params, Query>) => MaybePromise<Reply>
   ): void => {
     const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
     const method = (options.method ?? Method.ALL) as Method

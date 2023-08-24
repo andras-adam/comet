@@ -74,13 +74,16 @@ workerComet.route({
 
 workerComet.route({
   pathname: '/test/:id',
+  params: z.strictObject({
+    id: z.string()
+  }),
   method: GET,
   before: [ logger('local before'), auth, perm ],
   after: [ logger('local after') ]
-}, async ({ event }) => {
-  const { id } = event.params
+}, async ({ event, params }) => {
+  const { id } = params
   // console.log(event)
-  console.log(event.userId)
+  console.log(event.userId, id)
   // await new Promise(resolve => setTimeout(resolve, 2000))
   return event.reply.ok({ found: true })
 })
@@ -88,7 +91,7 @@ workerComet.route({
 workerComet.route({
   pathname: '/test',
   method: POST
-}, async ({ event, env, logger }) => {
+}, async ({ event, env, logger, request, body }) => {
   //
   // env.MY_KV // exist
   // console.log(event.ctx.waitUntil) // exists
@@ -120,10 +123,11 @@ workerComet.route({
     [Status.Ok]: z.strictObject({ foo: z.string() }),
     [Status.InternalServerError]: z.strictObject({ message: z.string() })
   }
-}, async ({ event }) => {
+}, async ({ event, body }) => {
   try {
     //
     console.log(event.body)
+    body.foo
     //
     event.body
     event.params

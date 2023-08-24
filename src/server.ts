@@ -68,7 +68,7 @@ export class Server<
           ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
         }
 
-        const input = { event, env, logger }
+        const input = { event, env, logger, reply, ...data }
 
         span.setAttribute('isDurableObject', isDurableObject)
 
