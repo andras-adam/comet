@@ -59,7 +59,9 @@ export class Data {
       }
       case 'multipart/form-data': {
         const formData = await request.formData()
-        return { body: Object.fromEntries(formData.entries()) }
+        const body: Record<string, string | File> = {}
+        for (const [ key, value ] of formData.entries()) body[key] = value
+        return { body }
       }
       case 'application/x-www-form-urlencoded': {
         const text = await request.text()
