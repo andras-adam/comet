@@ -1,11 +1,18 @@
-# Comet
 ![logo](comet_logo.png)
 
-☄️ A powerful DX-first routing library for [Cloudflare Workers][cloudflare-workers-url].
+<p align="center">
+  ☄️ A powerful DX-first routing library for <a href="https://workers.cloudflare.com/">Cloudflare Workers</a>.
+</p>
 
-[![NPM Version][npm-version-image]][npm-url]
-[![NPM Install Size][npm-install-size-image]][npm-install-size-url]
-[![NPM Downloads][npm-downloads-image]][npm-downloads-url]
+<p align="center">
+  <a href="https://npmjs.org/package/@neoaren/comet"><img src="https://badgen.net/npm/v/@neoaren/comet" alt="NPM Version"></a>
+  <a href="https://packagephobia.com/result?p=@neoaren/comet"><img src="https://badgen.net/packagephobia/install/@neoaren/comet" alt="NPM Install Size"></a>
+  <a href="https://npmcharts.com/compare/@neoaren/comet?minimal=true"><img src="https://badgen.net/npm/dm/@neoaren/comet" alt="NPM Downloads"></a>
+</p>
+
+-----
+
+## Getting started
 
 ```ts
 import { GET, server } from '@neoaren/comet'
@@ -41,12 +48,3 @@ Use commit names with the following prefixes to indicate their purpose
 | :paperclip:              | `:paperclip:`              | for dependencies                                           |
 | :octocat:                | `:octocat:`                | for workflows                                              |
 | :construction:           | `:construction:`           | for experimental or temporary changes                      |
-
-[cloudflare-workers-url]: https://workers.cloudflare.com/
-[npm-downloads-image]: https://badgen.net/npm/dm/@neoaren/comet
-[npm-downloads-url]: https://npmcharts.com/compare/@neoaren/comet?minimal=true
-[npm-install-size-image]: https://badgen.net/packagephobia/install/@neoaren/comet
-[npm-install-size-url]: https://packagephobia.com/result?p=@neoaren/comet
-[npm-url]: https://npmjs.org/package/@neoaren/comet
-[npm-version-image]: https://badgen.net/npm/v/@neoaren/comet
-[documentation-url]: https://github.com/NeoAren/comet/wiki
