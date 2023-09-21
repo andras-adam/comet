@@ -1,4 +1,5 @@
 # Comet
+![logo](comet_logo.png)
 
 ☄️ A powerful DX-first routing library for [Cloudflare Workers][cloudflare-workers-url].
 
