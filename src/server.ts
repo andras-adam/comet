@@ -1,4 +1,4 @@
-import { Router, RouterOptions } from './router'
+import { Router, RouterOptions, Route } from './router'
 import { Data } from './data'
 import { Reply } from './reply'
 import { getPathnameParameters } from './utils'
@@ -6,7 +6,6 @@ import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
 import { cors, CorsOptions, preflightHandler } from './cors'
 import { Logger, LoggerOptions } from './logger'
-import { OpenApi, OpenApiOptions, routeToOpenApiOperation } from './openapi'
 import { next } from './middleware'
 import type { MiddlewareList } from './middleware'
 import type { CookiesOptions } from './cookies'
@@ -40,6 +39,7 @@ export class Server<
     this.logger = new Logger(options.logger)
     this.router = new Router<SBefore, SAfter, IsDo>(options, this.logger)
     this.route = this.router.register
+    //this.openapi = function(){}
   }
 
   public handler = async (
@@ -139,33 +139,12 @@ export class Server<
     }
   }
 
-  public openapi = async (openApiOptions: OpenApiOptions, compatibilityDate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`): Promise<OpenApi> => {
-    const methods: Record<Exclude<Method, Method.ALL>, Lowercase<Method>> = {
-      [Method.GET]: 'get',
-      [Method.PUT]: 'put',
-      [Method.POST]: 'post',
-      [Method.DELETE]: 'delete',
-      [Method.OPTIONS]: 'options',
-      [Method.HEAD]: 'head',
-      [Method.PATCH]: 'patch',
-      [Method.TRACE]: 'trace',
-      [Method.CONNECT]: 'connect'
-    }
-
-    const paths: OpenApi['paths'] = Object.fromEntries(this.router.getRoutes().map(route => {
-      return [
-        (route.pathname.startsWith('/') ? route.pathname : `/${route.pathname}`) as `/${string}`,
-        Object.fromEntries(Object.entries(methods).map(([ cometMethod, openApiMethod ]) => {
-          const operation = routeToOpenApiOperation(this.router.find(route.pathname, cometMethod, compatibilityDate))
-          return [
-            openApiMethod,
-            operation
-          ]
-        }).filter(([ t ]) => t !== undefined))
-      ]
-    }))
-
-    return { ...openApiOptions, paths, openapi: '3.1.0' }
+  public static getRouter<
+  Before extends MiddlewareList,
+  After extends MiddlewareList,
+  IsDo extends boolean
+>(server: Server<Before, After, IsDo>): Router<Before, After, IsDo> {
+    return server.router
   }
 }
 

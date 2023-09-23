@@ -300,18 +300,14 @@ const replies: Record<Status, number> = {
   [Status.NetworkAuthenticationRequired]: 511
 }
 
-export function routeToOpenApiOperation(route?: Route): OpenApi['paths']['/']['get'] | undefined {
-  if (!route) {
-    return
-  }
-
+export function routeToOpenApiOperation(route: Route): Extract<OpenApi['paths']['/']['get'], {}> {
   const path = objectSchemaToParameters(route.schemas.params)
   const query = objectSchemaToParameters(route.schemas.query)
 
   const pathParams = path ? path
     .map(el => ({ in: 'path' as const, name: el[0], required: true, schema: el[1] })) satisfies Array<{ required: true }> : []
   const queryParams = query ? query
-    .map(el => ({ in: 'query' as const, name: el[0], required: !el[2], schema: el[1] })) : []
+    .map(el => ({ in: 'query' as const, name: el[0], required: !el[2], schema: el[1], compatibilityDate: route.compatibilityDate })) : []
   const parameters = [ ...pathParams, ...queryParams ].length > 0 ? [ ...pathParams, ...queryParams ] : undefined
 
   const body = route.schemas.body ? { content: zodToJsonSchema(route.schemas.body, { target: 'openApi3' }) } : undefined
@@ -322,9 +318,9 @@ export function routeToOpenApiOperation(route?: Route): OpenApi['paths']['/']['g
 
   return {
     parameters,
-    // @ts-expect-error Even though the error seems reasonable, the schema generated looks correct - needs more testing
+    // @ts-expect-error
     requestBody: body,
-    // @ts-expect-error Same as above
+    // @ts-expect-error
     responses
   }
 }

@@ -9,7 +9,8 @@ export function isValidPathname(value?: unknown): boolean {
   try {
     new URLPattern(value, BASE_URL)
     return true
-  } catch {
+  } catch (error) {
+    console.error(error)
     return false
   }
 }

@@ -10,6 +10,7 @@ import type { Reply, ReplyFrom, Status } from './reply'
 import type { Data } from './data'
 import type { Logger } from './logger'
 import type { ExtensionsFrom, MiddlewareList } from './middleware'
+import type { Server } from './server'
 import type { TypeOf, ZodObject, ZodType } from 'zod'
 import type { Pipe, Strings, Tuples } from 'hotscript'
 
@@ -140,5 +141,4 @@ export class Router<
   }
 
   public getRoutes = (): Route[] => this.routes
-
 }

@@ -1,0 +1,224 @@
+{
+  "info": {
+    "title": "Test",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/test": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Post works without error"
+      },
+      "post": {
+        "comment": "Post test route"
+      }
+    },
+    "/api/test/:id": {
+      "get": {
+        "comment": "Id test route"
+      }
+    },
+    "/api/never": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      },
+      "delete": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      },
+      "options": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      },
+      "head": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      },
+      "trace": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      },
+      "connect": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "comment": "Haha working"
+      }
+    },
+    "/api/test/stuff/:id": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "test",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "type": "object",
+            "properties": {
+              "foo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "foo"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "responses": {
+          "200": {
+            "type": "object",
+            "properties": {
+              "foo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "foo"
+            ],
+            "additionalProperties": false
+          },
+          "500": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "comment": "Schema and param test route"
+      }
+    }
+  },
+  "openapi": "3.1.0"
+}

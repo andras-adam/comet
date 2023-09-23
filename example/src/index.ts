@@ -62,22 +62,15 @@ const workerComet = server({
   }
 })
 
-workerComet.route({
-  pathname: '/openapi',
-  method: GET
-}, async event => {
-  const api = await workerComet.openapi({
-    info: {
-      title: 'Test',
-      version: '1.0.0'
-    }
-  })
-  return event.reply.ok(api)
-})
-
+/**
+ * @description Basic test route
+ */
 workerComet.route({
   pathname: '/test',
-  method: GET
+  method: GET,
+  query: z.strictObject({
+    filter: z.string()
+  })
 }, ({ event }) => {
   //
   event.reply
@@ -85,6 +78,26 @@ workerComet.route({
   return event.reply.ok(123)
 })
 
+/**
+ * @description Post works without error
+ */
+workerComet.route({
+  pathname: '/test',
+  method: GET,
+  compatibilityDate: '2023-09-01',
+  query: z.strictObject({
+    filter: z.string()
+  })
+}, ({ event }) => {
+  //
+  event.reply
+  //
+  return event.reply.ok(123)
+})
+
+/**
+ * @description Id test route
+ */
 workerComet.route({
   pathname: '/test/:id',
   method: GET,
@@ -98,6 +111,9 @@ workerComet.route({
   return event.reply.ok({ found: true })
 })
 
+/**
+ * @description Post test route
+ */
 workerComet.route({
   pathname: '/test',
   method: POST
@@ -111,11 +127,35 @@ workerComet.route({
   return event.reply.ok('foo')
 })
 
+/**
+ * @description Never test route for compatibilityData check
+ */
 workerComet.route({
   pathname: '/never',
   before: [ never ]
 }, ({ event }) => event.reply.ok())
 
+/**
+ * @description Haha working
+ */
+workerComet.route({
+  pathname: '/never',
+  compatibilityDate: '2023-09-01',
+  before: [ never ],
+  query: z.strictObject({
+    filter: z.string()
+  })
+}, ({ event }) => event.reply.ok())
+
+workerComet.route({
+  pathname: '/never',
+  compatibilityDate: '2023-10-01',
+  before: [ never ]
+}, ({ event }) => event.reply.ok())
+
+/**
+ * @description Schema and param test route
+ */
 workerComet.route({
   name: 'Schema testing',
   pathname: '/test/stuff/:id',
@@ -155,7 +195,6 @@ export default <ExportedHandler>{
   fetch: workerComet.handler
 }
 
-
 // DURABLE OBJECTS
 
 
@@ -178,3 +217,5 @@ class TestDo implements DurableObject {
     return doComet.handler(request, this.env, this.state)
   }
 }
+
+export { workerComet }
