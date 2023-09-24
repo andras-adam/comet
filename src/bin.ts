@@ -40,13 +40,11 @@ const mainCommand = defineCommand({
     }
   },
   run({args}) {
-    // validate if input file exist
     if (!fs.existsSync(args.input)){
       console.error(`Input file '${args.input}' does not exist!`)
       return
     }
 
-    // validate if info is a valid json format and has the properties: title and version
     try {
       const info = JSON.parse(args.info) // TODO: only accepts format from commmand line like this '{\"title\": \"Test\", \"version\": \"1.0.0\"}' (not sure if that is a problem)
     
@@ -59,7 +57,6 @@ const mainCommand = defineCommand({
       return
     }
 
-    // validate is date is an empty string or a correct yyyy-mm-dd format
     if (args.date !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(args.date)) {
       console.error('Invalid date argument! Empty string or "yyyy-mm-dd" format required.')
       return
@@ -170,7 +167,7 @@ async function generate(args: {input: string, output: string, info: string, date
 
   const ungroupedRoutes: { [pathname: string]: Route[] } = {}
 
-  Object.entries(groupedRoutes).map((route) => {
+  Object.entries(groupedRoutes).map((route) => { // filter routes where there are multiple dates
     const pathname = route[0]
     const routes = route[1]
     const objects: Route[] = []
@@ -216,7 +213,9 @@ async function generate(args: {input: string, output: string, info: string, date
     const pathToCompare = '"' + key.slice(args.prefix.length) + '"' // slice the prefix from the path for easier comparing
     Object.keys(value).forEach((method) => {
       
-      let information: {checkNum: number, data: {path: string, method: string, description: string}} = {checkNum: 0, data: {path: '', method: '', description: ''}}
+      //detailed data in case of need
+      //let information: {checkNum: number, data: {path: string, method: string, description: string}} = {checkNum: 0, data: {path: '', method: '', description: ''}}
+      let information: {checkNum: number, data: string} = {checkNum: 0, data: ''}
 
       const methodToCompare = method.toUpperCase()
       const valueData: any = value[method as keyof typeof value]
@@ -228,9 +227,11 @@ async function generate(args: {input: string, output: string, info: string, date
       
       // @ts-expect-error - @babel/traverse export is messed up
       traverse.default(astree, {
-        ExpressionStatement: function(path: any) { // we check each path's each method and look for leading comments
+        ExpressionStatement: function(path: any) { // check each path's each method and look for leading comments
           if (path.node.leadingComments !== undefined){
-            const data = {path: key, method: methodToCompare, description: path.node.leadingComments[0].value.slice(18,-2)} // , route: valueData
+
+            //const data = {path: key, method: methodToCompare, description: path.node.leadingComments[0].value.slice(18,-2)}
+            const data = path.node.leadingComments[0].value.slice(18,-2)
             const propertiesArray = path.node.expression.arguments[0].properties // properties of the api
 
             const valuesArray = propertiesArray.map((key: any) => { // api properties from the code
@@ -266,8 +267,7 @@ async function generate(args: {input: string, output: string, info: string, date
       })
       // information contains the correct inline comments for each api and method
       if(information.checkNum > 0){
-        //console.log(information)
-        paths[key as keyof typeof paths][method as keyof typeof value].comment = information.data.description
+        paths[key as keyof typeof paths][method as keyof typeof value].comment = information.data
         //TODO: add comment attribute to router? store comments elsewhere?
       }
     })

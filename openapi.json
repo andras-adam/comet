@@ -13,11 +13,10 @@
             "required": true,
             "schema": {
               "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
+            }
           }
         ],
-        "comment": "Post works without error"
+        "comment": "Basic test route"
       },
       "post": {
         "comment": "Post test route"
@@ -30,130 +29,31 @@
     },
     "/api/never": {
       "get": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       },
       "put": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       },
       "post": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       },
       "delete": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       },
       "options": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       },
       "head": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       },
       "patch": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       },
       "trace": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       },
       "connect": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "filter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "compatibilityDate": "2023-09-01"
-          }
-        ],
-        "comment": "Haha working"
+        "comment": "Never test route for compatibilityData check"
       }
     },
     "/api/test/stuff/:id": {
