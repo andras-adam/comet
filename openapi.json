@@ -13,47 +13,216 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "compatibilityDate": "2023-09-01"
           }
         ],
-        "comment": "Basic test route"
+        "description": [
+          "Post works without error"
+        ]
       },
       "post": {
-        "comment": "Post test route"
+        "description": [
+          "Post test route"
+        ]
       }
     },
     "/api/test/:id": {
       "get": {
-        "comment": "Id test route"
+        "summary": [
+          "Test id summary comment"
+        ]
       }
     },
     "/api/never": {
       "get": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "put": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "post": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "delete": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "options": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "head": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "patch": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "trace": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "connect": {
-        "comment": "Never test route for compatibilityData check"
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "compatibilityDate": "2023-09-01"
+          }
+        ],
+        "description": [
+          "Haha working"
+        ],
+        "tags": [
+          "1",
+          "2",
+          "3"
+        ]
       }
     },
     "/api/test/stuff/:id": {
@@ -116,7 +285,12 @@
             "additionalProperties": false
           }
         },
-        "comment": "Schema and param test route"
+        "description": [
+          "Schema and param test route"
+        ],
+        "summary": [
+          "This is a summary for schema and param test route"
+        ]
       }
     }
   },

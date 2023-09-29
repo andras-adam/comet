@@ -96,7 +96,7 @@ workerComet.route({
 })
 
 /**
- * @description Id test route
+ * @summary Test id summary comment
  */
 workerComet.route({
   pathname: '/test/:id',
@@ -137,6 +137,9 @@ workerComet.route({
 
 /**
  * @description Haha working
+ * @tag 1
+ * @tag 2
+ * @tag 3
  */
 workerComet.route({
   pathname: '/never',
@@ -155,6 +158,7 @@ workerComet.route({
 
 /**
  * @description Schema and param test route
+ * @summary This is a summary for schema and param test route
  */
 workerComet.route({
   name: 'Schema testing',

@@ -23,6 +23,7 @@ type PathItem = {
   $ref?: string
   summary?: string
   description?: string
+  tags?: string[]
   get?: Operation
   put?: Operation
   post?: Operation

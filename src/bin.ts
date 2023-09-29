@@ -8,6 +8,7 @@ import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import { defineCommand, runMain } from 'citty'
 import fs from 'fs'
+import { object } from 'zod'
 
 
 
@@ -46,7 +47,7 @@ const mainCommand = defineCommand({
     }
 
     try {
-      const info = JSON.parse(args.info) // TODO: only accepts format from commmand line like this '{\"title\": \"Test\", \"version\": \"1.0.0\"}' (not sure if that is a problem)
+      const info = JSON.parse(args.info)
     
       if (typeof info !== 'object' || !info.title || !info.version) {
         console.error('Invalid info argument! Title and version properties required.')
@@ -165,6 +166,23 @@ async function generate(args: {input: string, output: string, info: string, date
     }
   }
 
+  function getComments(comments: string): { [key: string]: string[] }{
+    const commentArray = comments.split('* @').slice(1).map((comment) => {
+      return comment.slice(0,-2)
+    })
+
+    const commentsByType: { [key: string]: string[] } = {description: [], summary: [], tag: []}
+
+    commentArray.forEach((comment) => {
+      const words = comment.split(' ')
+      const head = words[0]
+      const tail = words.slice(1).join(' ')
+
+      commentsByType[head].push(tail)
+    })
+    return commentsByType
+  }
+
   const ungroupedRoutes: { [pathname: string]: Route[] } = {}
 
   Object.entries(groupedRoutes).map((route) => { // filter routes where there are multiple dates
@@ -213,9 +231,7 @@ async function generate(args: {input: string, output: string, info: string, date
     const pathToCompare = '"' + key.slice(args.prefix.length) + '"' // slice the prefix from the path for easier comparing
     Object.keys(value).forEach((method) => {
       
-      //detailed data in case of need
-      //let information: {checkNum: number, data: {path: string, method: string, description: string}} = {checkNum: 0, data: {path: '', method: '', description: ''}}
-      let information: {checkNum: number, data: string} = {checkNum: 0, data: ''}
+      let information: {checkNum: number, data: { [key: string]: string[] }} = {checkNum: 0, data: {}}
 
       const methodToCompare = method.toUpperCase()
       const valueData: any = value[method as keyof typeof value]
@@ -229,9 +245,7 @@ async function generate(args: {input: string, output: string, info: string, date
       traverse.default(astree, {
         ExpressionStatement: function(path: any) { // check each path's each method and look for leading comments
           if (path.node.leadingComments !== undefined){
-
-            //const data = {path: key, method: methodToCompare, description: path.node.leadingComments[0].value.slice(18,-2)}
-            const data = path.node.leadingComments[0].value.slice(18,-2)
+            const data = getComments(path.node.leadingComments[0].value)
             const propertiesArray = path.node.expression.arguments[0].properties // properties of the api
 
             const valuesArray = propertiesArray.map((key: any) => { // api properties from the code
@@ -266,9 +280,11 @@ async function generate(args: {input: string, output: string, info: string, date
         }
       })
       // information contains the correct inline comments for each api and method
+      const currentNode = paths[key as keyof typeof paths][method as keyof typeof value]
       if(information.checkNum > 0){
-        paths[key as keyof typeof paths][method as keyof typeof value].comment = information.data
-        //TODO: add comment attribute to router? store comments elsewhere?
+        information.data.description.length === 0 ? null : currentNode.description = information.data.description
+        information.data.summary.length === 0 ? null : currentNode.summary = information.data.summary
+        information.data.tag.length === 0 ? null : currentNode.tags = information.data.tag
       }
     })
   })
