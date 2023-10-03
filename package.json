@@ -1,12 +1,12 @@
 {
   "type": "module",
   "name": "@neoaren/comet",
-  "version": "2.0.1",
+  "version": "3.1.1",
   "description": "A powerful DX-first routing library for Cloudflare Workers.",
   "scripts": {
     "build": "rimraf dist && npm-run-all \"build:*\"",
-    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2022",
-    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.cjs --format=cjs --target=es2022",
+    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2022 --external:zod --external:hotscript --external:@opentelemetry/*",
+    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --target=es2022 --external:zod --external:hotscript --external:@opentelemetry/*",
     "build:bin": "esbuild src/bin.ts --bundle --outfile=dist/bin.mjs --format=esm --target=es2022 --platform=node --packages=external --external:./tmp.js",
     "build:dts": "tsc",
     "lint": "eslint . --ext ts",
@@ -16,14 +16,14 @@
     "dist"
   ],
   "bin": "./dist/bin.mjs",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/index.cjs",
+      "require": "./dist/index.js",
       "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/src/index.d.ts"
     }
   },
   "repository": {
@@ -47,9 +47,11 @@
   "dependencies": {
     "@babel/parser": "^7.22.14",
     "@babel/traverse": "^7.22.11",
-    "@neoaren/comet": "^3.1.0",
+    "@opentelemetry/api": "^1.4.1",
+    "@opentelemetry/api-logs": "^0.41.1",
+    "@opentelemetry/sdk-trace-base": "^1.15.1",
     "citty": "^0.1.4",
-    "hotscript": "^1.0.12",
+    "hotscript": "^1.0.13",
     "urlpattern-polyfill": "^9.0.0",
     "zod": "^3.21.4",
     "zod-to-json-schema": "^3.18.1"
@@ -63,11 +65,6 @@
     "esbuild": "^0.18.20",
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2",
-    "wrangler": "^3.6.0"
-  },
-  "directories": {
-    "example": "example"
+    "typescript": "^5.2.2"
   }
 }

@@ -3,14 +3,15 @@
     "target": "esnext",
     "module": "esnext",
     "lib": [ "esnext" ],
-    "types": [ "@cloudflare/workers-types/experimental", "@types/node", /*"./src/bindings.d.ts"*/ ],
-    "moduleResolution": "node",
+    "types": [ "@cloudflare/workers-types/experimental", "@types/node" ],
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "baseUrl": "./",
     "outDir": "./dist",
     "declaration": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "resolveJsonModule": true
   },
   "include": [ "src/**/*" ],
   "exclude": [ "example/**/*" ]
