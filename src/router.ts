@@ -10,7 +10,6 @@ import { Logger, recordException } from './logger'
 import type { Reply, ReplyFrom, Status } from './reply'
 import type { Data } from './data'
 import type { ExtensionsFrom, MiddlewareList } from './middleware'
-import type { Server } from './server'
 import type { TypeOf, ZodObject, ZodType } from 'zod'
 import type { Pipe, Strings, Tuples } from 'hotscript'
 
@@ -52,7 +51,6 @@ export interface RouterOptions {
 
 export class Router<
   const SBefore extends MiddlewareList,
-  const SAfter extends MiddlewareList,
   const IsDo extends boolean = false
 > {
 

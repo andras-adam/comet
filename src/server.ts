@@ -1,6 +1,6 @@
 import { SpanKind, trace } from '@opentelemetry/api'
 import { name, version } from '../package.json'
-import { Router, RouterOptions, Route } from './router'
+import { Router, RouterOptions } from './router'
 import { Data } from './data'
 import { Reply } from './reply'
 import { getPathnameParameters } from './utils'
@@ -40,7 +40,7 @@ export class Server<
   constructor(private options: ServerOptions<SBefore, SAfter, IsDo> = {}) {
     this.router = new Router<SBefore, SAfter, IsDo>(options)
     this.route = this.router.register
-    //this.openapi = function(){}
+    // this.openapi = function(){}
   }
 
   public handler = async (

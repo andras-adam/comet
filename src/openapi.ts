@@ -301,7 +301,7 @@ const replies: Record<Status, number> = {
   [Status.NetworkAuthenticationRequired]: 511
 }
 
-export function routeToOpenApiOperation(route: Route): Extract<OpenApi['paths']['/']['get'], {}> {
+export function routeToOpenApiOperation(route: Route): Operation {
   const path = objectSchemaToParameters(route.schemas.params)
   const query = objectSchemaToParameters(route.schemas.query)
 
@@ -319,9 +319,7 @@ export function routeToOpenApiOperation(route: Route): Extract<OpenApi['paths'][
 
   return {
     parameters,
-    // @ts-expect-error
     requestBody: body,
-    // @ts-expect-error
     responses
   }
 }
