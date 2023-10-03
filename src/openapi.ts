@@ -321,5 +321,5 @@ export function routeToOpenApiOperation(route: Route): Operation {
     parameters,
     requestBody: body,
     responses
-  }
+  } as Operation
 }
