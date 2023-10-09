@@ -13,41 +13,39 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install nodejs
       uses: actions/setup-node@v3
       with:
-        node-version: 16
+        node-version: 20
         cache: npm
 
     - name: Install dependencies
       run: |
         npm ci --no-progress
 
-    - name: Get current version
-      id: package-version
-      run: |
-        echo ::set-output name=current-version::$(cat ./package.json | jq '.version' | tr -d '"')
-
     - name: Build package
       run: |
         npm run build
 
     - name: Publish to NPM
-      uses: JS-DevTools/npm-publish@v1
+      id: npm-release
+      uses: JS-DevTools/npm-publish@v2
       with:
         access: public
         token: ${{ secrets.NPM_TOKEN }}
 
-    - name: "Tag latest commit"
+    - name: Tag latest commit
+      if: steps.npm-release.outputs.type != ''
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
         gh auth setup-git
         git config user.name "GitHub Actions"
-        git tag "v${{ steps.package-version.outputs.current-version }}" -a -m "${{ github.event.commits[0].message }}"
-        git push origin "v${{ steps.package-version.outputs.current-version }}"
+        git tag "v${{ steps.npm-release.outputs.version }}" -a -m "${{ github.event.commits[0].message }}"
+        git push origin "v${{ steps.npm-release.outputs.version }}"
 
     - name: Create GitHub release
+      if: steps.npm-release.outputs.type != ''
       run: |
-        gh release create --generate-notes "v${{ steps.package-version.outputs.current-version }}"
+        gh release create --generate-notes "v${{ steps.npm-release.outputs.version }}"
