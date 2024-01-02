@@ -6,7 +6,7 @@ import type { ZodType } from 'zod'
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface Middleware<T> {
+export interface Middleware<_T> {
   name?: string
   requires?: MiddlewareList
   handler: (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
