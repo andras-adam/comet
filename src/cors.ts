@@ -28,6 +28,7 @@ function getAllOptions(options?: CorsOptions) {
   const allowedMethods = parseListValue(allOptions.methods)
   const exposedHeaders = parseListValue(allOptions.exposedHeaders)
   const { credentials: allowCredentials, maxAge } = allOptions
+
   return { allowedOrigins, allowedHeaders, allowedMethods, exposedHeaders, allowCredentials, maxAge }
 }
 
@@ -47,13 +48,15 @@ export const cors = (options?: CorsOptions) => middleware({
   if (allowedOrigins.includes('*')) {
     event.reply.headers.set('access-control-allow-origin', '*')
   } else if (origin
-    && (allowedOrigins.includes(origin)
-      || allowedOrigins.some(allowed => allowed.startsWith('https://*.') && origin.endsWith(allowed.slice(1))))) {
+  && (allowedOrigins.includes(origin)
+  || allowedOrigins.some(allowed => allowed.startsWith('https://*.') && origin.endsWith(allowed.slice(1))))) {
     event.reply.headers.set('access-control-allow-origin', origin)
     event.reply.headers.append('vary', 'origin')
   }
+
   if (allowCredentials) event.reply.headers.set('access-control-allow-credentials', 'true')
   if (exposedHeaders.length > 0) event.reply.headers.set('access-control-expose-headers', exposedHeaders.join(','))
+
   // Continue to the next middleware
   return event.next()
 })
@@ -64,6 +67,7 @@ export const preflightHandler = (router: Router<any, any, any>, options?: CorsOp
 }, ({ event }) => {
   // Run only on preflight requests
   if (event.method !== Method.OPTIONS) return event.next()
+
   // Get all CORS options
   const { allowedHeaders, allowedMethods, maxAge } = getAllOptions(options)
   // Verify that the preflighted route exists
@@ -75,5 +79,6 @@ export const preflightHandler = (router: Router<any, any, any>, options?: CorsOp
   if (allowedMethods.length > 0) event.reply.headers.set('access-control-allow-methods', allowedMethods.join(','))
   event.reply.headers.set('access-control-max-age', maxAge.toString())
   event.reply.headers.set('content-length', '0')
+
   return event.reply.noContent()
 })

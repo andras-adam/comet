@@ -1,4 +1,4 @@
-import { MaybePromise, Method } from './types'
+import { type MaybePromise, Method } from './types'
 import {
   compareCompatibilityDates,
   compareMethods,
@@ -6,7 +6,7 @@ import {
   isValidCompatibilityDate,
   isValidPathname
 } from './utils'
-import { Logger, recordException } from './logger'
+import { type Logger, recordException } from './logger'
 import type { Reply, ReplyFrom, Status } from './reply'
 import type { Data } from './data'
 import type { ExtensionsFrom, MiddlewareList } from './middleware'
@@ -51,6 +51,7 @@ export interface RouterOptions {
 
 export class Router<
   const SBefore extends MiddlewareList,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const SAfter extends MiddlewareList,
   const IsDo extends boolean = false
 > {
@@ -89,7 +90,7 @@ export class Router<
     },
     handler: (input: {
       event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query> & { reply: ReplyFrom<Replies> }
-        & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
+      & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
       env: Environment
       logger: Logger
     }) => MaybePromise<Reply>
@@ -100,12 +101,16 @@ export class Router<
     const name = options.name ?? `${method} ${pathname}${compatibilityDate ? ` (${compatibilityDate})` : ''}`
     if (!isValidPathname(pathname)) {
       recordException(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
+
       return
     }
+
     if (options.compatibilityDate !== undefined && !isValidCompatibilityDate(options.compatibilityDate)) {
       recordException(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
+
       return
     }
+
     const schemas = { body: options.body, params: options.params, query: options.query }
     this.routes.push({ ...options, pathname, method, name, handler, schemas })
     this.ready = false
@@ -121,9 +126,11 @@ export class Router<
     for (const route of this.routes) {
       const doPathnamesMatch = comparePathnames(pathname, route.pathname)
       if (!doPathnamesMatch) continue
+
       const doMethodsMatch = compareMethods(method, route.method)
       if (!doMethodsMatch) continue
       if (ignoreCompatibilityDate) return route
+
       const doCompatibilityDatesMatch = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
       if (doCompatibilityDatesMatch) return route
     }
@@ -134,6 +141,7 @@ export class Router<
     if (this.ready) return
     this.routes.sort((a, b) => {
       if (a.pathname !== b.pathname || a.method !== b.method) return 0
+
       return compareCompatibilityDates(a.compatibilityDate, b.compatibilityDate) ? -1 : 1
     })
     this.ready = true

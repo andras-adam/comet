@@ -72,6 +72,7 @@ export interface ReplyData {
 
 type TypeOfSafe<Schema> = Schema extends ZodType ? TypeOf<Schema> : never
 type ReplyFnFrom<Body> = Body extends undefined ? () => Reply : (body: TypeOfSafe<Body>) => Reply
+
 export type ReplyFrom<Schemas extends Partial<Record<Status, ZodType>> | undefined> = Schemas extends undefined
   ? Reply
   : ReplyData & { [Key in keyof Schemas as `${string & Key}`]: ReplyFnFrom<Schemas[Key]> }
@@ -96,13 +97,17 @@ export class Reply implements ReplyData {
     // Return error response if no reply was sent
     if (!reply.sent) {
       recordException('[Comet] No reply was sent for this event.')
+
       return new Response(null, { status: 500 })
     }
+
     // Handle sending a raw response
     if (reply._raw !== undefined) {
       trace.getActiveSpan()?.addEvent('return raw response')
+
       return reply._raw
     }
+
     // Get status, headers and serialize cookies
     const status = reply.status
     const headers = reply.headers
@@ -110,20 +115,26 @@ export class Reply implements ReplyData {
     // Handle websocket response
     if (reply.body instanceof WebSocket) {
       trace.getActiveSpan()?.addEvent('return websocket response')
+
       return new Response(null, { status, headers, webSocket: reply.body })
     }
+
     // Handle stream response
     if (reply.body instanceof ReadableStream) {
       trace.getActiveSpan()?.addEvent('return streamed response')
+
       return new Response(reply.body, { status, headers })
     }
+
     // Handle json response
     let body: string | null = null
     if (reply.body) {
       headers.set('content-type', 'application/json')
       body = options.dev ? JSON.stringify(reply.body, null, 2) : JSON.stringify(reply.body)
     }
+
     trace.getActiveSpan()?.addEvent('convert response')
+
     return new Response(body, { status, headers })
   }
 
@@ -131,8 +142,10 @@ export class Reply implements ReplyData {
   private send(status: number, body?: unknown): Reply {
     if (this.sent) {
       recordException('[Comet] Cannot send a reply after one has already been sent.')
+
       return this
     }
+
     this.status = status
     this.body = body
     this.sent = new Date()
@@ -140,6 +153,7 @@ export class Reply implements ReplyData {
       status,
       sent: +this.sent
     })
+
     return this
   }
 
@@ -147,13 +161,16 @@ export class Reply implements ReplyData {
   public raw(response: Response): Reply {
     if (this.sent) {
       recordException('[Comet] Cannot send a reply after one has already been sent.')
+
       return this
     }
+
     this._raw = response
     this.sent = new Date()
     trace.getActiveSpan()?.addEvent('raw reply', {
       sent: +this.sent
     })
+
     return this
   }
 

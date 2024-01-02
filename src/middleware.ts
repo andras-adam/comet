@@ -5,6 +5,7 @@ import type { Logger } from './logger'
 import type { ZodType } from 'zod'
 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface Middleware<T> {
   name?: string
   requires?: MiddlewareList
@@ -82,13 +83,14 @@ export function middleware<
     logger: Logger
   }) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
-  const _options = typeof options === 'object' ? options : {}
-  const _handler = typeof options === 'function' ? options : handler
-  if (!_handler) throw new Error('[Comet] A middleware received no handler argument.')
+  const middlewareOptions = typeof options === 'object' ? options : {}
+  const middlewareHandler = typeof options === 'function' ? options : handler
+  if (!middlewareHandler) throw new Error('[Comet] A middleware received no handler argument.')
+
   return {
-    ..._options,
+    ...middlewareOptions,
     handler: async input => {
-      const nextData = await _handler(input)
+      const nextData = await middlewareHandler(input)
       if (nextData instanceof NextData) Object.assign(input.event, nextData.data)
     }
   }

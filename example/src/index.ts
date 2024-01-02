@@ -7,6 +7,7 @@ import { z } from 'zod'
 
 const logger = (message: string) => middleware(({ event }) => {
   console.log(message)
+
   return event.next()
 })
 
@@ -14,6 +15,7 @@ const token = middleware({
   name: 'find-token'
 }, ({ event }) => {
   const token = 'gf2ugfsdej6fg6u3fgejzf'
+
   return event.next({ token })
 })
 
@@ -23,6 +25,7 @@ const auth = middleware({
 }, ({ event }) => {
   // event.foo = 'bar'
   console.log('finding user for token', event.token)
+
   return event.next({ userId: '674253674253' })
 })
 
@@ -33,12 +36,14 @@ const perm = middleware({
     [Status.Forbidden]: z.string()
   }
 }, async ({ event }) => {
-  await new Promise(resolve => setTimeout(resolve, 500))
+  await scheduler.wait(500)
   console.log(event.userId)
+
   const can = false
   if (can) {
     return event.reply.forbidden('forbidden')
   }
+
   return event.next()
 })
 
@@ -68,6 +73,7 @@ workerComet.route({
 }, ({ event }) => {
   //
   event.reply
+
   //
   return event.reply.ok(123)
 })
@@ -80,7 +86,8 @@ workerComet.route({
 }, async ({ event }) => {
   const { id } = event.params
   // console.log(event)
-  console.log(event.userId)
+  console.log(id, event.userId)
+
   // await new Promise(resolve => setTimeout(resolve, 2000))
   return event.reply.ok({ found: true })
 })
@@ -88,12 +95,13 @@ workerComet.route({
 workerComet.route({
   pathname: '/test',
   method: POST
-}, async ({ event, env, logger }) => {
+}, async ({ event, logger }) => {
   //
   // env.MY_KV // exist
   // console.log(event.ctx.waitUntil) // exists
   //
   logger.warn('weeeeee')
+
   //
   return event.reply.ok('foo')
 })
@@ -130,10 +138,12 @@ workerComet.route({
     event.query.test
     //
     event.reply
+
     //
     return event.reply.ok({ foo: 'bar' })
   } catch (error) {
     console.error(error)
+
     return event.reply.internalServerError({ message: 'asd' })
   }
 })
@@ -141,6 +151,7 @@ workerComet.route({
 export default <ExportedHandler>{
   fetch: workerComet.handler
 }
+export { TestDo }
 
 
 // DURABLE OBJECTS
@@ -156,6 +167,7 @@ doComet.route({
   pathname: '/test'
 }, async ({ event }) => {
   console.log(event.state.id)
+
   return event.reply.ok()
 })
 

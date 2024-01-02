@@ -1,15 +1,14 @@
 import { SpanKind, trace } from '@opentelemetry/api'
 import { name, version } from '../package.json'
-import { Router, RouterOptions } from './router'
+import { Router, type RouterOptions } from './router'
 import { Data } from './data'
 import { Reply } from './reply'
 import { getPathnameParameters } from './utils'
 import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
-import { cors, CorsOptions, preflightHandler } from './cors'
+import { cors, type CorsOptions, preflightHandler } from './cors'
 import { logger, recordException } from './logger'
-import { next } from './middleware'
-import type { MiddlewareList } from './middleware'
+import { next, type MiddlewareList } from './middleware'
 import type { CookiesOptions } from './cookies'
 
 
@@ -118,7 +117,7 @@ export class Server<
 
               // Find the route
               const route = this.router.find(event.pathname, event.method, compatibilityDate)
-              // eslint-disable-next-line unicorn/no-negated-condition
+
               if (!route) {
 
                 // Use built-in preflight handler for preflight requests, return 404 otherwise
@@ -199,6 +198,7 @@ export class Server<
                 }
               }
             }
+
             span.end()
           })
         }
@@ -234,11 +234,13 @@ export class Server<
 
         // Construct response from reply
         span.end()
+
         return await Reply.toResponse(event.reply, this.options)
       } catch (error) {
         recordException('[Comet] Failed to handle request.')
         recordException(error)
         span.end()
+
         return new Response(null, { status: 500 })
       }
     })

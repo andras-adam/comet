@@ -80,9 +80,10 @@ export class Cookies {
 
   // Parse cookies from headers
   public static async parse(headers: Headers, options?: CookiesOptions): Promise<Cookies> {
-    const allOptions = this.getAllOptions(options)
+    const allOptions = Cookies.getAllOptions(options)
     const cookies = new Cookies()
     const pairs = headers.get('Cookie')?.split(';', allOptions.limit) ?? []
+
     for (const pair of pairs) {
       // Parse cookie name and value
       let [ name, value ] = pair.split('=', 2).map(component => component.trim())
@@ -90,8 +91,10 @@ export class Cookies {
         recordException(`[Comet] Failed to parse malformatted cookie "${pair}".`)
         continue
       }
+
       // Unwrap cookie value if it is wrapped in quotes
       if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1)
+
       try {
         // Decode cookie name and value if a decoder function is provided
         if (allOptions.decode !== null) name = await allOptions.decode(name)
@@ -103,6 +106,7 @@ export class Cookies {
         recordException(error)
       }
     }
+
     return cookies
   }
 
@@ -112,9 +116,11 @@ export class Cookies {
     headers: Headers,
     options?: CookiesOptions
   ): Promise<void> {
-    const allOptions = this.getAllOptions(options)
+    const allOptions = Cookies.getAllOptions(options)
+
     for (const cookie of cookies.data.values()) {
       const serialized: string[] = []
+
       try {
         // Encode cookie name and value if an encoder function is provided
         const name = allOptions.encode === null ? cookie.name : await allOptions.encode(cookie.name)
@@ -126,6 +132,7 @@ export class Cookies {
         recordException(error)
         continue
       }
+
       // Set cookie meta data
       if (cookie.meta?.domain) serialized.push(`Domain=${cookie.meta.domain}`)
       if (cookie.meta?.expires) serialized.push(`Expires=${new Date(cookie.meta.expires).toUTCString()}`)

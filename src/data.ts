@@ -21,7 +21,7 @@ export class Data {
 
   public static async fromRequest(request: Request, options: Options, serverName?: string): Promise<Data> {
     const url = new URL(request.url)
-    const { raw, body } = await this.parseRequestBody(request)
+    const { raw, body } = await Data.parseRequestBody(request)
 
     trace.getActiveSpan()?.addEvent('convert request to data', {
       method: request.method,
@@ -52,22 +52,30 @@ export class Data {
       contentType: request.headers.get('content-type') ?? undefined,
       parsedContentType: contentType
     })
+
     switch (contentType) {
       case 'application/json': {
         const text = await request.text()
+
         return { raw: text, body: JSON.parse(text) }
       }
+
       case 'multipart/form-data': {
         const formData = await request.formData()
         const body: Record<string, string | File> = {}
+
         for (const [ key, value ] of formData.entries()) body[key] = value
+
         return { body }
       }
+
       case 'application/x-www-form-urlencoded': {
         const text = await request.text()
         const entries = text.split('&').map(x => x.split('=').map(decodeURIComponent))
+
         return { body: Object.fromEntries(entries) }
       }
+
       default:
         return { body: undefined }
     }
