@@ -8,7 +8,7 @@
     "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2022 --external:zod --external:hotscript --external:@opentelemetry/*",
     "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.cjs --format=cjs --target=es2022 --external:zod --external:hotscript --external:@opentelemetry/*",
     "build:dts": "tsc",
-    "lint": "eslint .",
+    "lint": "eslint --cache .",
     "lint:fix": "npm run lint -- --fix"
   },
   "files": [
@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231218.0",
-    "bundled-eslint-config": "^0.2.17",
+    "bundled-eslint-config": "^0.2.18",
     "esbuild": "^0.19.11",
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.5",
