@@ -122,7 +122,7 @@ export class Router<
     method?: string,
     compatibilityDate?: string,
     ignoreCompatibilityDate?: boolean
-  ): Route | undefined => {
+  ): Route | void => {
     for (const route of this.routes) {
       const doPathnamesMatch = comparePathnames(pathname, route.pathname)
       if (!doPathnamesMatch) continue
