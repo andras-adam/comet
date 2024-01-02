@@ -1,24 +1,25 @@
 {
   "name": "@neoaren/comet",
+  "type": "module",
   "version": "3.2.1",
   "description": "A powerful DX-first routing library for Cloudflare Workers.",
   "scripts": {
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
     "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2022 --external:zod --external:hotscript --external:@opentelemetry/*",
-    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --target=es2022 --external:zod --external:hotscript --external:@opentelemetry/*",
+    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.cjs --format=cjs --target=es2022 --external:zod --external:hotscript --external:@opentelemetry/*",
     "build:dts": "tsc",
-    "lint": "eslint . --ext ts",
-    "lint:fix": "eslint . --ext ts --fix"
+    "lint": "eslint .",
+    "lint:fix": "npm run lint -- --fix"
   },
   "files": [
     "dist"
   ],
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "import": "./dist/index.mjs",
       "types": "./dist/src/index.d.ts"
     }
