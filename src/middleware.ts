@@ -5,11 +5,13 @@ import type { Logger } from './logger'
 import type { ZodType } from 'zod'
 
 
+export type MiddlewareHandler = (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface Middleware<_T> {
   name?: string
   requires?: MiddlewareList
-  handler: (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
+  handler: MiddlewareHandler
   replies?: Partial<Record<Status, ZodType>>
 }
 
