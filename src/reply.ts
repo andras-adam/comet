@@ -139,10 +139,14 @@ export class Reply implements ReplyData {
     }
 
     // Handle json response
-    let body: string | null = null
+    let body: BodyInit | null = null
     if (reply.body) {
-      headers.set('content-type', 'application/json')
-      body = options.dev ? JSON.stringify(reply.body, null, 2) : JSON.stringify(reply.body)
+      if (!headers.has('content-type') || headers.get('content-type') === 'application/json') {
+        headers.set('content-type', 'application/json')
+        body = options.dev ? JSON.stringify(reply.body, null, 2) : JSON.stringify(reply.body)
+      } else {
+        body = reply.body as BodyInit
+      }
     }
 
     trace.getActiveSpan()?.addEvent('convert response')
