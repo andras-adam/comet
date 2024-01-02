@@ -117,6 +117,19 @@ export class Reply implements ReplyData {
       trace.getActiveSpan()?.addEvent('return streamed response')
       return new Response(reply.body, { status, headers })
     }
+
+    if (reply.body instanceof ArrayBuffer) {
+      trace.getActiveSpan()?.addEvent('return arraybuffer response')
+
+      return new Response(reply.body, { status, headers })
+    }
+
+    if (reply.body instanceof Blob) {
+      trace.getActiveSpan()?.addEvent('return blob response')
+
+      return new Response(reply.body, { status, headers })
+    }
+
     // Handle json response
     let body: string | null = null
     if (reply.body) {
