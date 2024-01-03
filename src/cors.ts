@@ -1,6 +1,7 @@
 import { middleware } from './middleware'
 import { Method } from './types'
 import type { Router } from './router'
+import { CometError, ErrorType } from './error'
 
 
 export interface CorsOptions {
@@ -73,7 +74,7 @@ export const preflightHandler = (router: Router<any, any, any>, options?: CorsOp
   // Verify that the preflighted route exists
   const requestMethod = event.headers.get('access-control-request-method') ?? undefined
   const route = router.find(event.pathname, requestMethod, undefined, true)
-  if (!route) return event.reply.notFound()
+  if (!route) throw new CometError(ErrorType.NotFound)
   // Set the appropriate CORS headers on the preflight response
   if (allowedHeaders.length > 0) event.reply.headers.set('access-control-allow-headers', allowedHeaders.join(','))
   if (allowedMethods.length > 0) event.reply.headers.set('access-control-allow-methods', allowedMethods.join(','))

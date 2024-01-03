@@ -113,7 +113,7 @@ export class Server<
             // Get and validate the compatibility date
             const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
             if (compatibilityDate && new Date(compatibilityDate) > new Date() && !this.options.dev) {
-              event.reply.badRequest({ message: 'Invalid compatibility date' })
+              throw new CometError(ErrorType.InvalidCompatibilityDate)
             } else {
 
               // Find the route
@@ -121,11 +121,11 @@ export class Server<
 
               if (!route) {
 
-                // Use built-in preflight handler for preflight requests, return 404 otherwise
+                // Use built-in preflight handler for preflight requests, call error handler otherwise
                 if (event.method === Method.OPTIONS) {
                   await preflightHandler(this.router, this.options.cors).handler(input)
                 } else {
-                  event.reply.notFound()
+                  throw new CometError(ErrorType.NotFound)
                 }
 
               } else {
