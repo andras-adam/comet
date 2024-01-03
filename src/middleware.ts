@@ -22,7 +22,7 @@ export type ExtensionsFrom<MWs, Accumulator = unknown> = MWs extends readonly [i
   ? ExtensionsFrom<Rest, Accumulator & ExtensionFrom<Current>>
   : Accumulator
 
-type MiddlewareContext =
+export type MiddlewareContext =
   { isDurableObject: true; state: DurableObjectState }
   | { isDurableObject: false; ctx: ExecutionContext }
 

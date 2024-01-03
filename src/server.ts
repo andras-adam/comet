@@ -7,9 +7,15 @@ import { getPathnameParameters } from './utils'
 import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
 import { cors, type CorsOptions, preflightHandler } from './cors'
-import { logger, recordException } from './logger'
-import { next, type MiddlewareList, type Middleware, type MiddlewareHandler } from './middleware'
+import { logger, recordException, type Logger } from './logger'
+import {
+  next,
+  type MiddlewareList,
+  type Middleware,
+  type MiddlewareHandler
+} from './middleware'
 import type { CookiesOptions } from './cookies'
+import { CometError, CometErrorHandler, type ErrorHandler, ErrorType } from './error'
 
 
 export interface ServerOptions<
@@ -23,6 +29,7 @@ export interface ServerOptions<
   after?: After
   cookies?: CookiesOptions
   cors?: CorsOptions
+  errorHandler?: ErrorHandler<Before>
   dev?: boolean
 }
 
@@ -53,6 +60,10 @@ export class Server<
       }
     }, async span => {
 
+      let input: { event: any; env: Environment; logger: Logger }
+
+      const calledMiddleware = new Set<MiddlewareHandler>()
+
       try {
         // Initialize router
         this.router.init()
@@ -67,11 +78,9 @@ export class Server<
           ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
         }
 
-        const input = { event, env, logger }
+        input = { event, env, logger }
 
         span.setAttribute('isDurableObject', isDurableObject)
-
-        const calledMiddleware = new Set<MiddlewareHandler>()
 
         // Run global before middleware
         await this.handleMiddleware({
@@ -181,7 +190,24 @@ export class Server<
         recordException(error)
         span.end()
 
-        return new Response(null, { status: 500 })
+        return await this.tracer.startActiveSpan('comet error handler', async span => {
+
+          // Run global after middleware, as those mostly contain cleanups, analytics, logging, etc.
+          // That would be useful to have if an error occurs earlier on.
+          // This relies on the internal deduplication of called middleware, so if the error is thrown in a global-after
+          // Middleware, it will not be called again.
+          await this.handleMiddleware({
+            middleware: this.options.after,
+            called: calledMiddleware,
+            input,
+            type: 'global-after'
+          })
+
+          const response = CometErrorHandler.handle(input, error, this.options)
+          span.end()
+
+          return response
+        })
       }
     })
   }
