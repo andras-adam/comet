@@ -13,6 +13,7 @@ function convert(...data: unknown[]): string {
   return data.map(entry => {
     if (typeof entry === 'string') return entry
     if (entry === undefined) return 'undefined'
+
     return JSON.stringify(entry, null, 2)
   }).join(', ')
 }

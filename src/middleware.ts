@@ -5,10 +5,13 @@ import type { Logger } from './logger'
 import type { ZodType } from 'zod'
 
 
-export interface Middleware<T> {
+export type MiddlewareHandler = (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface Middleware<_T> {
   name?: string
   requires?: MiddlewareList
-  handler: (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
+  handler: MiddlewareHandler
   replies?: Partial<Record<Status, ZodType>>
 }
 
@@ -19,7 +22,7 @@ export type ExtensionsFrom<MWs, Accumulator = unknown> = MWs extends readonly [i
   ? ExtensionsFrom<Rest, Accumulator & ExtensionFrom<Current>>
   : Accumulator
 
-type MiddlewareContext =
+export type MiddlewareContext =
   { isDurableObject: true; state: DurableObjectState }
   | { isDurableObject: false; ctx: ExecutionContext }
 
@@ -82,13 +85,14 @@ export function middleware<
     logger: Logger
   }) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown> {
-  const _options = typeof options === 'object' ? options : {}
-  const _handler = typeof options === 'function' ? options : handler
-  if (!_handler) throw new Error('[Comet] A middleware received no handler argument.')
+  const middlewareOptions = typeof options === 'object' ? options : {}
+  const middlewareHandler = typeof options === 'function' ? options : handler
+  if (!middlewareHandler) throw new Error('[Comet] A middleware received no handler argument.')
+
   return {
-    ..._options,
+    ...middlewareOptions,
     handler: async input => {
-      const nextData = await _handler(input)
+      const nextData = await middlewareHandler(input)
       if (nextData instanceof NextData) Object.assign(input.event, nextData.data)
     }
   }
