@@ -1,4 +1,4 @@
-import { GET, middleware, POST, server, Status } from '@neoaren/comet'
+import { GET, middleware, POST, PUT, server, Status } from '@neoaren/comet'
 import { z } from 'zod'
 
 
@@ -138,10 +138,17 @@ workerComet.route({
   }
 })
 
+workerComet.route({
+  pathname: '/test/foo',
+  method: [ POST, PUT ]
+}, async ({ event }) => {
+  const reply = `'${event.request.method}' method found!`
+  return event.reply.ok(reply)
+})
+
 export default <ExportedHandler>{
   fetch: workerComet.handler
 }
-
 
 // DURABLE OBJECTS
 
