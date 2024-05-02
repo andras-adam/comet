@@ -6,7 +6,7 @@
     "dev": "npx wrangler dev --local"
   },
   "dependencies": {
-    "@neoaren/comet": "file:..",
+    "@neoaren/comet": "file:../src",
     "zod": "^3.21.4"
   },
   "devDependencies": {
