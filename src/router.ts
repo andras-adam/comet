@@ -28,6 +28,7 @@ type RoutePathParams<T extends string> = ZodObject<{ [key in Pipe<T, [
   Tuples.Map<Strings.TrimLeft<':'>>,
   Tuples.ToUnion
 ]>]: ZodType }>
+type RouteMethod = Method | keyof typeof Method
 
 export interface Route {
   name: string
@@ -77,7 +78,7 @@ export class Router<
   >(
     options: {
       name?: string
-      method?: Method | keyof typeof Method
+      method?: RouteMethod | RouteMethod[]
       pathname?: RoutePath
       compatibilityDate?: string
       before?: RBefore
@@ -94,20 +95,30 @@ export class Router<
       logger: Logger
     }) => MaybePromise<Reply>
   ): void => {
-    const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
-    const method = (options.method ?? Method.ALL) as Method
-    const compatibilityDate = options.compatibilityDate
-    const name = options.name ?? `${method} ${pathname}${compatibilityDate ? ` (${compatibilityDate})` : ''}`
-    if (!isValidPathname(pathname)) {
-      recordException(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
-      return
+    const _register = (inputMethod?: RouteMethod) => {
+      const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
+      const method = (inputMethod ?? Method.ALL) as Method
+      const compatibilityDate = options.compatibilityDate
+      const name = options.name ?? `${method} ${pathname}${compatibilityDate ? ` (${compatibilityDate})` : ''}`
+      if (!isValidPathname(pathname)) {
+        recordException(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
+        return
+      }
+      if (options.compatibilityDate !== undefined && !isValidCompatibilityDate(options.compatibilityDate)) {
+        recordException(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
+        return
+      }
+      const schemas = { body: options.body, params: options.params, query: options.query }
+      this.routes.push({ ...options, pathname, method, name, handler, schemas })
     }
-    if (options.compatibilityDate !== undefined && !isValidCompatibilityDate(options.compatibilityDate)) {
-      recordException(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
-      return
+
+    const { method } = options
+    if (Array.isArray(method)) {
+      for (const each of method) _register(each)
+    } else {
+      _register(method)
     }
-    const schemas = { body: options.body, params: options.params, query: options.query }
-    this.routes.push({ ...options, pathname, method, name, handler, schemas })
+
     this.ready = false
   }
 
