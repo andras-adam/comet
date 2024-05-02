@@ -41,3 +41,6 @@ node_modules/
 
 # Production build
 dist
+
+# Test setup
+**/.wrangler
