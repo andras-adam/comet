@@ -76,7 +76,7 @@ export class Server<
         if (this.options.before) {
           for (const mw of this.options.before) {
             await this.tracer.startActiveSpan(
-              `comet middleware ${mw.name}`, {
+              `comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
                 attributes: {
                   type: 'global-before'
                 }
@@ -140,7 +140,7 @@ export class Server<
                 if (route.before) {
                   for (const mw of route.before) {
                     await this.tracer.startActiveSpan(
-                      `comet middleware ${mw.name}`, {
+                      `comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
                         attributes: {
                           type: 'local-before'
                         }
@@ -174,7 +174,7 @@ export class Server<
                   if (isDurableObject) {
                     for (const mw of route.after) {
                       await this.tracer.startActiveSpan(
-                        `comet middleware ${mw.name}`, {
+                        `comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
                           attributes: {
                             type: 'local-after'
                           }
@@ -187,7 +187,7 @@ export class Server<
                     }
                   } else {
                     ctxOrState.waitUntil(Promise.allSettled(route.after.map(async mw => {
-                      const span = this.tracer.startSpan(`comet middleware ${mw.name}`, {
+                      const span = this.tracer.startSpan(`comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
                         attributes: {
                           type: 'local-after'
                         }
@@ -208,7 +208,7 @@ export class Server<
           if (isDurableObject) {
             for (const mw of this.options.after) {
               await this.tracer.startActiveSpan(
-                `comet middleware ${mw.name}`, {
+                `comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
                   attributes: {
                     type: 'global-after'
                   }
@@ -221,7 +221,7 @@ export class Server<
             }
           } else {
             ctxOrState.waitUntil(Promise.allSettled(this.options.after.map(async mw => {
-              const span = this.tracer.startSpan(`comet middleware ${mw.name}`, {
+              const span = this.tracer.startSpan(`comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
                 attributes: {
                   type: 'global-after'
                 }
