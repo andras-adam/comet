@@ -11,15 +11,18 @@ export const schemaValidation = (route: Route) => middleware({
   // Parse and validate request params, query and body
   const paramsResult = paramsSchema?.safeParse(event.params)
   trace.getActiveSpan()?.addEvent('params schema parse', {
-    success: paramsResult?.success
+    success: paramsResult?.success,
+    errors: paramsResult?.success ? undefined : paramsResult?.error.issues.map(issue => issue.message)
   })
   const queryResult = querySchema?.safeParse(event.query)
   trace.getActiveSpan()?.addEvent('query schema parse', {
-    success: queryResult?.success
+    success: queryResult?.success,
+    errors: paramsResult?.success ? undefined : paramsResult?.error.issues.map(issue => issue.message)
   })
   const bodyResult = bodySchema?.safeParse(event.body)
   trace.getActiveSpan()?.addEvent('body schema parse', {
-    success: bodyResult?.success
+    success: bodyResult?.success,
+    errors: paramsResult?.success ? undefined : paramsResult?.error.issues.map(issue => issue.message)
   })
   // Return a reply with errors
   const errors: Record<string, unknown> = {}
