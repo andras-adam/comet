@@ -70,7 +70,7 @@ export class Server<
 
         const input = { event, env, logger }
 
-        span.setAttribute('isDurableObject', isDurableObject)
+        span.setAttribute('comet.server.is_durable_object', isDurableObject)
 
         // Run global before middleware
         if (this.options.before) {
