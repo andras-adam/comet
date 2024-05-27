@@ -47,7 +47,7 @@ export class Server<
     env: Environment,
     ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext
   ) => {
-    return this.tracer.startActiveSpan('comet handler', {
+    return this.tracer.startActiveSpan('Comet Handler', {
       kind: SpanKind.SERVER,
       attributes: {
         name: this.options.name
@@ -70,15 +70,15 @@ export class Server<
 
         const input = { event, env, logger }
 
-        span.setAttribute('comet.server.is_durable_object', isDurableObject)
+        span.setAttribute('comet.server.durable_object', isDurableObject)
 
         // Run global before middleware
         if (this.options.before) {
           for (const mw of this.options.before) {
             await this.tracer.startActiveSpan(
-              `comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
+              `Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                 attributes: {
-                  name: mw.name,
+                  'comet.mw.name': mw.name,
                   'comet.mw.type': 'global-before'
                 }
               },
@@ -94,9 +94,9 @@ export class Server<
         // Run CORS middleware
         if (!event.reply.sent) {
           await this.tracer.startActiveSpan(
-            'comet cors middleware', {
+            'Comet CORS Middleware', {
               attributes: {
-                name: 'CORS',
+                'comet.mw.name': 'CORS',
                 'comet.mw.type': 'global-before',
                 'comet.mw.cors.origin': event.headers.get('origin') ?? undefined,
                 'comet.mw.cors.method': event.method
@@ -112,7 +112,7 @@ export class Server<
         // Main logic
         if (!event.reply.sent) {
 
-          await this.tracer.startActiveSpan('comet routing', {
+          await this.tracer.startActiveSpan('Comet Routing', {
             attributes: {
               'comet.routing.compatibility_date': event.headers.get('x-compatibility-date') ?? undefined,
               'comet.routing.pathname': event.pathname,
@@ -151,9 +151,9 @@ export class Server<
                 if (route.before) {
                   for (const mw of route.before) {
                     await this.tracer.startActiveSpan(
-                      `comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
+                      `Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                         attributes: {
-                          name: mw.name,
+                          'comet.mw.name': mw.name,
                           'comet.mw.type': 'local-before'
                         }
                       },
@@ -169,9 +169,9 @@ export class Server<
                 // Run route handler
                 if (!event.reply.sent) {
                   await this.tracer.startActiveSpan(
-                    'comet main handler', {
+                    'Comet Main Handler', {
                       attributes: {
-                        name: route.name,
+                        'comet.route.name': route.name,
                         'comet.route.pathname': route.pathname,
                         'comet.route.compatibility_date': route.compatibilityDate,
                         'comet.route.has_body_schema': !!route.schemas.body,
@@ -192,9 +192,9 @@ export class Server<
                   if (isDurableObject) {
                     for (const mw of route.after) {
                       await this.tracer.startActiveSpan(
-                        `comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
+                        `Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                           attributes: {
-                            name: mw.name,
+                            'comet.mw.name': mw.name,
                             'comet.mw.type': 'local-after'
                           }
                         },
@@ -206,9 +206,9 @@ export class Server<
                     }
                   } else {
                     ctxOrState.waitUntil(Promise.allSettled(route.after.map(async mw => {
-                      const span = this.tracer.startSpan(`comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
+                      const span = this.tracer.startSpan(`Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                         attributes: {
-                          name: mw.name,
+                          'comet.mw.name': mw.name,
                           'comet.mw.type': 'local-after'
                         }
                       })
@@ -228,9 +228,9 @@ export class Server<
           if (isDurableObject) {
             for (const mw of this.options.after) {
               await this.tracer.startActiveSpan(
-                `comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
+                `Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                   attributes: {
-                    name: mw.name,
+                    'comet.mw.name': mw.name,
                     'comet.mw.type': 'global-after'
                   }
                 },
@@ -242,9 +242,9 @@ export class Server<
             }
           } else {
             ctxOrState.waitUntil(Promise.allSettled(this.options.after.map(async mw => {
-              const span = this.tracer.startSpan(`comet middleware${mw.name ? ` ${mw.name}` : ''}`, {
+              const span = this.tracer.startSpan(`Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                 attributes: {
-                  name: mw.name,
+                  'comet.mw.name': mw.name,
                   'comet.mw.type': 'global-after'
                 }
               })
