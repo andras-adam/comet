@@ -273,17 +273,6 @@ export class Server<
 
         return await this.tracer.startActiveSpan('comet error handler', async span => {
 
-          // Run global after middleware, as those mostly contain cleanups, analytics, logging, etc.
-          // That would be useful to have if an error occurs earlier on.
-          // This relies on the internal deduplication of called middleware, so if the error is thrown in a global-after
-          // Middleware, it will not be called again.
-          await this.handleMiddleware({
-            middleware: this.options.after,
-            called: calledMiddleware,
-            input,
-            type: 'global-after'
-          })
-
           const response = CometErrorHandler.handle(input, error, this.options)
           span.end()
 
