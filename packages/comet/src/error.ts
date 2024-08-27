@@ -1,3 +1,5 @@
+import { trace } from '@opentelemetry/api'
+import { name, version } from '../package.json'
 import { Reply, type ReplyFrom, Status } from './reply'
 import { type Logger, recordException } from './logger'
 import type { ZodType } from 'zod'
@@ -5,8 +7,6 @@ import type { Data } from './data'
 import type { MaybePromise } from './types'
 import type { ExtensionsFrom, MiddlewareContext, MiddlewareList } from './middleware'
 import type { ServerOptions } from './server'
-import { trace } from '@opentelemetry/api'
-import { name, version } from '../package.json'
 
 
 export type ErrorHandler<
@@ -59,9 +59,15 @@ export class CometErrorHandler {
     if (this.input.error instanceof CometError) {
       switch (this.input.error.type) {
         case ErrorType.MethodNotAllowed:
-          return new Response('Method not allowed.', { status: 405 })
+          return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
+            status: 405,
+            headers: { 'content-type': 'application/json' }
+          })
         case ErrorType.NotFound:
-          return new Response('Not found.', { status: 404 })
+          return new Response(JSON.stringify({ success: false, error: 'Not found' }), {
+            status: 404,
+            headers: { 'content-type': 'application/json' }
+          })
         case ErrorType.SchemaValidation:
           return new Response(JSON.stringify({ success: false, errors: this.input.error.details }), {
             status: 400,
@@ -70,7 +76,10 @@ export class CometErrorHandler {
         // case ErrorType.Internal:
         // case ErrorType.Unknown:
         default:
-          return new Response('An internal error has occurred.', { status: 500 })
+          return new Response(JSON.stringify({ success: false, error: 'An internal error has occurred' }), {
+            status: 500,
+            headers: { 'content-type': 'application/json' }
+          })
       }
     }
 
