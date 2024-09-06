@@ -1,16 +1,16 @@
 import { SpanKind, trace } from '@opentelemetry/api'
 import { name, version } from '../package.json'
-import { Router, RouterOptions } from './router'
+import { Router, type RouterOptions } from './router'
 import { Data } from './data'
 import { Reply } from './reply'
 import { getPathnameParameters } from './utils'
 import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
-import { cors, CorsOptions, preflightHandler } from './cors'
+import { cors, type CorsOptions, preflightHandler } from './cors'
 import { logger, recordException } from './logger'
 import { next } from './middleware'
-import type { MiddlewareList } from './middleware'
-import type { CookiesOptions } from './cookies'
+import { type MiddlewareList } from './middleware'
+import { type CookiesOptions } from './cookies'
 
 
 export interface ServerOptions<

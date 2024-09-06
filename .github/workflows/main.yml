@@ -6,6 +6,7 @@ on:
     - main
 
 jobs:
+
   npm-publish:
     name: Publish to NPM
     runs-on: ubuntu-latest

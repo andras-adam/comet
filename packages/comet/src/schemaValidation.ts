@@ -1,6 +1,6 @@
 import { trace } from '@opentelemetry/api'
 import { middleware } from './middleware'
-import type { Route } from './router'
+import { type Route } from './router'
 
 
 export const schemaValidation = (route: Route) => middleware({

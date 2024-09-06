@@ -1,4 +1,4 @@
-![logo](comet_logo.png)
+![logo](.github/assets/comet_logo.png)
 
 <p align="center">
   ☄️ A powerful DX-first routing library for <a href="https://workers.cloudflare.com/">Cloudflare Workers</a>.
