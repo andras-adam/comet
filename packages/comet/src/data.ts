@@ -1,6 +1,6 @@
 import { trace } from '@opentelemetry/api'
 import { Cookies } from './cookies'
-import type { Method, Options } from './types'
+import { Method, type Options } from './types'
 
 
 export class Data {
