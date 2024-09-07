@@ -3,7 +3,7 @@ name: Main
 on:
   push:
     branches:
-    - main
+      - main
 
 jobs:
 
@@ -13,45 +13,53 @@ jobs:
     if: contains( join( github.event.commits.*.message, ', ' ), '[ci release]' )
 
     steps:
-    - name: Checkout repository
-      timeout-minutes: 3
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        timeout-minutes: 3
+        uses: actions/checkout@v4
 
-    - name: Install nodejs
-      uses: actions/setup-node@v3
-      with:
-        node-version: 20
-        cache: pnpm
+      - name: Install pnpm
+        timeout-minutes: 3
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
 
-    - name: Install dependencies
-      timeout-minutes: 5
-      run: pnpm i
+      - name: Install nodejs
+        timeout-minutes: 3
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
 
-    - name: Build package
-      timeout-minutes: 3
-      working-directory: packages/comet
-      run: |
-        pnpm run build
+      - name: Install dependencies
+        timeout-minutes: 5
+        run: pnpm install
 
-    - name: Publish to NPM
-      id: npm-release
-      uses: JS-DevTools/npm-publish@v3
-      with:
-        access: public
-        token: ${{ secrets.NPM_TOKEN }}
-        dry-run: true
-        package: packages/comet
+      - name: Build package
+        timeout-minutes: 3
+        working-directory: packages/comet
+        run: |
+          pnpm run build
 
-#    - name: Tag latest commit
-#      if: steps.npm-release.outputs.type != ''
-#      run: |
-#        echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
-#        gh auth setup-git
-#        git config user.name "GitHub Actions"
-#        git tag "v${{ steps.npm-release.outputs.version }}" -a -m "${{ github.event.commits[0].message }}"
-#        git push origin "v${{ steps.npm-release.outputs.version }}"
-#
-#    - name: Create GitHub release
-#      if: steps.npm-release.outputs.type != ''
-#      run: |
-#        gh release create --generate-notes "v${{ steps.npm-release.outputs.version }}"
+      - name: Publish to NPM
+        id: npm-release
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          access: public
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+          package: packages/comet
+
+    #    - name: Tag latest commit
+    #      if: steps.npm-release.outputs.type != ''
+    #      run: |
+    #        echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+    #        gh auth setup-git
+    #        git config user.name "GitHub Actions"
+    #        git tag "v${{ steps.npm-release.outputs.version }}" -a -m "${{ github.event.commits[0].message }}"
+    #        git push origin "v${{ steps.npm-release.outputs.version }}"
+    #
+    #    - name: Create GitHub release
+    #      if: steps.npm-release.outputs.type != ''
+    #      run: |
+    #        gh release create --generate-notes "v${{ steps.npm-release.outputs.version }}"
