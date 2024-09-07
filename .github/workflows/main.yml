@@ -35,13 +35,12 @@ jobs:
 
     - name: Publish to NPM
       id: npm-release
-      working-directory: packages/comet
       uses: JS-DevTools/npm-publish@v3
       with:
         access: public
         token: ${{ secrets.NPM_TOKEN }}
         dry-run: true
-      run: |
+        package: packages/comet
 
 #    - name: Tag latest commit
 #      if: steps.npm-release.outputs.type != ''
