@@ -49,7 +49,7 @@ export enum Status {
   MisdirectedRequest = 'misdirectedRequest',
   UnprocessableEntity = 'unprocessableEntity',
   FailedDependency = 'failedDependency',
-  UpdateRequired = 'updateRequired',
+  UpgradeRequired = 'upgradeRequired',
   PreconditionRequired = 'preconditionRequired',
   TooManyRequests = 'tooManyRequests',
   RequestHeaderFieldsTooLarge = 'requestHeaderFieldsTooLarge',
