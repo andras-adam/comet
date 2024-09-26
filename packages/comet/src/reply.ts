@@ -49,6 +49,7 @@ export enum Status {
   MisdirectedRequest = 'misdirectedRequest',
   UnprocessableEntity = 'unprocessableEntity',
   FailedDependency = 'failedDependency',
+  UpdateRequired = 'updateRequired',
   PreconditionRequired = 'preconditionRequired',
   TooManyRequests = 'tooManyRequests',
   RequestHeaderFieldsTooLarge = 'requestHeaderFieldsTooLarge',
@@ -392,6 +393,11 @@ export class Reply implements ReplyData {
   // Send an HTTP `424 Failed Dependency` client error response
   public failedDependency(body?: unknown) {
     return this.send(424, body)
+  }
+
+  // Send an HTTP `426 Upgrade Required` client error response
+  public upgradeRequired(body?: unknown) {
+    return this.send(426, body)
   }
 
   // Send an HTTP `428 Precondition Required` client error response
