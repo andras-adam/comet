@@ -46,6 +46,8 @@ export interface Route {
   }
 }
 
+export type RouteResult = { exact: true; route: Route } | { exact: false; route?: Route }
+
 export interface RouterOptions {
   prefix?: string
 }
@@ -128,16 +130,32 @@ export class Router<
     method?: string,
     compatibilityDate?: string,
     ignoreCompatibilityDate?: boolean
-  ): Route | undefined => {
+  ): RouteResult => {
+    // Best non-exact match
+    let bestMatch: Route | undefined
     for (const route of this.routes) {
       const doPathnamesMatch = comparePathnames(pathname, route.pathname)
       if (!doPathnamesMatch) continue
+
+      if (!ignoreCompatibilityDate) {
+        const doCompatibilityDatesMatch = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
+        if (!doCompatibilityDatesMatch) continue
+      }
+
+      // At this point, we have a potential match. We need to check
+      // if the methods match.
       const doMethodsMatch = compareMethods(method, route.method)
-      if (!doMethodsMatch) continue
-      if (ignoreCompatibilityDate) return route
-      const doCompatibilityDatesMatch = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
-      if (doCompatibilityDatesMatch) return route
+      if (doMethodsMatch) {
+        // Methods are equal, we have an exact match.
+        return { route, exact: true }
+      }
+
+      // Methods aren't equal, we don't have an exact match yet.
+      bestMatch = route
     }
+
+    // No exact match was found, return the bext match.
+    return { route: bestMatch, exact: false }
   }
 
   // Initialize router by sorting the routes by compatibility date in descending order to ensure the correct functioning of the find algorithm

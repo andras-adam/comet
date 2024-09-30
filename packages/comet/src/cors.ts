@@ -68,8 +68,13 @@ export const preflightHandler = (router: Router<any, any, any>, options?: CorsOp
   const { allowedHeaders, allowedMethods, maxAge } = getAllOptions(options)
   // Verify that the preflighted route exists
   const requestMethod = event.headers.get('access-control-request-method') ?? undefined
-  const route = router.find(event.pathname, requestMethod, undefined, true)
-  if (!route) return event.reply.notFound()
+  const { route, exact } = router.find(event.pathname, requestMethod, undefined, true)
+  if (!route) {
+    return event.reply.notFound()
+  } else if (!exact) {
+    return event.reply.methodNotAllowed()
+  }
+
   // Set the appropriate CORS headers on the preflight response
   if (allowedHeaders.length > 0) event.reply.headers.set('access-control-allow-headers', allowedHeaders.join(','))
   if (allowedMethods.length > 0) event.reply.headers.set('access-control-allow-methods', allowedMethods.join(','))

@@ -127,7 +127,7 @@ export class Server<
             } else {
 
               // Find the route
-              const route = this.router.find(event.pathname, event.method, compatibilityDate)
+              const { route, exact } = this.router.find(event.pathname, event.method, compatibilityDate)
               // eslint-disable-next-line unicorn/no-negated-condition
               if (!route) {
 
@@ -139,62 +139,23 @@ export class Server<
                 }
 
               } else {
+                if (!exact) {
+                  event.reply.methodNotAllowed()
+                } else {
+                  // Set path params on event
+                  event.params = getPathnameParameters(event.pathname, route.pathname)
 
-                // Set path params on event
-                event.params = getPathnameParameters(event.pathname, route.pathname)
+                  // Schema validation
+                  if (!event.reply.sent) schemaValidation(route).handler(input)
 
-                // Schema validation
-                if (!event.reply.sent) schemaValidation(route).handler(input)
-
-                // Run local before middleware
-                if (route.before) {
-                  for (const mw of route.before) {
-                    await trace.getTracer(name, version).startActiveSpan(
-                      `Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
-                        attributes: {
-                          'comet.mw.name': mw.name,
-                          'comet.mw.type': 'local-before'
-                        }
-                      },
-                      async span => {
-                        await mw.handler(input)
-                        span.end()
-                      }
-                    )
-                    if (event.reply.sent) break
-                  }
-                }
-
-                // Run route handler
-                if (!event.reply.sent) {
-                  await trace.getTracer(name, version).startActiveSpan(
-                    'Comet Main Handler', {
-                      attributes: {
-                        'comet.route.name': route.name,
-                        'comet.route.pathname': route.pathname,
-                        'comet.route.compatibility_date': route.compatibilityDate,
-                        'comet.route.has_body_schema': !!route.schemas.body,
-                        'comet.route.has_query_schema': !!route.schemas.query,
-                        'comet.route.has_params_schema': !!route.schemas.params,
-                        'comet.route.method': route.method
-                      }
-                    },
-                    async span => {
-                      await route.handler(input)
-                      span.end()
-                    }
-                  )
-                }
-
-                // Run local after middleware
-                if (route.after) {
-                  if (isDurableObject) {
-                    for (const mw of route.after) {
+                  // Run local before middleware
+                  if (route.before) {
+                    for (const mw of route.before) {
                       await trace.getTracer(name, version).startActiveSpan(
                         `Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                           attributes: {
                             'comet.mw.name': mw.name,
-                            'comet.mw.type': 'local-after'
+                            'comet.mw.type': 'local-before'
                           }
                         },
                         async span => {
@@ -202,18 +163,60 @@ export class Server<
                           span.end()
                         }
                       )
+                      if (event.reply.sent) break
                     }
-                  } else {
-                    ctxOrState.waitUntil(Promise.allSettled(route.after.map(async mw => {
-                      const span = trace.getTracer(name, version).startSpan(`Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
+                  }
+
+                  // Run route handler
+                  if (!event.reply.sent) {
+                    await trace.getTracer(name, version).startActiveSpan(
+                      'Comet Main Handler', {
                         attributes: {
-                          'comet.mw.name': mw.name,
-                          'comet.mw.type': 'local-after'
+                          'comet.route.name': route.name,
+                          'comet.route.pathname': route.pathname,
+                          'comet.route.compatibility_date': route.compatibilityDate,
+                          'comet.route.has_body_schema': !!route.schemas.body,
+                          'comet.route.has_query_schema': !!route.schemas.query,
+                          'comet.route.has_params_schema': !!route.schemas.params,
+                          'comet.route.method': route.method
                         }
-                      })
-                      await mw.handler(input)
-                      span.end()
-                    })))
+                      },
+                      async span => {
+                        await route.handler(input)
+                        span.end()
+                      }
+                    )
+                  }
+
+                  // Run local after middleware
+                  if (route.after) {
+                    if (isDurableObject) {
+                      for (const mw of route.after) {
+                        await trace.getTracer(name, version).startActiveSpan(
+                          `Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
+                            attributes: {
+                              'comet.mw.name': mw.name,
+                              'comet.mw.type': 'local-after'
+                            }
+                          },
+                          async span => {
+                            await mw.handler(input)
+                            span.end()
+                          }
+                        )
+                      }
+                    } else {
+                      ctxOrState.waitUntil(Promise.allSettled(route.after.map(async mw => {
+                        const span = trace.getTracer(name, version).startSpan(`Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
+                          attributes: {
+                            'comet.mw.name': mw.name,
+                            'comet.mw.type': 'local-after'
+                          }
+                        })
+                        await mw.handler(input)
+                        span.end()
+                      })))
+                    }
                   }
                 }
               }
