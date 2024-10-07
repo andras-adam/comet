@@ -1,6 +1,5 @@
 {
   "name": "comet",
   "private": true,
-  "workspaces": [ "packages/*" ],
-  "packageManager": "pnpm@9.2.0"
+  "workspaces": [ "packages/*" ]
 }
