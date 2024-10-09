@@ -54,7 +54,9 @@ jobs:
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
           gh auth setup-git
-          git config user.name "GitHub Actions"
+          # Source: https://github.com/actions/checkout/pull/1707
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "v${{ steps.npm-release.outputs.version }}" -a -m "${{ github.event.commits[0].message }}"
           git push origin "v${{ steps.npm-release.outputs.version }}"
 

@@ -1,8 +1,8 @@
-import { type MaybePromise } from './types'
-import { type Data } from './data'
+import type { MaybePromise } from './types'
+import type { Data } from './data'
 import { type Reply, type ReplyFrom, Status } from './reply'
-import { type Logger } from './logger'
-import { type ZodType } from 'zod'
+import type { Logger } from './logger'
+import type { ZodType } from 'zod'
 
 export type MiddlewareHandler = (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
 
