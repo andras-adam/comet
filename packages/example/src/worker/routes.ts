@@ -1,7 +1,7 @@
 import { GET, POST, PUT, Status } from '@neoaren/comet'
 import { z } from 'zod'
 import { workerRouter } from './server'
-import { auth, logger, never, perm } from '../middleware'
+import { auth, logger, never, perm, mwError } from '../middleware'
 
 workerRouter.route({
   pathname: '/test',
@@ -86,4 +86,26 @@ workerRouter.route({
 }, async ({ event }) => {
   const reply = `'${event.request.method}' method found!`
   return event.reply.ok(reply)
+})
+
+// Tests for error handling
+workerRouter.route({
+  pathname: '/test/error/1',
+  method: [GET, POST],
+}, async ({ event }) => {
+  throw new Error('Endpoint error test succesful')
+})
+workerRouter.route({
+pathname: '/test/error/2',
+  method: [GET, POST],
+  before: [ mwError ],
+}, async ({ event }) => {
+  return event.reply.ok('No error! This means something went wrong.')
+})
+workerRouter.route({
+  pathname: '/test/error/3',
+  method: GET,
+  body: z.strictObject({})
+}, async ({ event }) => {
+  return event.reply.ok('Get method shouldn\'t have a body')
 })

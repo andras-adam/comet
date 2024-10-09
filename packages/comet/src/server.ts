@@ -7,10 +7,15 @@ import { getPathnameParameters } from './utils'
 import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
 import { cors, type CorsOptions, preflightHandler } from './cors'
-import { logger, recordException } from './logger'
-import { next } from './middleware'
-import { type MiddlewareList } from './middleware'
-import { type CookiesOptions } from './cookies'
+import { logger, recordException, type Logger } from './logger'
+import {
+  next,
+  type MiddlewareList,
+  type MiddlewareHandler,
+  type Middleware
+} from './middleware'
+import type { CookiesOptions } from './cookies'
+import { CometError, CometErrorHandler, type ErrorHandler, ErrorType } from './error'
 
 
 export interface ServerOptions<
@@ -24,6 +29,7 @@ export interface ServerOptions<
   after?: After
   cookies?: CookiesOptions
   cors?: CorsOptions
+  errorHandler?: ErrorHandler<Before>
   dev?: boolean
 }
 
@@ -53,6 +59,10 @@ export class Server<
       }
     }, async span => {
 
+      let input: { event: any; env: Environment; logger: Logger }
+
+      const calledMiddleware = new Set<MiddlewareHandler>()
+
       try {
         // Initialize router
         this.router.init()
@@ -67,7 +77,7 @@ export class Server<
           ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
         }
 
-        const input = { event, env, logger }
+        input = { event, env, logger }
 
         span.setAttribute('comet.server.durable_object', isDurableObject)
 
@@ -123,7 +133,7 @@ export class Server<
             // Get and validate the compatibility date
             const compatibilityDate = event.headers.get('x-compatibility-date') ?? undefined
             if (compatibilityDate && new Date(compatibilityDate) > new Date() && !this.options.dev) {
-              event.reply.badRequest({ message: 'Invalid compatibility date' })
+              throw new CometError(ErrorType.InvalidCompatibilityDate)
             } else {
 
               // Find the route
@@ -131,11 +141,11 @@ export class Server<
               // eslint-disable-next-line unicorn/no-negated-condition
               if (!route) {
 
-                // Use built-in preflight handler for preflight requests, return 404 otherwise
+                // Use built-in preflight handler for preflight requests, call error handler otherwise
                 if (event.method === Method.OPTIONS) {
                   await preflightHandler(this.router, this.options.cors).handler(input)
                 } else {
-                  event.reply.notFound()
+                  throw new CometError(ErrorType.NotFound)
                 }
 
               } else {
@@ -260,7 +270,14 @@ export class Server<
         recordException('[Comet] Failed to handle request.')
         recordException(error)
         span.end()
-        return new Response(null, { status: 500 })
+
+        return await trace.getTracer(name, version).startActiveSpan('comet error handler', async span => {
+
+          const response = CometErrorHandler.handle(input, error, this.options)
+          span.end()
+
+          return response
+        })
       }
     })
   }
