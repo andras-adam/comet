@@ -271,7 +271,7 @@ export class Server<
         recordException(error)
         span.end()
 
-        return await this.tracer.startActiveSpan('comet error handler', async span => {
+        return await trace.getTracer(name, version).startActiveSpan('comet error handler', async span => {
 
           const response = CometErrorHandler.handle(input, error, this.options)
           span.end()
