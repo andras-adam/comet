@@ -47,19 +47,18 @@ jobs:
         with:
           access: public
           token: ${{ secrets.NPM_TOKEN }}
-          dry-run: true
           package: packages/comet
 
-    #    - name: Tag latest commit
-    #      if: steps.npm-release.outputs.type != ''
-    #      run: |
-    #        echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
-    #        gh auth setup-git
-    #        git config user.name "GitHub Actions"
-    #        git tag "v${{ steps.npm-release.outputs.version }}" -a -m "${{ github.event.commits[0].message }}"
-    #        git push origin "v${{ steps.npm-release.outputs.version }}"
-    #
-    #    - name: Create GitHub release
-    #      if: steps.npm-release.outputs.type != ''
-    #      run: |
-    #        gh release create --generate-notes "v${{ steps.npm-release.outputs.version }}"
+      - name: Tag latest commit
+        if: steps.npm-release.outputs.type != ''
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+          gh auth setup-git
+          git config user.name "GitHub Actions"
+          git tag "v${{ steps.npm-release.outputs.version }}" -a -m "${{ github.event.commits[0].message }}"
+          git push origin "v${{ steps.npm-release.outputs.version }}"
+
+      - name: Create GitHub release
+        if: steps.npm-release.outputs.type != ''
+        run: |
+          gh release create --generate-notes "v${{ steps.npm-release.outputs.version }}"
