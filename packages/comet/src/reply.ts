@@ -1,8 +1,8 @@
 import { trace } from '@opentelemetry/api'
 import { Cookies } from './cookies'
 import { recordException } from './logger'
-import { type Options } from './types'
-import { type TypeOf, type ZodType } from 'zod'
+import type { Options } from './types'
+import type { TypeOf, ZodType } from 'zod'
 
 
 export enum Status {

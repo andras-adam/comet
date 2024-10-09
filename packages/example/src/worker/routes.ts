@@ -46,6 +46,12 @@ workerRouter.route({
 }, ({ event }) => event.reply.ok())
 
 workerRouter.route({
+  pathname: '/error/1'
+}, ({ event }) => {
+  throw new Error('Endpoint error test succesful')
+})
+
+workerRouter.route({
   name: 'Schema testing',
   pathname: '/test/stuff/:id',
   method: POST,
