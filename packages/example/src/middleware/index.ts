@@ -39,3 +39,8 @@ export const perm = middleware({
 })
 
 export const never = middleware(({ event }) => event.reply.internalServerError())
+
+// Error testing
+export const mwError = middleware(({ event }) => {
+  throw new Error('Error in middleware')
+})
