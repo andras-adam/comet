@@ -27,6 +27,8 @@ export const logger: Logger = {
 }
 
 export function recordException(exception: unknown) {
+  console.error('[Comet] Recorded exception', exception)
+
   if (exception instanceof Error || typeof exception === 'string') {
     trace.getActiveSpan()?.recordException(exception)
   } else if (typeof exception === 'object' && exception !== null && 'toString' in exception) {

@@ -73,6 +73,16 @@ export class CometErrorHandler {
             status: 400,
             headers: { 'content-type': 'application/json' }
           })
+        case ErrorType.InvalidCompatibilityDate:
+          return new Response(JSON.stringify({ success: false, error: 'Invalid compatibility date' }), {
+            status: 400,
+            headers: { 'content-type': 'application/json' }
+          })
+        case ErrorType.InvalidJSON:
+          return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
+            status: 400,
+            headers: { 'content-type': 'application/json' }
+          })
         // case ErrorType.Internal:
         // case ErrorType.Unknown:
         default:
@@ -93,7 +103,8 @@ export enum ErrorType {
   SchemaValidation,
   InvalidCompatibilityDate,
   Internal,
-  Unknown
+  Unknown,
+  InvalidJSON
 }
 
 export class CometError extends Error {
