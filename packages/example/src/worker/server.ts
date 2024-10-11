@@ -12,9 +12,5 @@ export const workerRouter = server({
     origins: 'http://localhost:3000',
     methods: '*',
     headers: '*'
-  },
-  errorHandler: ({ event, error }) => {
-    console.log(error)
-    return event.reply.internalServerError()
   }
 })
