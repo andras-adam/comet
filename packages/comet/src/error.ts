@@ -72,7 +72,10 @@ export class CometErrorHandler {
         case ErrorType.NotFound:
           return new Response(null, { status: 404 })
         case ErrorType.SchemaValidation:
-          return new Response(null, { status: 400 })
+          return new Response(JSON.stringify({ errors: input.error.details }), {
+            status: 400,
+            headers: { 'content-type': 'application/json' }
+          })
         // case ErrorType.Internal:
         // case ErrorType.Unknown:
         default:
