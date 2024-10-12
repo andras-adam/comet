@@ -49,7 +49,6 @@ export class CometErrorHandler {
          *      logs the error but wants to leave it up to the internal handler
          *      to return a reply to the caller.
          */
-        // return new CometErrorHandler({ ...input, error: cometError }).handleError()
         return CometErrorHandler.internalHandle({ ...input, error: wrappedError })
       } catch (error) {
         recordException('[Comet] Failed to handle error.')
