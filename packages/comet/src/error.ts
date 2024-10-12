@@ -69,31 +69,19 @@ export class CometErrorHandler {
     if (input.error instanceof CometError) {
       switch (input.error.type) {
         case ErrorType.MethodNotAllowed:
-          return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
-            status: 405,
-            headers: { 'content-type': 'application/json' }
-          })
+          return new Response(null, { status: 405 })
         case ErrorType.NotFound:
-          return new Response(JSON.stringify({ success: false, error: 'Not found' }), {
-            status: 404,
-            headers: { 'content-type': 'application/json' }
-          })
+          return new Response(null, { status: 404 })
         case ErrorType.SchemaValidation:
-          return new Response(JSON.stringify({ success: false, errors: input.error.details }), {
-            status: 400,
-            headers: { 'content-type': 'application/json' }
-          })
+          return new Response(null, { status: 400 })
         // case ErrorType.Internal:
         // case ErrorType.Unknown:
         default:
-          return new Response(JSON.stringify({ success: false, error: 'An internal error has occurred' }), {
-            status: 500,
-            headers: { 'content-type': 'application/json' }
-          })
+          return new Response(null, { status: 500 })
       }
     }
 
-    return new Response('An internal error has occurred.', { status: 500 })
+    return new Response(null, { status: 500 })
   }
 }
 
