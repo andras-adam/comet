@@ -61,8 +61,6 @@ export class Server<
 
       let input: { event: any; env: Environment; logger: Logger }
 
-      const calledMiddleware = new Set<MiddlewareHandler>()
-
       try {
         // Initialize router
         this.router.init()
@@ -150,7 +148,7 @@ export class Server<
 
               } else {
                 if (!exact) {
-                  event.reply.methodNotAllowed()
+                  throw new CometError(ErrorType.MethodNotAllowed)
                 } else {
                   // Set path params on event
                   event.params = getPathnameParameters(event.pathname, route.pathname)
