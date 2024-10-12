@@ -14,7 +14,8 @@ export const workerRouter = server({
     headers: '*'
   },
   errorHandler: ({ event, error }) => {
-    console.log(error)
-    return event.reply.internalServerError()
+    console.error('Caught an unexpected error', error)
+    // Not returning anything to let the internal error handler take care of this.
+    return undefined
   }
 })
