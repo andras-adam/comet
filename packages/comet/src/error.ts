@@ -26,13 +26,13 @@ export class CometErrorHandler {
       try {
         const cometError = error instanceof Error ? error : new CometError(ErrorType.Internal, error)
 
-        /* if (options.errorHandler) {
+        if (options.errorHandler) {
           span.setAttribute('handler', 'custom')
 
           const reply = await options.errorHandler({ ...input, error: cometError })
 
           return await Reply.toResponse(reply, options)
-        } */
+        }
 
         span.setAttribute('handler', 'internal')
 
