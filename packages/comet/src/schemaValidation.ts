@@ -1,6 +1,7 @@
 import { trace } from '@opentelemetry/api'
 import { middleware } from './middleware'
 import { type Route } from './router'
+import { CometError, ErrorType } from './error'
 
 
 export const schemaValidation = (route: Route) => middleware({
@@ -30,7 +31,7 @@ export const schemaValidation = (route: Route) => middleware({
   if (queryResult?.success === false) errors.query = queryResult.error.issues
   if (bodyResult?.success === false) errors.body = bodyResult.error.issues
   if (errors.body || errors.params || errors.query) {
-    return event.reply.badRequest({ success: false, errors })
+    throw new CometError(ErrorType.SchemaValidation, errors)
   }
   // Set the parsed params, query and body on the event and continue to the next handler
   if (paramsResult?.success) event.params = paramsResult.data

@@ -1,9 +1,10 @@
-import { type MaybePromise } from './types'
-import { type Data } from './data'
+import type { MaybePromise } from './types'
+import type { Data } from './data'
 import { type Reply, type ReplyFrom, Status } from './reply'
-import { type Logger } from './logger'
-import { type ZodType } from 'zod'
+import type { Logger } from './logger'
+import type { ZodType } from 'zod'
 
+export type MiddlewareHandler = (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
 
 export interface Middleware<T> {
   name?: string
@@ -19,7 +20,7 @@ export type ExtensionsFrom<MWs, Accumulator = unknown> = MWs extends readonly [i
   ? ExtensionsFrom<Rest, Accumulator & ExtensionFrom<Current>>
   : Accumulator
 
-type MiddlewareContext =
+export type MiddlewareContext =
   { isDurableObject: true; state: DurableObjectState }
   | { isDurableObject: false; ctx: ExecutionContext }
 

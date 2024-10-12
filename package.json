@@ -1,6 +1,11 @@
 {
   "name": "comet",
   "private": true,
-  "workspaces": [ "packages/*" ],
-  "packageManager": "pnpm@9.2.0"
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "postinstall": "pnpm run -r --if-present build"
+  },
+  "packageManager": "pnpm@9.12.0"
 }

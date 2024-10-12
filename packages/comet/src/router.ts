@@ -9,9 +9,9 @@ import {
 import { type Logger, recordException } from './logger'
 import { type Reply, type ReplyFrom, Status } from './reply'
 import { type Data } from './data'
-import { type ExtensionsFrom, type MiddlewareList } from './middleware'
-import { type TypeOf, ZodObject, ZodType } from 'zod'
-import { type Pipe, type Strings, type Tuples } from 'hotscript'
+import type { ExtensionsFrom, MiddlewareList } from './middleware'
+import type { TypeOf, ZodObject, ZodType } from 'zod'
+import type { Pipe, Strings, Tuples } from 'hotscript'
 
 
 type RouteContext<IsDo extends boolean> = IsDo extends true
