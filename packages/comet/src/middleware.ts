@@ -54,7 +54,7 @@ export function middleware<
     replies?: Replies
   },
   handler: (input: {
-    event: Data & { reply: ReplyFrom<Replies>; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>
+    event: Data & { reply: ReplyFrom<Replies>; next: NextFn; body: unknown } & MiddlewareContext & ExtensionsFrom<Requires>
     env: Environment
     logger: Logger
   }) => MaybePromise<NextData<Extension> | Reply>
@@ -73,12 +73,12 @@ export function middleware<
     }
     |
     ((input: {
-      event: Data & { reply: Reply; next: NextFn } & MiddlewareContext
+      event: Data & { reply: Reply; next: NextFn; body: unknown } & MiddlewareContext
       env: Environment
       logger: Logger
     }) => MaybePromise<NextData<Extension> | Reply>),
   handler?: (input: {
-    event: Data & { reply: ReplyFrom<Replies>; next: NextFn } & MiddlewareContext & ExtensionsFrom<Requires>
+    event: Data & { reply: ReplyFrom<Replies>; next: NextFn; body: unknown } & MiddlewareContext & ExtensionsFrom<Requires>
     env: Environment
     logger: Logger
   }) => MaybePromise<NextData<Extension> | Reply>
