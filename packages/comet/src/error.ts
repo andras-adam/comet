@@ -77,12 +77,12 @@ export class CometErrorHandler {
             headers: { 'content-type': 'application/json' }
           })
         case ErrorType.InvalidCompatibilityDate:
-          return new Response(JSON.stringify({ success: false, error: 'Invalid compatibility date' }), {
+          return new Response(JSON.stringify({ error: 'Invalid compatibility date' }), {
             status: 400,
             headers: { 'content-type': 'application/json' }
           })
         case ErrorType.InvalidJSON:
-          return new Response(JSON.stringify({ success: false, error: 'Invalid JSON' }), {
+          return new Response(JSON.stringify({ error: 'Invalid JSON in body' }), {
             status: 400,
             headers: { 'content-type': 'application/json' }
           })
