@@ -12,5 +12,10 @@ export const workerRouter = server({
     origins: 'http://localhost:3000',
     methods: '*',
     headers: '*'
+  },
+  errorHandler: ({ event, error }) => {
+    console.error('Caught an unexpected error', error)
+    // Not returning anything to let the internal error handler take care of this.
+    return undefined
   }
 })

@@ -17,28 +17,39 @@ export type ErrorHandler<
   env: Environment
   logger: Logger
   error: Error
-}) => MaybePromise<Reply>
+}) => MaybePromise<Reply | undefined>
 
 export class CometErrorHandler {
   private static readonly tracer = trace.getTracer(name, version)
+
   static async handle(input: Omit<Parameters<ErrorHandler<any>>[0], 'error'>, error: unknown, options: ServerOptions<any, any, any>) {
     return CometErrorHandler.tracer.startActiveSpan('comet error handler', async span => {
       try {
-        const cometError = error instanceof Error ? error : new CometError(ErrorType.Internal, error)
+        const wrappedError = error instanceof Error ? error : CometError.wrap(error)
 
         if (options.errorHandler) {
           span.setAttribute('handler', 'custom')
 
-          const reply = await options.errorHandler({ ...input, error: cometError })
+          const reply = await options.errorHandler({ ...input, error: wrappedError })
 
-          return await Reply.toResponse(reply, options)
+          /*
+           * If the handler decides to return a reply, we forward it,
+           * otherwise the error gets passed to the internal handler.
+           */
+          if (reply) return await Reply.toResponse(reply, options)
         }
 
         span.setAttribute('handler', 'internal')
-
-
-        return new CometErrorHandler({ ...input, error: cometError }).handleError()
-
+        /*
+         * If we get to this point, it means that:
+         * - A) There is no custom error handler to take care of this error
+         * - B) The custom error handler consumed the error but did not
+         *      return a reply. The latter is a valid case when the handler
+         *      might only be interested in specific types of errors or just
+         *      logs the error but wants to leave it up to the internal handler
+         *      to return a reply to the caller.
+         */
+        return CometErrorHandler.internalHandle({ ...input, error: wrappedError })
       } catch (error) {
         recordException('[Comet] Failed to handle error.')
         recordException(error)
@@ -49,27 +60,19 @@ export class CometErrorHandler {
     })
   }
 
-  constructor(private readonly input: Parameters<ErrorHandler<any>>[0]) {}
-
-  private async handleError(): Promise<Response> {
+  private static async internalHandle(input: Parameters<ErrorHandler<any>>[0]): Promise<Response> {
     // record exception
-    this.input.logger.error(this.input.error)
+    input.logger.error(input.error)
 
     // handle CometError
-    if (this.input.error instanceof CometError) {
-      switch (this.input.error.type) {
+    if (input.error instanceof CometError) {
+      switch (input.error.type) {
         case ErrorType.MethodNotAllowed:
-          return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
-            status: 405,
-            headers: { 'content-type': 'application/json' }
-          })
+          return new Response(null, { status: 405 })
         case ErrorType.NotFound:
-          return new Response(JSON.stringify({ success: false, error: 'Not found' }), {
-            status: 404,
-            headers: { 'content-type': 'application/json' }
-          })
+          return new Response(null, { status: 404 })
         case ErrorType.SchemaValidation:
-          return new Response(JSON.stringify({ success: false, errors: this.input.error.details }), {
+          return new Response(JSON.stringify({ errors: input.error.details }), {
             status: 400,
             headers: { 'content-type': 'application/json' }
           })
@@ -86,14 +89,11 @@ export class CometErrorHandler {
         // case ErrorType.Internal:
         // case ErrorType.Unknown:
         default:
-          return new Response(JSON.stringify({ success: false, error: 'An internal error has occurred' }), {
-            status: 500,
-            headers: { 'content-type': 'application/json' }
-          })
+          return new Response(null, { status: 500 })
       }
     }
 
-    return new Response('An internal error has occurred.', { status: 500 })
+    return new Response(null, { status: 500 })
   }
 }
 
@@ -111,5 +111,9 @@ export class CometError extends Error {
 
   constructor(public readonly type: ErrorType, public readonly details?: unknown) {
     super(type.toString())
+  }
+
+  static wrap(error: unknown): CometError {
+    return new CometError(ErrorType.Internal, error)
   }
 }
