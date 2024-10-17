@@ -32,8 +32,8 @@ it('should return 500 on POST /api/test/error/2', async () => {
   expect(response.status).toBe(500)
 })
 
-it('should return 400 on POST /api/test/stuff/asd without body', async () => {
-  const response = await SELF.fetch('https://domain/api/test/stuff/asd', {
+it('should return 400 on POST /api/test2/stuff/asd without body', async () => {
+  const response = await SELF.fetch('https://domain/api/test2/stuff/asd', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -42,8 +42,35 @@ it('should return 400 on POST /api/test/stuff/asd without body', async () => {
   expect(response.status).toBe(400)
   await expect(response.json()).resolves.toMatchInlineSnapshot(`
     {
-      "error": "Invalid JSON",
-      "success": false,
+      "error": "Invalid JSON in body",
+    }
+  `)
+})
+
+it('should return 400 on POST /api/test2/stuff/asd incorrect body', async () => {
+  const response = await SELF.fetch('https://domain/api/test2/stuff/asd', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ foo: 123 })
+  })
+  expect(response.status).toBe(400)
+  await expect(response.json()).resolves.toMatchInlineSnapshot(`
+    {
+      "errors": {
+        "body": [
+          {
+            "code": "invalid_type",
+            "expected": "string",
+            "message": "Expected string, received number",
+            "path": [
+              "foo",
+            ],
+            "received": "number",
+          },
+        ],
+      },
     }
   `)
 })
@@ -58,8 +85,8 @@ it('should return 200 on POST /api/test2/stuff/asd with body', async () => {
   })
   //expect(response.status).toBe(200)
   await expect(response.json()).resolves.toMatchInlineSnapshot(`
-        {
-          "foo": "bar",
-        }
-      `)
+    {
+      "foo": "bar",
+    }
+  `)
 })
