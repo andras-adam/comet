@@ -70,16 +70,15 @@ export class Server<
 
         const reply = new Reply()
         const isDurableObject = 'id' in ctxOrState
-        let event = {
+        const event = {
           ...data, reply, next, isDurableObject,
           ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
         }
-        input.event = { ...input.event, ...event }
+        input.event = event
 
-        const bodyData = await Data.parseRequestBody(request)
-        event = { ...event, ...bodyData }
-        input.event = { ...input.event, ...bodyData }
-
+        const { raw, body } = await Data.parseRequestBody(request)
+        input.event.raw = raw
+        input.event.body = body
 
         span.setAttribute('comet.server.durable_object', isDurableObject)
 
