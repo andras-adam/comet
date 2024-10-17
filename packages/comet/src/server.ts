@@ -154,7 +154,7 @@ export class Server<
                   event.params = getPathnameParameters(event.pathname, route.pathname)
 
                   // Schema validation
-                  if (!event.reply.sent) schemaValidation(route).handler(input)
+                  if (!event.reply.sent) await schemaValidation(route).handler(input)
 
                   // Run local before middleware
                   if (route.before) {
