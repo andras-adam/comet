@@ -59,7 +59,7 @@ export class Server<
       }
     }, async span => {
 
-      let input: { event: any; env: Environment; logger: Logger }
+      let input = { event: {} as any, env, logger }
 
       try {
         // Initialize router
@@ -74,8 +74,11 @@ export class Server<
           ...data, reply, next, isDurableObject,
           ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
         }
+        input.event = event
 
-        input = { event, env, logger }
+        const { raw, body } = await Data.parseRequestBody(request)
+        input.event.raw = raw
+        input.event.body = body
 
         span.setAttribute('comet.server.durable_object', isDurableObject)
 
@@ -274,7 +277,7 @@ export class Server<
 
         return await trace.getTracer(name, version).startActiveSpan('comet error handler', async span => {
 
-          const response = CometErrorHandler.handle(input, error, this.options)
+          const response = await CometErrorHandler.handle(input, error, this.options)
           span.end()
 
           return response

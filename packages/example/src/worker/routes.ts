@@ -53,7 +53,7 @@ workerRouter.route({
 
 workerRouter.route({
   name: 'Schema testing',
-  pathname: '/test/stuff/:id',
+  pathname: '/test2/stuff/:id',
   method: POST,
   body: z.strictObject({
     foo: z.string()
