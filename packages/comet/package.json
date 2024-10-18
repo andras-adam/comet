@@ -1,6 +1,6 @@
 {
   "name": "@neoaren/comet",
-  "version": "3.5.5",
+  "version": "3.5.6",
   "scripts": {
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
     "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2022 --packages=external",
