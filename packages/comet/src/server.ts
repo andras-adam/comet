@@ -293,6 +293,14 @@ export class Server<
   >(server: Server<Before, After, IsDo>): Router<Before, After, IsDo> {
     return server.router
   }
+
+  public static getOptions<
+    Before extends MiddlewareList,
+    After extends MiddlewareList,
+    IsDo extends boolean
+  >(server: Server<Before, After, IsDo>): ServerOptions<Before, After, IsDo> {
+    return server.options
+  }
 }
 
 export function server<
