@@ -77,7 +77,7 @@ export class Server<
         input.event = event
 
         const { raw, body } = await Data.parseRequestBody(request)
-        input.event.raw = raw
+        input.event._raw = raw
         input.event.body = body
 
         span.setAttribute('comet.server.durable_object', isDurableObject)

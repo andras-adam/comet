@@ -22,6 +22,8 @@ workerRouter.route({
   const { id } = event.params
   // console.log(event)
   console.log(event.userId)
+  event.body
+  event._raw
   // await new Promise(resolve => setTimeout(resolve, 2000))
   return event.reply.ok({ found: true })
 })
