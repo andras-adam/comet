@@ -92,6 +92,7 @@ export class Router<
     },
     handler: (input: {
       event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query> & { reply: ReplyFrom<Replies> }
+        & { _raw: unknown }
         & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
       env: Environment
       logger: Logger
