@@ -7,14 +7,9 @@ import { getPathnameParameters } from './utils'
 import { schemaValidation } from './schemaValidation'
 import { Method } from './types'
 import { cors, type CorsOptions, preflightHandler } from './cors'
-import { logger, recordException, type Logger } from './logger'
-import {
-  next,
-  type MiddlewareList,
-  type MiddlewareHandler,
-  type Middleware
-} from './middleware'
-import type { CookiesOptions } from './cookies'
+import { logger, recordException } from './logger'
+import { next, type MiddlewareList } from './middleware'
+import { type CookiesOptions } from './cookies'
 import { CometError, CometErrorHandler, type ErrorHandler, ErrorType } from './error'
 
 
@@ -50,7 +45,7 @@ export class Server<
   public handler = async (
     request: Request,
     env: Environment,
-    ctxOrState: IsDo extends true ? DurableObjectState : ExecutionContext
+    ctx: IsDo extends true ? DurableObjectState : ExecutionContext
   ) => {
     return trace.getTracer(name, version).startActiveSpan('Comet Handler', {
       kind: SpanKind.SERVER,
@@ -59,7 +54,7 @@ export class Server<
       }
     }, async span => {
 
-      let input = { event: {} as any, env, logger }
+      let input = { event: {} as any, env, logger, ctx }
 
       try {
         // Initialize router
@@ -69,10 +64,10 @@ export class Server<
         const data = await Data.fromRequest(request, this.options, this.options.name)
 
         const reply = new Reply()
-        const isDurableObject = 'id' in ctxOrState
+        const isDurableObject = 'id' in ctx
         const event = {
           ...data, reply, next, isDurableObject,
-          ...(isDurableObject ? { state: ctxOrState } : { ctx: ctxOrState })
+          ...(isDurableObject ? { state: ctx } : { ctx: ctx })
         }
         input.event = event
 
@@ -217,7 +212,7 @@ export class Server<
                         )
                       }
                     } else {
-                      ctxOrState.waitUntil(Promise.allSettled(route.after.map(async mw => {
+                      ctx.waitUntil(Promise.allSettled(route.after.map(async mw => {
                         const span = trace.getTracer(name, version).startSpan(`Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                           attributes: {
                             'comet.mw.name': mw.name,
@@ -254,7 +249,7 @@ export class Server<
               )
             }
           } else {
-            ctxOrState.waitUntil(Promise.allSettled(this.options.after.map(async mw => {
+            ctx.waitUntil(Promise.allSettled(this.options.after.map(async mw => {
               const span = trace.getTracer(name, version).startSpan(`Comet Middleware${mw.name ? ` ${mw.name}` : ''}`, {
                 attributes: {
                   'comet.mw.name': mw.name,

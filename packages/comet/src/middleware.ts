@@ -9,7 +9,12 @@ export type MiddlewareHandler = (input: { event: any; env: Environment; logger: 
 export interface Middleware<T> {
   name?: string
   requires?: MiddlewareList
-  handler: (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
+  handler: (input: {
+    event: any;
+    env: Environment;
+    ctx: ExecutionContext | DurableObjectState
+    logger: Logger
+  }) => MaybePromise<void>
   replies?: Partial<Record<Status, ZodType>>
 }
 
@@ -20,9 +25,19 @@ export type ExtensionsFrom<MWs, Accumulator = unknown> = MWs extends readonly [i
   ? ExtensionsFrom<Rest, Accumulator & ExtensionFrom<Current>>
   : Accumulator
 
-export type MiddlewareContext =
-  { isDurableObject: true; state: DurableObjectState }
-  | { isDurableObject: false; ctx: ExecutionContext }
+export type MiddlewareContext = {
+    isDurableObject: true
+    /**
+     * @deprecated
+     */
+    state: DurableObjectState
+  } | {
+    isDurableObject: false
+    /**
+     * @deprecated
+     */
+    ctx: ExecutionContext
+  }
 
 class NextData<const T extends Record<string, unknown> = Record<never, never>> {
   // @ts-expect-error data could use better typing
@@ -39,6 +54,7 @@ export function middleware<
   handler: (input: {
     event: Data & { reply: Reply; next: NextFn } & MiddlewareContext
     env: Environment
+    ctx: ExecutionContext | DurableObjectState
     logger: Logger
   }) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown>
@@ -56,6 +72,7 @@ export function middleware<
   handler: (input: {
     event: Data & { reply: ReplyFrom<Replies>; next: NextFn; body: unknown } & MiddlewareContext & ExtensionsFrom<Requires>
     env: Environment
+    ctx: ExecutionContext | DurableObjectState
     logger: Logger
   }) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown>
@@ -75,11 +92,13 @@ export function middleware<
     ((input: {
       event: Data & { reply: Reply; next: NextFn; body: unknown } & MiddlewareContext
       env: Environment
+      ctx: ExecutionContext | DurableObjectState
       logger: Logger
     }) => MaybePromise<NextData<Extension> | Reply>),
   handler?: (input: {
     event: Data & { reply: ReplyFrom<Replies>; next: NextFn; body: unknown } & MiddlewareContext & ExtensionsFrom<Requires>
     env: Environment
+    ctx: ExecutionContext | DurableObjectState
     logger: Logger
   }) => MaybePromise<NextData<Extension> | Reply>
 ): Middleware<Extension extends Record<any, any> ? Extension : unknown> {

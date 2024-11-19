@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { workerRouter } from './server'
 import { auth, logger, never, perm, mwError } from '../middleware'
 
+
 workerRouter.route({
   pathname: '/test',
   method: GET
@@ -10,6 +11,18 @@ workerRouter.route({
   //
   event.reply
   //
+  return event.reply.ok(123)
+})
+
+workerRouter.route({
+  pathname: '/abort',
+  method: POST
+}, ({ event, env, ctx }) => {
+
+  ctx.waitUntil(Promise.resolve(console.log('foo')))
+  
+  console.log('bar')
+
   return event.reply.ok(123)
 })
 

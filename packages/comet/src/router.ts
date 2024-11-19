@@ -14,9 +14,19 @@ import type { TypeOf, ZodObject, ZodType } from 'zod'
 import type { Pipe, Strings, Tuples } from 'hotscript'
 
 
-type RouteContext<IsDo extends boolean> = IsDo extends true
-  ? { isDurableObject: true; state: DurableObjectState }
-  : { isDurableObject: false; ctx: ExecutionContext }
+type RouteContext<IsDo extends boolean> = IsDo extends true ? {
+  isDurableObject: true
+  /**
+   * @deprecated
+   */
+  state: DurableObjectState
+} : {
+  isDurableObject: false
+  /**
+   * @deprecated
+   */
+  ctx: ExecutionContext
+}
 
 type BodyFromSchema<T> = { body: T extends ZodType ? TypeOf<T> : unknown }
 type ParamsFromSchema<T> = { params: T extends ZodType ? TypeOf<T> : Partial<Record<string, string>> }
@@ -37,7 +47,12 @@ export interface Route {
   compatibilityDate?: string
   before?: MiddlewareList
   after?: MiddlewareList
-  handler: (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<Reply>
+  handler: (input: {
+    event: any;
+    env: Environment;
+    ctx: any
+    logger: Logger
+  }) => MaybePromise<Reply>
   replies?: Partial<Record<Status, ZodType>>
   schemas: {
     body?: ZodType
@@ -95,6 +110,7 @@ export class Router<
         & { _raw: unknown }
         & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
       env: Environment
+      ctx: IsDo extends true ? DurableObjectState : ExecutionContext
       logger: Logger
     }) => MaybePromise<Reply>
   ): void => {
