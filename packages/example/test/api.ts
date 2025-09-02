@@ -1,6 +1,7 @@
 import { SELF } from 'cloudflare:test'
 import { expect, it } from 'vitest'
 
+
 it('should return 404 on GET /', async () => {
   const response = await SELF.fetch('https://domain/')
   expect(response.status).toBe(404)
