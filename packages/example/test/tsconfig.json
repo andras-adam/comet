@@ -2,7 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "types": [
-      "@cloudflare/workers-types/experimental",
+      "@cloudflare/workers-types",
       "@cloudflare/vitest-pool-workers"
     ]
   },

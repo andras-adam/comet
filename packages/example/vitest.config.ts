@@ -7,6 +7,7 @@ export default defineWorkersConfig({
       provider: 'istanbul'
     },
     include: [ '**/test/**/*.ts' ],
+    exclude: [ '**/test/**/*.d.ts' ],
     poolOptions: {
       workers: {
         wrangler: { configPath: './wrangler.toml' }

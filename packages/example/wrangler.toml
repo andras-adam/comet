@@ -1,6 +1,6 @@
 name = "comet-example"
 main = "src/index.ts"
-compatibility_date = "2024-11-19"
+compatibility_date = "2025-09-02"
 compatibility_flags = [ 'nodejs_compat' ]
 
 [[durable_objects.bindings]]
