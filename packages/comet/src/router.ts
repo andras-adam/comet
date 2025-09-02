@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { type MaybePromise, Method } from './types'
 import {
   compareCompatibilityDates,
@@ -7,11 +8,9 @@ import {
   isValidPathname
 } from './utils'
 import { type Logger, recordException } from './logger'
-import { type Reply, type ReplyFrom, Status } from './reply'
+import { type RepliesType, type Reply, type ReplyFrom } from './reply'
 import { type Data } from './data'
 import type { ExtensionsFrom, MiddlewareList } from './middleware'
-import type { TypeOf, ZodObject, ZodType } from 'zod'
-import type { Pipe, Strings, Tuples } from 'hotscript'
 
 
 type RouteContext<IsDo extends boolean> = IsDo extends true ? {
@@ -28,16 +27,10 @@ type RouteContext<IsDo extends boolean> = IsDo extends true ? {
   ctx: ExecutionContext
 }
 
-type BodyFromSchema<T> = { body: T extends ZodType ? TypeOf<T> : unknown }
-type ParamsFromSchema<T> = { params: T extends ZodType ? TypeOf<T> : Partial<Record<string, string>> }
-type QueryFromSchema<T> = { query: T extends ZodType ? TypeOf<T> : Partial<Record<string, string>> }
+type BodyFromSchema<T> = { body: T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : unknown }
+type ParamsFromSchema<T> = { params: T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : Partial<Record<string, string>> }
+type QueryFromSchema<T> = { query: T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : Partial<Record<string, string>> }
 type RouteParams<Body, Params, Query> = BodyFromSchema<Body> & ParamsFromSchema<Params> & QueryFromSchema<Query>
-type RoutePathParams<T extends string> = ZodObject<{ [key in Pipe<T, [
-  Strings.Split<'/'>,
-  Tuples.Filter<Strings.StartsWith<':'>>,
-  Tuples.Map<Strings.TrimLeft<':'>>,
-  Tuples.ToUnion
-]>]: ZodType }>
 type RouteMethod = Method | keyof typeof Method
 
 export interface Route {
@@ -53,11 +46,11 @@ export interface Route {
     ctx: any
     logger: Logger
   }) => MaybePromise<Reply>
-  replies?: Partial<Record<Status, ZodType>>
+  replies?: RepliesType
   schemas: {
-    body?: ZodType
-    params?: ZodType
-    query?: ZodType
+    body?: StandardSchemaV1
+    params?: StandardSchemaV1
+    query?: StandardSchemaV1
   }
 }
 
@@ -85,13 +78,10 @@ export class Router<
     const RBefore extends MiddlewareList,
     const RAfter extends MiddlewareList,
     const RoutePath extends string,
-    const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
-    const Body extends ZodType | undefined = undefined,
-    const Params extends (RoutePathParams<RoutePath> extends undefined
-      ? never
-      : RoutePathParams<RoutePath>
-    ) | undefined = undefined,
-    const Query extends ZodType | undefined = undefined
+    const Replies extends RepliesType | undefined = undefined,
+    const Body extends StandardSchemaV1 | undefined = undefined,
+    const Params extends StandardSchemaV1 | undefined = undefined,
+    const Query extends StandardSchemaV1 | undefined = undefined
   >(
     options: {
       name?: string

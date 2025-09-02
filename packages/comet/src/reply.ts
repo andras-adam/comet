@@ -1,8 +1,8 @@
 import { trace } from '@opentelemetry/api'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { Cookies } from './cookies'
 import { recordException } from './logger'
 import type { Options } from './types'
-import type { TypeOf, ZodType } from 'zod'
 
 
 export enum Status {
@@ -71,11 +71,13 @@ export interface ReplyData {
   sent?: Date
 }
 
-type TypeOfSafe<Schema> = Schema extends ZodType ? TypeOf<Schema> : never
+export type RepliesType = Partial<Record<Status, StandardSchemaV1>>
+
+type TypeOfSafe<Schema> = Schema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<Schema> : never
 type ReplyFnFrom<Body> = Body extends undefined ? () => Reply : (body: TypeOfSafe<Body>) => Reply
-export type ReplyFrom<Schemas extends Partial<Record<Status, ZodType>> | undefined> = Schemas extends undefined
+export type ReplyFrom<Replies extends RepliesType | undefined> = Replies extends undefined
   ? Reply
-  : ReplyData & { [Key in keyof Schemas as `${string & Key}`]: ReplyFnFrom<Schemas[Key]> }
+  : ReplyData & { [Key in keyof Replies as `${string & Key}`]: ReplyFnFrom<Replies[Key]> }
 
 export class Reply implements ReplyData {
 

@@ -1,8 +1,8 @@
 import type { MaybePromise } from './types'
 import type { Data } from './data'
-import { type Reply, type ReplyFrom, Status } from './reply'
+import { type RepliesType, type Reply, type ReplyFrom } from './reply'
 import type { Logger } from './logger'
-import type { ZodType } from 'zod'
+
 
 export type MiddlewareHandler = (input: { event: any; env: Environment; logger: Logger }) => MaybePromise<void>
 
@@ -15,7 +15,7 @@ export interface Middleware<T> {
     ctx: ExecutionContext | DurableObjectState
     logger: Logger
   }) => MaybePromise<void>
-  replies?: Partial<Record<Status, ZodType>>
+  replies?: RepliesType
 }
 
 export type MiddlewareList = readonly [...readonly Middleware<any>[]]
@@ -61,7 +61,7 @@ export function middleware<
 
 export function middleware<
   const Requires extends MiddlewareList,
-  const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
+  const Replies extends RepliesType | undefined = undefined,
   const Extension extends Record<string, unknown> = Record<never, never>
 >(
   options: {
@@ -79,7 +79,7 @@ export function middleware<
 
 export function middleware<
   const Requires extends MiddlewareList,
-  const Replies extends Partial<Record<Status, ZodType>> | undefined = undefined,
+  const Replies extends RepliesType | undefined = undefined,
   const Extension extends Record<string, unknown> = Record<never, never>
 >(
   options:
