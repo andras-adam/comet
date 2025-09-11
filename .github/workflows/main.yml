@@ -36,7 +36,7 @@ jobs:
 
       - name: Build package
         timeout-minutes: 3
-        working-directory: packages/comet
+        working-directory: .
         run: |
           pnpm run build
 
@@ -46,7 +46,7 @@ jobs:
         with:
           access: public
           token: ${{ secrets.NPM_TOKEN }}
-          package: packages/comet
+          package: .
 
       - name: Tag latest commit
         if: steps.npm-release.outputs.type != ''
