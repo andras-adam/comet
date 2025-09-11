@@ -1,0 +1,21 @@
+{
+  "name": "basic-worker",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "typecheck": "tsc",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@neoaren/comet": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.71",
+    "@cloudflare/workers-types": "^4.20250911.0",
+    "@vitest/coverage-istanbul": "^3.2.4",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.35.0"
+  }
+}
