@@ -6,7 +6,8 @@
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
     "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2022 --packages=external",
     "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --target=es2022 --packages=external",
-    "build:dts": "tsc"
+    "build:dts": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "description": "A powerful DX-first routing library for Cloudflare Workers.",
   "keywords": [
