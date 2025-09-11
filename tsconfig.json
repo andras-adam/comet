@@ -16,5 +16,6 @@
     "outDir": "./dist",
     "declaration": true,
     "emitDeclarationOnly": true
-  }
+  },
+  "include": ["./src/**/**.*"]
 }

@@ -1,11 +1,57 @@
 {
-  "name": "comet",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "name": "@neoaren/comet",
+  "version": "3.8.1",
   "scripts": {
-    "postinstall": "pnpm run -r --if-present build"
+    "postinstall": "pnpm build",
+    "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
+    "build:esm": "esbuild src/index.ts --bundle --outfile=dist/index.mjs --format=esm --target=es2022 --packages=external",
+    "build:cjs": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --target=es2022 --packages=external",
+    "build:dts": "tsc"
   },
-  "packageManager": "pnpm@9.12.0"
+  "description": "A powerful DX-first routing library for Cloudflare Workers.",
+  "keywords": [
+    "cloudflare-workers",
+    "cloudflare",
+    "workers",
+    "routing",
+    "comet",
+    "router",
+    "dx"
+  ],
+  "repository": "https://github.com/andras-adam/comet",
+  "bugs": "https://github.com/andras-adam/comet/issues",
+  "homepage": "https://github.com/andras-adam/comet",
+  "author": "andras-adam",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "workspaces": [
+    ".",
+    "tests/*"
+  ],
+  "packageManager": "pnpm@9.12.0",
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api-logs": "^0.203.0",
+    "@standard-schema/spec": "^1.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250902.0",
+    "esbuild": "^0.25.9",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.2"
+  }
 }

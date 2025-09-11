@@ -6,9 +6,7 @@ settings:
 
 importers:
 
-  .: {}
-
-  packages/comet:
+  .:
     dependencies:
       '@opentelemetry/api':
         specifier: ^1.9.0
@@ -36,11 +34,11 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
 
-  packages/example:
+  tests/basic-worker:
     dependencies:
       '@neoaren/comet':
         specifier: workspace:*
-        version: link:../comet
+        version: link:../..
       zod:
         specifier: ^3.25.76
         version: 3.25.76
