@@ -64,11 +64,10 @@ it('should return 400 on POST /api/test2/stuff/asd incorrect body', async () => 
           {
             "code": "invalid_type",
             "expected": "string",
-            "message": "Expected string, received number",
+            "message": "Invalid input: expected string, received number",
             "path": [
               "foo",
             ],
-            "received": "number",
           },
         ],
       },
