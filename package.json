@@ -1,6 +1,6 @@
 {
   "name": "@neoaren/comet",
-  "version": "3.8.1",
+  "version": "3.8.2",
   "scripts": {
     "postinstall": "pnpm build",
     "build": "rimraf dist && npm-run-all build:esm build:cjs build:dts",
