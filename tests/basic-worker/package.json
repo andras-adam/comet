@@ -2,8 +2,6 @@
   "name": "basic-worker",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
     "typecheck": "tsc",
     "test": "vitest"
   },
