@@ -37,11 +37,7 @@
       "require": "./dist/index.js"
     }
   },
-  "workspaces": [
-    ".",
-    "tests/*"
-  ],
-  "packageManager": "pnpm@9.12.0",
+  "packageManager": "pnpm@10.15.0",
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.205.0",
