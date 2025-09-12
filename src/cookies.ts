@@ -1,5 +1,4 @@
-import { recordException } from './logger'
-
+import { recordException } from "./logger"
 
 export interface CookiesOptions {
   decode?: ((arg: string) => Promise<string> | string) | null
@@ -14,9 +13,9 @@ export const defaultCookiesOptions: Required<CookiesOptions> = {
 }
 
 export enum SameSite {
-  Strict = 'Strict',
-  Lax = 'Lax',
-  None = 'None'
+  Strict = "Strict",
+  Lax = "Lax",
+  None = "None"
 }
 
 export interface CookieMetaData {
@@ -36,7 +35,6 @@ export interface Cookie {
 }
 
 export class Cookies {
-
   private readonly data = new Map<string, Cookie>()
 
   get [Symbol.toStringTag]() {
@@ -65,33 +63,44 @@ export class Cookies {
 
   // Returns an array that contains the key-value pairs for each cookie
   public entries(): [key: string, value: string][] {
-    return [ ...this.data.entries() ].map(([ name, cookie ]) => [ name, cookie.value ])
+    return [...this.data.entries()].map(([name, cookie]) => [
+      name,
+      cookie.value
+    ])
   }
 
   // Returns an array that contains the keys for each cookie
   public keys(): string[] {
-    return [ ...this.data.keys() ]
+    return [...this.data.keys()]
   }
 
   // Returns an array that contains the values for each cookie
   public values(): string[] {
-    return [ ...this.data.values() ].map(cookie => cookie.value)
+    return [...this.data.values()].map((cookie) => cookie.value)
   }
 
   // Parse cookies from headers
-  public static async parse(headers: Headers, options?: CookiesOptions): Promise<Cookies> {
+  public static async parse(
+    headers: Headers,
+    options?: CookiesOptions
+  ): Promise<Cookies> {
     const allOptions = this.getAllOptions(options)
     const cookies = new Cookies()
-    const pairs = headers.get('Cookie')?.split(';', allOptions.limit) ?? []
+    const pairs = headers.get("Cookie")?.split(";", allOptions.limit) ?? []
     for (const pair of pairs) {
       // Parse cookie name and value
-      let [ name, value ] = pair.split('=', 2).map(component => component.trim())
+      let [name, value] = pair
+        .split("=", 2)
+        .map((component) => component.trim())
       if (!name || !value) {
-        recordException(`[Comet] Failed to parse malformatted cookie "${pair}".`)
+        recordException(
+          `[Comet] Failed to parse malformatted cookie "${pair}".`
+        )
         continue
       }
       // Unwrap cookie value if it is wrapped in quotes
-      if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1)
+      if (value.startsWith('"') && value.endsWith('"'))
+        value = value.slice(1, -1)
       try {
         // Decode cookie name and value if a decoder function is provided
         if (allOptions.decode !== null) name = await allOptions.decode(name)
@@ -117,8 +126,14 @@ export class Cookies {
       const serialized: string[] = []
       try {
         // Encode cookie name and value if an encoder function is provided
-        const name = allOptions.encode === null ? cookie.name : await allOptions.encode(cookie.name)
-        const value = allOptions.encode === null ? cookie.value : await allOptions.encode(cookie.value)
+        const name =
+          allOptions.encode === null
+            ? cookie.name
+            : await allOptions.encode(cookie.name)
+        const value =
+          allOptions.encode === null
+            ? cookie.value
+            : await allOptions.encode(cookie.value)
         // Set the cookie
         serialized.push(`${name}=${value}`)
       } catch (error) {
@@ -128,20 +143,25 @@ export class Cookies {
       }
       // Set cookie meta data
       if (cookie.meta?.domain) serialized.push(`Domain=${cookie.meta.domain}`)
-      if (cookie.meta?.expires) serialized.push(`Expires=${new Date(cookie.meta.expires).toUTCString()}`)
-      if (cookie.meta?.httpOnly) serialized.push('HttpOnly')
+      if (cookie.meta?.expires)
+        serialized.push(
+          `Expires=${new Date(cookie.meta.expires).toUTCString()}`
+        )
+      if (cookie.meta?.httpOnly) serialized.push("HttpOnly")
       if (cookie.meta?.maxAge) serialized.push(`Max-Age=${cookie.meta.maxAge}`)
       if (cookie.meta?.path) serialized.push(`Path=${cookie.meta.path}`)
-      if (cookie.meta?.sameSite) serialized.push(`SameSite=${cookie.meta.sameSite}`)
-      if (cookie.meta?.secure) serialized.push('Secure')
+      if (cookie.meta?.sameSite)
+        serialized.push(`SameSite=${cookie.meta.sameSite}`)
+      if (cookie.meta?.secure) serialized.push("Secure")
       // Append the cookie to the headers
-      headers.append('Set-Cookie', serialized.join('; '))
+      headers.append("Set-Cookie", serialized.join("; "))
     }
   }
 
   // Get all options with fallback to default options
-  public static getAllOptions(options?: CookiesOptions): Required<CookiesOptions> {
+  public static getAllOptions(
+    options?: CookiesOptions
+  ): Required<CookiesOptions> {
     return { ...defaultCookiesOptions, ...options }
   }
-
 }

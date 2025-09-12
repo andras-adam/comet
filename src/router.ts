@@ -1,36 +1,49 @@
-import type { StandardSchemaV1 } from '@standard-schema/spec'
-import { type MaybePromise, Method } from './types'
+import type { StandardSchemaV1 } from "@standard-schema/spec"
+import { type MaybePromise, Method } from "./types"
 import {
   compareCompatibilityDates,
   compareMethods,
   comparePathnames,
   isValidCompatibilityDate,
   isValidPathname
-} from './utils'
-import { type Logger, recordException } from './logger'
-import { type RepliesType, type Reply, type ReplyFrom } from './reply'
-import { type Data } from './data'
-import type { ExtensionsFrom, MiddlewareList } from './middleware'
+} from "./utils"
+import { type Logger, recordException } from "./logger"
+import { type RepliesType, type Reply, type ReplyFrom } from "./reply"
+import { type Data } from "./data"
+import type { ExtensionsFrom, MiddlewareList } from "./middleware"
 
+type RouteContext<IsDo extends boolean> = IsDo extends true
+  ? {
+      isDurableObject: true
+      /**
+       * @deprecated
+       */
+      state: DurableObjectState
+    }
+  : {
+      isDurableObject: false
+      /**
+       * @deprecated
+       */
+      ctx: ExecutionContext
+    }
 
-type RouteContext<IsDo extends boolean> = IsDo extends true ? {
-  isDurableObject: true
-  /**
-   * @deprecated
-   */
-  state: DurableObjectState
-} : {
-  isDurableObject: false
-  /**
-   * @deprecated
-   */
-  ctx: ExecutionContext
+type BodyFromSchema<T> = {
+  body: T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : unknown
 }
-
-type BodyFromSchema<T> = { body: T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : unknown }
-type ParamsFromSchema<T> = { params: T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : Partial<Record<string, string>> }
-type QueryFromSchema<T> = { query: T extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<T> : Partial<Record<string, string>> }
-type RouteParams<Body, Params, Query> = BodyFromSchema<Body> & ParamsFromSchema<Params> & QueryFromSchema<Query>
+type ParamsFromSchema<T> = {
+  params: T extends StandardSchemaV1
+    ? StandardSchemaV1.InferOutput<T>
+    : Partial<Record<string, string>>
+}
+type QueryFromSchema<T> = {
+  query: T extends StandardSchemaV1
+    ? StandardSchemaV1.InferOutput<T>
+    : Partial<Record<string, string>>
+}
+type RouteParams<Body, Params, Query> = BodyFromSchema<Body> &
+  ParamsFromSchema<Params> &
+  QueryFromSchema<Query>
 type RouteMethod = Method | keyof typeof Method
 
 export interface Route {
@@ -41,8 +54,8 @@ export interface Route {
   before?: MiddlewareList
   after?: MiddlewareList
   handler: (input: {
-    event: any;
-    env: Environment;
+    event: any
+    env: Environment
     ctx: any
     logger: Logger
   }) => MaybePromise<Reply>
@@ -54,7 +67,9 @@ export interface Route {
   }
 }
 
-export type RouteResult = { exact: true; route: Route } | { exact: false; route?: Route }
+export type RouteResult =
+  | { exact: true; route: Route }
+  | { exact: false; route?: Route }
 
 export interface RouterOptions {
   prefix?: string
@@ -65,7 +80,6 @@ export class Router<
   const SAfter extends MiddlewareList,
   const IsDo extends boolean = false
 > {
-
   // Registry of routes
   private routes: Route[] = []
   private ready = true
@@ -96,28 +110,44 @@ export class Router<
       query?: Query
     },
     handler: (input: {
-      event: Data & RouteContext<IsDo> & RouteParams<Body, Params, Query> & { reply: ReplyFrom<Replies> }
-        & { _raw: unknown }
-        & ExtensionsFrom<SBefore> & ExtensionsFrom<RBefore>
+      event: Data &
+        RouteContext<IsDo> &
+        RouteParams<Body, Params, Query> & { reply: ReplyFrom<Replies> } & {
+          _raw: unknown
+        } & ExtensionsFrom<SBefore> &
+        ExtensionsFrom<RBefore>
       env: Environment
       ctx: IsDo extends true ? DurableObjectState : ExecutionContext
       logger: Logger
     }) => MaybePromise<Reply>
   ): void => {
     const _register = (inputMethod?: RouteMethod) => {
-      const pathname = `${this.options.prefix ?? ''}${options.pathname ?? '*'}`
+      const pathname = `${this.options.prefix ?? ""}${options.pathname ?? "*"}`
       const method = (inputMethod ?? Method.ALL) as Method
       const compatibilityDate = options.compatibilityDate
-      const name = options.name ?? `${method} ${pathname}${compatibilityDate ? ` (${compatibilityDate})` : ''}`
+      const name =
+        options.name ??
+        `${method} ${pathname}${compatibilityDate ? ` (${compatibilityDate})` : ""}`
       if (!isValidPathname(pathname)) {
-        recordException(`[Comet] Failed to set up route '${name}' due to an invalid pathname.`)
+        recordException(
+          `[Comet] Failed to set up route '${name}' due to an invalid pathname.`
+        )
         return
       }
-      if (options.compatibilityDate !== undefined && !isValidCompatibilityDate(options.compatibilityDate)) {
-        recordException(`[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`)
+      if (
+        options.compatibilityDate !== undefined &&
+        !isValidCompatibilityDate(options.compatibilityDate)
+      ) {
+        recordException(
+          `[Comet] Failed to set up route '${name}' due to an invalid compatibility date.`
+        )
         return
       }
-      const schemas = { body: options.body, params: options.params, query: options.query }
+      const schemas = {
+        body: options.body,
+        params: options.params,
+        query: options.query
+      }
       this.routes.push({ ...options, pathname, method, name, handler, schemas })
     }
 
@@ -145,7 +175,10 @@ export class Router<
       if (!doPathnamesMatch) continue
 
       if (!ignoreCompatibilityDate) {
-        const doCompatibilityDatesMatch = compareCompatibilityDates(compatibilityDate, route.compatibilityDate)
+        const doCompatibilityDatesMatch = compareCompatibilityDates(
+          compatibilityDate,
+          route.compatibilityDate
+        )
         if (!doCompatibilityDatesMatch) continue
       }
 
@@ -170,7 +203,9 @@ export class Router<
     if (this.ready) return
     this.routes.sort((a, b) => {
       if (a.pathname !== b.pathname || a.method !== b.method) return 0
-      return compareCompatibilityDates(a.compatibilityDate, b.compatibilityDate) ? -1 : 1
+      return compareCompatibilityDates(a.compatibilityDate, b.compatibilityDate)
+        ? -1
+        : 1
     })
     this.ready = true
   }

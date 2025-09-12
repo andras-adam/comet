@@ -1,17 +1,16 @@
-import type { CookiesOptions } from './cookies'
-
+import type { CookiesOptions } from "./cookies"
 
 export enum Method {
-  ALL = 'ALL',
-  GET = 'GET',
-  HEAD = 'HEAD',
-  POST = 'POST',
-  PUT = 'PUT',
-  DELETE = 'DELETE',
-  CONNECT = 'CONNECT',
-  OPTIONS = 'OPTIONS',
-  TRACE = 'TRACE',
-  PATCH = 'PATCH',
+  ALL = "ALL",
+  GET = "GET",
+  HEAD = "HEAD",
+  POST = "POST",
+  PUT = "PUT",
+  DELETE = "DELETE",
+  CONNECT = "CONNECT",
+  OPTIONS = "OPTIONS",
+  TRACE = "TRACE",
+  PATCH = "PATCH"
 }
 
 export const ALL = Method.ALL

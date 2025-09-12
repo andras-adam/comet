@@ -1,67 +1,66 @@
-import { trace } from '@opentelemetry/api'
-import type { StandardSchemaV1 } from '@standard-schema/spec'
-import { Cookies } from './cookies'
-import { recordException } from './logger'
-import type { Options } from './types'
-
+import { trace } from "@opentelemetry/api"
+import type { StandardSchemaV1 } from "@standard-schema/spec"
+import { Cookies } from "./cookies"
+import { recordException } from "./logger"
+import type { Options } from "./types"
 
 export enum Status {
-  Continue = 'continue',
-  SwitchingProtocols = 'switchingProtocols',
-  Processing = 'processing',
-  Ok = 'ok',
-  Created = 'created',
-  Accepted = 'accepted',
-  NonAuthoritativeInformation = 'nonAuthoritativeInformation',
-  NoContent = 'noContent',
-  ResetContent = 'resetContent',
-  PartialContent = 'partialContent',
-  MultiStatus = 'multiStatus',
-  MultipleChoices = 'multipleChoices',
-  MovedPermanently = 'movedPermanently',
-  MovedTemporarily = 'movedTemporarily',
-  SeeOther = 'seeOther',
-  NotModified = 'notModified',
-  UseProxy = 'useProxy',
-  TemporaryRedirect = 'temporaryRedirect',
-  PermanentRedirect = 'permanentRedirect',
-  BadRequest = 'badRequest',
-  Unauthorized = 'unauthorized',
-  PaymentRequired = 'paymentRequired',
-  Forbidden = 'forbidden',
-  NotFound = 'notFound',
-  MethodNotAllowed = 'methodNotAllowed',
-  NotAcceptable = 'notAcceptable',
-  ProxyAuthenticationRequired = 'proxyAuthenticationRequired',
-  RequestTimeout = 'requestTimeout',
-  Conflict = 'conflict',
-  Gone = 'gone',
-  LengthRequired = 'lengthRequired',
-  PreconditionFailed = 'preconditionFailed',
-  RequestTooLong = 'requestTooLong',
-  RequestUriTooLong = 'requestUriTooLong',
-  UnsupportedMediaType = 'unsupportedMediaType',
-  RequestedRangeNotSatisfiable = 'requestedRangeNotSatisfiable',
-  ExpectationFailed = 'expectationFailed',
-  ImATeapot = 'imATeapot',
-  InsufficientSpaceOnResource = 'insufficientSpaceOnResource',
-  MethodFailure = 'methodFailure',
-  MisdirectedRequest = 'misdirectedRequest',
-  UnprocessableEntity = 'unprocessableEntity',
-  FailedDependency = 'failedDependency',
-  UpgradeRequired = 'upgradeRequired',
-  PreconditionRequired = 'preconditionRequired',
-  TooManyRequests = 'tooManyRequests',
-  RequestHeaderFieldsTooLarge = 'requestHeaderFieldsTooLarge',
-  UnavailableForLegalReasons = 'unavailableForLegalReasons',
-  InternalServerError = 'internalServerError',
-  NotImplemented = 'notImplemented',
-  BadGateway = 'badGateway',
-  ServiceUnavailable = 'serviceUnavailable',
-  GatewayTimeout = 'gatewayTimeout',
-  HttpVersionNotSupported = 'httpVersionNotSupported',
-  InsufficientStorage = 'insufficientStorage',
-  NetworkAuthenticationRequired = 'networkAuthenticationRequired'
+  Continue = "continue",
+  SwitchingProtocols = "switchingProtocols",
+  Processing = "processing",
+  Ok = "ok",
+  Created = "created",
+  Accepted = "accepted",
+  NonAuthoritativeInformation = "nonAuthoritativeInformation",
+  NoContent = "noContent",
+  ResetContent = "resetContent",
+  PartialContent = "partialContent",
+  MultiStatus = "multiStatus",
+  MultipleChoices = "multipleChoices",
+  MovedPermanently = "movedPermanently",
+  MovedTemporarily = "movedTemporarily",
+  SeeOther = "seeOther",
+  NotModified = "notModified",
+  UseProxy = "useProxy",
+  TemporaryRedirect = "temporaryRedirect",
+  PermanentRedirect = "permanentRedirect",
+  BadRequest = "badRequest",
+  Unauthorized = "unauthorized",
+  PaymentRequired = "paymentRequired",
+  Forbidden = "forbidden",
+  NotFound = "notFound",
+  MethodNotAllowed = "methodNotAllowed",
+  NotAcceptable = "notAcceptable",
+  ProxyAuthenticationRequired = "proxyAuthenticationRequired",
+  RequestTimeout = "requestTimeout",
+  Conflict = "conflict",
+  Gone = "gone",
+  LengthRequired = "lengthRequired",
+  PreconditionFailed = "preconditionFailed",
+  RequestTooLong = "requestTooLong",
+  RequestUriTooLong = "requestUriTooLong",
+  UnsupportedMediaType = "unsupportedMediaType",
+  RequestedRangeNotSatisfiable = "requestedRangeNotSatisfiable",
+  ExpectationFailed = "expectationFailed",
+  ImATeapot = "imATeapot",
+  InsufficientSpaceOnResource = "insufficientSpaceOnResource",
+  MethodFailure = "methodFailure",
+  MisdirectedRequest = "misdirectedRequest",
+  UnprocessableEntity = "unprocessableEntity",
+  FailedDependency = "failedDependency",
+  UpgradeRequired = "upgradeRequired",
+  PreconditionRequired = "preconditionRequired",
+  TooManyRequests = "tooManyRequests",
+  RequestHeaderFieldsTooLarge = "requestHeaderFieldsTooLarge",
+  UnavailableForLegalReasons = "unavailableForLegalReasons",
+  InternalServerError = "internalServerError",
+  NotImplemented = "notImplemented",
+  BadGateway = "badGateway",
+  ServiceUnavailable = "serviceUnavailable",
+  GatewayTimeout = "gatewayTimeout",
+  HttpVersionNotSupported = "httpVersionNotSupported",
+  InsufficientStorage = "insufficientStorage",
+  NetworkAuthenticationRequired = "networkAuthenticationRequired"
 }
 
 export interface ReplyData {
@@ -73,14 +72,20 @@ export interface ReplyData {
 
 export type RepliesType = Partial<Record<Status, StandardSchemaV1>>
 
-type TypeOfSafe<Schema> = Schema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<Schema> : never
-type ReplyFnFrom<Body> = Body extends undefined ? () => Reply : (body: TypeOfSafe<Body>) => Reply
-export type ReplyFrom<Replies extends RepliesType | undefined> = Replies extends undefined
-  ? Reply
-  : ReplyData & { [Key in keyof Replies as `${string & Key}`]: ReplyFnFrom<Replies[Key]> }
+type TypeOfSafe<Schema> = Schema extends StandardSchemaV1
+  ? StandardSchemaV1.InferOutput<Schema>
+  : never
+type ReplyFnFrom<Body> = Body extends undefined
+  ? () => Reply
+  : (body: TypeOfSafe<Body>) => Reply
+export type ReplyFrom<Replies extends RepliesType | undefined> =
+  Replies extends undefined
+    ? Reply
+    : ReplyData & {
+        [Key in keyof Replies as `${string & Key}`]: ReplyFnFrom<Replies[Key]>
+      }
 
 export class Reply implements ReplyData {
-
   // Reply data for regular replies
   private body?: unknown
   public status = Number.NaN
@@ -93,17 +98,16 @@ export class Reply implements ReplyData {
   // The date the reply was sent
   public sent?: Date
 
-
   // Convert a reply to a standard response
   static async toResponse(reply: Reply, options: Options): Promise<Response> {
     // Return error response if no reply was sent
     if (!reply.sent) {
-      recordException('[Comet] No reply was sent for this event.')
+      recordException("[Comet] No reply was sent for this event.")
       return new Response(null, { status: 500 })
     }
     // Handle sending a raw response
     if (reply._raw !== undefined) {
-      trace.getActiveSpan()?.addEvent('return raw response')
+      trace.getActiveSpan()?.addEvent("return raw response")
       return reply._raw
     }
     // Get status, headers and serialize cookies
@@ -112,23 +116,23 @@ export class Reply implements ReplyData {
     await Cookies.serialize(reply.cookies, reply.headers, options.cookies)
     // Handle websocket response
     if (reply.body instanceof WebSocket) {
-      trace.getActiveSpan()?.addEvent('return websocket response')
+      trace.getActiveSpan()?.addEvent("return websocket response")
       return new Response(null, { status, headers, webSocket: reply.body })
     }
     // Handle stream response
     if (reply.body instanceof ReadableStream) {
-      trace.getActiveSpan()?.addEvent('return streamed response')
+      trace.getActiveSpan()?.addEvent("return streamed response")
       return new Response(reply.body, { status, headers })
     }
 
     if (reply.body instanceof ArrayBuffer) {
-      trace.getActiveSpan()?.addEvent('return arraybuffer response')
+      trace.getActiveSpan()?.addEvent("return arraybuffer response")
 
       return new Response(reply.body, { status, headers })
     }
 
     if (reply.body instanceof Blob) {
-      trace.getActiveSpan()?.addEvent('return blob response')
+      trace.getActiveSpan()?.addEvent("return blob response")
 
       return new Response(reply.body, { status, headers })
     }
@@ -136,27 +140,34 @@ export class Reply implements ReplyData {
     // Handle json response
     let body: BodyInit | null = null
     if (reply.body) {
-      if (!headers.has('content-type') || headers.get('content-type') === 'application/json') {
-        headers.set('content-type', 'application/json')
-        body = options.dev ? JSON.stringify(reply.body, null, 2) : JSON.stringify(reply.body)
+      if (
+        !headers.has("content-type") ||
+        headers.get("content-type") === "application/json"
+      ) {
+        headers.set("content-type", "application/json")
+        body = options.dev
+          ? JSON.stringify(reply.body, null, 2)
+          : JSON.stringify(reply.body)
       } else {
         body = reply.body as BodyInit
       }
     }
-    trace.getActiveSpan()?.addEvent('convert response')
+    trace.getActiveSpan()?.addEvent("convert response")
     return new Response(body, { status, headers })
   }
 
   // Send a regular reply
   private send(status: number, body?: unknown): Reply {
     if (this.sent) {
-      recordException('[Comet] Cannot send a reply after one has already been sent.')
+      recordException(
+        "[Comet] Cannot send a reply after one has already been sent."
+      )
       return this
     }
     this.status = status
     this.body = body
     this.sent = new Date()
-    trace.getActiveSpan()?.addEvent('send reply', {
+    trace.getActiveSpan()?.addEvent("send reply", {
       status,
       sent: +this.sent
     })
@@ -166,12 +177,14 @@ export class Reply implements ReplyData {
   // Send a raw reply
   public raw(response: Response): Reply {
     if (this.sent) {
-      recordException('[Comet] Cannot send a reply after one has already been sent.')
+      recordException(
+        "[Comet] Cannot send a reply after one has already been sent."
+      )
       return this
     }
     this._raw = response
     this.sent = new Date()
-    trace.getActiveSpan()?.addEvent('raw reply', {
+    trace.getActiveSpan()?.addEvent("raw reply", {
       sent: +this.sent
     })
     return this
@@ -461,5 +474,4 @@ export class Reply implements ReplyData {
   public networkAuthenticationRequired(body?: unknown) {
     return this.send(511, body)
   }
-
 }

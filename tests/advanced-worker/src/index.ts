@@ -1,2 +1,2 @@
-export { MyDurableObject } from './durable-object'
-export { default } from './worker'
+export { MyDurableObject } from "./durable-object"
+export { default } from "./worker"
